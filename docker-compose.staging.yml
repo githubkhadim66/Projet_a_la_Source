@@ -1,0 +1,54 @@
+# ── Serveur de STAGING ────────────────────────────────────────────────────────
+# Déployé par le workflow GitHub Actions `deploy-staging.yml` (images GHCR :staging).
+# Prérequis sur le serveur : fichier .env.staging à côté de ce fichier (voir deploy/.env.staging.example)
+# Usage : docker compose -f docker-compose.staging.yml --env-file .env.staging up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata_staging:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE}/a-la-source-backend:staging
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: staging
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-console}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      NOTIFY_INTERNAL_EMAIL: ${NOTIFY_INTERNAL_EMAIL:-}
+      CATALOGUE_PDF_PATH: /app/data/catalogue.pdf
+    volumes:
+      - catalogue_data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE}/a-la-source-frontend:staging
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata_staging:
+  catalogue_data:

@@ -1,0 +1,40 @@
+# ── Développement local : hot-reload front + back ────────────────────────────
+# Le backend se connecte au Postgres LOCAL de la machine (port 5433),
+# via host.docker.internal. Assurez-vous que PostgreSQL tourne et que la base
+# `alasource` existe (backend/scripts/create_db.py la crée au besoin).
+# Usage : docker compose up
+services:
+  backend:
+    build: ./backend
+    command: sh -c "alembic upgrade head && python -m app.initial_data && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+psycopg://postgres:%20%20%20%20@host.docker.internal:5433/alasource
+      SECRET_KEY: dev-secret-key
+      CORS_ORIGINS: http://localhost:5173,http://localhost:8080
+      FRONTEND_URL: http://localhost:5173
+      EMAIL_BACKEND: console
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend:/app
+      - ./backend/data:/app/data
+    ports:
+      - "8000:8000"
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install --no-audit --no-fund && npm run dev -- --host 0.0.0.0"
+    environment:
+      VITE_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  frontend_node_modules:

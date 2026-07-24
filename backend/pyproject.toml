@@ -1,0 +1,18 @@
+[project]
+name = "a-la-source-backend"
+version = "0.1.0"
+description = "API FastAPI — À la Source : leads, catalogue, espace fournisseurs, RDV expert"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+ignore = ["B008"]  # FastAPI Depends() dans les signatures
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

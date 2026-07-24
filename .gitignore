@@ -1,0 +1,32 @@
+# Node / frontend
+node_modules/
+frontend/dist/
+*.local
+
+# Python / backend
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.db
+
+# Données locales : images téléversées (S3/volume en prod) et fichiers générés
+backend/data/uploads/
+backend/data/*.pdf
+backend/data/page*.png
+backend/data/fiche*.png
+
+# Environnements (les .example sont versionnés)
+.env
+.env.*
+!.env.example
+!deploy/.env.staging.example
+!deploy/.env.prod.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

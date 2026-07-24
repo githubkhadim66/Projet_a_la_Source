@@ -1,0 +1,71 @@
+# ── Serveur de PRODUCTION ─────────────────────────────────────────────────────
+# Déployé par le workflow GitHub Actions `deploy-production.yml` (images GHCR :latest / :vX.Y.Z).
+# TLS automatique via Caddy (Let's Encrypt) — définir DOMAIN dans .env.prod.
+# Usage : docker compose -f docker-compose.prod.yml --env-file .env.prod up -d
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE}/a-la-source-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: production
+      DEBUG: "false"
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      FRONTEND_URL: ${FRONTEND_URL}
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-smtp}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      NOTIFY_INTERNAL_EMAIL: ${NOTIFY_INTERNAL_EMAIL}
+      CATALOGUE_PDF_PATH: /app/data/catalogue.pdf
+    volumes:
+      - catalogue_data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: ${REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE}/a-la-source-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  # Reverse proxy TLS (Let's Encrypt automatique) — SEC-01 : HTTPS partout
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
+volumes:
+  pgdata_prod:
+  catalogue_data:
+  caddy_data:
+  caddy_config:
