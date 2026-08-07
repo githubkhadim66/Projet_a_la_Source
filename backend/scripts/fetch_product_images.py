@@ -8,16 +8,20 @@ Usage : python scripts/fetch_product_images.py
 Idempotent : un produit qui a déjà une image téléversée est laissé tel quel.
 """
 
+import os
 import sys
 import time
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
-from sqlalchemy import select
+# Rend le paquet `app` importable même lancé en tant que fichier (python scripts/…)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.db.session import SessionLocal
-from app.models import Product
-from app.services.storage import upload_product_image
+from sqlalchemy import select  # noqa: E402
+
+from app.db.session import SessionLocal  # noqa: E402
+from app.models import Product  # noqa: E402
+from app.services.storage import upload_product_image  # noqa: E402
 
 # Mots-clés de recherche par référence produit (loremflickr renvoie une photo pertinente)
 KEYWORDS: dict[str, str] = {
