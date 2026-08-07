@@ -66,7 +66,7 @@ export function KeyFigures() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-[rgba(13,34,101,0.08)]">
           {stats.map((s, i) => (
-            <div key={i} className="py-8 px-5 lg:px-6 first:pl-0">
+            <div key={i} className="py-8 px-5 lg:px-6 text-center">
               <p className="font-black text-[#0d2265] leading-none tabular-nums" style={{ fontSize: "clamp(2.2rem,3vw,3rem)" }}>{s.n}</p>
               <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-[0.16em] mt-2 leading-snug">{s.tag}</p>
             </div>
