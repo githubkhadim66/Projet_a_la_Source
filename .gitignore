@@ -24,6 +24,7 @@ backend/data/fiche*.png
 !.env.example
 !deploy/.env.staging.example
 !deploy/.env.prod.example
+!deploy/.env.server.example
 
 # IDE / OS
 .vscode/
