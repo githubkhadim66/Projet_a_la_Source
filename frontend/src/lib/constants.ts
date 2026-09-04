@@ -10,6 +10,8 @@ export const IMG_MARKET = "https://images.unsplash.com/photo-1778079247396-9c0e0
 // Options des formulaires
 export const PAYS_EU = ["France","Allemagne","Belgique","Pays-Bas","Espagne","Italie","Portugal","Suisse","Luxembourg","Autre"];
 export const CERTS_OPTIONS = ["Bio UE","HACCP","Halal","Casher","ISO 22000"];
+// Certifications côté fournisseur (candidature + proposition de produit)
+export const CERTS_FOURNISSEUR = ["Bio","Halal","Casher","HACCP","ISO","Autre","Aucune"];
 export const INCOTERMS = ["EXW","FCA","FAS","FOB","CFR","CIF","CPT","CIP","DPU","DAP","DDP"];
 // Incoterms proposés dans les formulaires de demande, avec l'option « à conseiller » (CDC FOR-01)
 export const INCOTERMS_CHOIX = [...INCOTERMS, "À conseiller"];
@@ -69,6 +71,46 @@ export const PAYS_ORIGINE = [
   "Sénégal","Côte d'Ivoire","Mali","Burkina Faso","Ghana","Guinée","Bénin","Togo",
   "Nigeria","Cameroun","Maroc","Autre",
 ];
+
+// ─── Conditionnement & MOQ (formulaire fournisseur) ──────────────────────────
+// Conditionnement = format de vente ; MOQ = quantité minimum de commande.
+export const EMBALLAGES = ["Sac", "Carton", "Bidon", "Seau", "Palette", "Conteneur 20'", "Conteneur 40'", "Vrac"];
+export const EMBALLAGE_PLURIEL: Record<string, string> = {
+  "Sac": "sacs", "Carton": "cartons", "Bidon": "bidons", "Seau": "seaux",
+  "Palette": "palettes", "Conteneur 20'": "conteneurs 20'", "Conteneur 40'": "conteneurs 40'",
+};
+export const MESURES = ["kg", "L"];
+
+/** Compose le libellé du conditionnement, ex. « Sac de 25 kg » (ou « Vrac »). */
+export function composePackaging(type: string, size: string, unit: string): string {
+  if (!type) return "";
+  if (type === "Vrac") return "Vrac";
+  return size.trim() ? `${type} de ${size.trim()} ${unit}` : "";
+}
+
+/** Compose le libellé de la MOQ avec l'équivalent calculé, ex. « 500 kg (20 sacs) ».
+ *  `unitMode` = "base" (kg/L/tonnes) ou "colis" (multiples du conditionnement). */
+export function composeMoq(
+  value: string, unitMode: "base" | "colis", baseUnit: string,
+  packType: string, packSize: string, packUnit: string,
+): string {
+  const v = parseFloat(value.replace(",", "."));
+  if (!value || Number.isNaN(v)) return "";
+  const size = parseFloat((packSize || "").replace(",", "."));
+  const plural = EMBALLAGE_PLURIEL[packType] || (packType ? packType.toLowerCase() : "colis");
+
+  if (unitMode === "colis" && size > 0) {
+    const total = v * size;
+    return `${total.toLocaleString("fr-FR")} ${packUnit} (${v.toLocaleString("fr-FR")} ${plural})`;
+  }
+  // Mode base : équivalent en colis si l'unité correspond et que ça tombe juste
+  let suffix = "";
+  if (size > 0 && packType && packType !== "Vrac" && baseUnit === packUnit) {
+    const n = v / size;
+    if (Number.isInteger(n)) suffix = ` (${n.toLocaleString("fr-FR")} ${plural})`;
+  }
+  return `${v.toLocaleString("fr-FR")} ${baseUnit}${suffix}`;
+}
 
 // Listes de produits par catégorie (formulaire fournisseur). Base modifiable :
 // « Autre (préciser) » ouvre un champ libre. À compléter avec le client.

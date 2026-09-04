@@ -91,7 +91,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
 
   /** Champs communs à la création et à la modification. */
   const formPayload = () => ({
-    name: form.name, origin: form.origin, category: form.category, moq: form.moq,
+    name: form.name, origin: form.origin, category: form.category, packaging: form.packaging, moq: form.moq,
     image: form.image, description: form.description, benefits: form.benefits,
     stock_kg: Number(form.stock) || 0, status: form.status, delay: form.delay,
     price_per_kg: form.price_per_kg, bulk_price: form.bulk_price, harvest_period: form.harvest_period,
@@ -222,7 +222,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <span className="font-semibold text-sm text-[#0a0a0f]">{p.name}</span>
-                  <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.moq ? ` · MOQ ${p.moq}` : ""} · {p.supplier_name} · <span className="font-mono">{p.ref}</span></p>
+                  <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.packaging ? ` · ${p.packaging}` : ""}{p.moq ? ` · MOQ ${p.moq}` : ""} · {p.supplier_name} · <span className="font-mono">{p.ref}</span></p>
                 </div>
                 <button onClick={() => restoreProduct(p)}
                   className="shrink-0 flex items-center gap-1.5 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 cursor-pointer hover:bg-emerald-50 transition-colors">
@@ -289,7 +289,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
                       {p.category && <span className="text-[10px] text-[#64697d] bg-[#f0f2f7] px-1.5 py-0.5">{p.category}</span>}
                       {p.featured && <span className="text-[10px] text-[#C4613A] font-semibold">★ Vedette</span>}
                     </div>
-                    <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.moq ? ` · MOQ ${p.moq}` : ""} · {p.supplier_name} · <span className="font-mono">{p.ref}</span></p>
+                    <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.packaging ? ` · ${p.packaging}` : ""}{p.moq ? ` · MOQ ${p.moq}` : ""} · {p.supplier_name} · <span className="font-mono">{p.ref}</span></p>
                   </div>
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">

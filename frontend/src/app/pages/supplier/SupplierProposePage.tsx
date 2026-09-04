@@ -1,24 +1,26 @@
-/** Proposition d'un nouveau produit par le fournisseur — fiche complète (comme l'ajout admin). */
+/** Proposition d'un produit par le fournisseur — assistant multi-étapes.
+ *  Conditionnement (format de vente) et MOQ (quantité minimum) sont distincts,
+ *  avec calcul automatique de l'équivalent (ex. 20 sacs = 500 kg).
+ */
 
 import { useRef, useState } from "react";
-import { ArrowRight, CheckCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
+import { CheckCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
-import { CAT_CATEGORIES, PAYS_ORIGINE, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
+import { CAT_CATEGORIES, CERTS_FOURNISSEUR, PAYS_ORIGINE, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
-import { BtnNavy } from "@/app/components/common/buttons";
-import { FieldLabel, FormError, TextArea, TextInput } from "@/app/components/common/fields";
-import { Confirm, FormCard, ScreenShell } from "@/app/components/common/layout";
+import { FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
+import { Confirm, ScreenShell } from "@/app/components/common/layout";
+import { FormWizard } from "@/app/components/common/FormWizard";
 
-const CERT_OPTIONS = ["Bio", "Halal", "Casher", "HACCP", "ISO", "Autre", "Aucune"];
+const AUTRE = "Autre (préciser)";
 
 export function SupplierPropose({ nav }: { nav: Nav }) {
   const [form, setForm] = useState({
-    name: "", origin: "", category: "Épicerie", moq: "", volumes: "",
+    name: "", origin: "", category: "Épicerie", packaging: "", moq: "", volumes: "",
     price_per_kg: "", bulk_price: "", harvest_period: "",
     description: "", benefits: "", image: "",
   });
-  // Produit choisi dans la liste de la catégorie, ou saisi librement (« Autre »)
   const [productChoice, setProductChoice] = useState("");
   const [customProduct, setCustomProduct] = useState(false);
   const [certs, setCerts] = useState<string[]>([]);
@@ -32,16 +34,12 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
     setForm(f => ({ ...f, [k]: e.target.value }));
   const toggleCert = (c: string) => setCerts(cs => cs.includes(c) ? cs.filter(x => x !== c) : [...cs, c]);
 
-  const AUTRE = "Autre (préciser)";
   const produitsCategorie = PRODUITS_PAR_CATEGORIE[form.category] ?? [];
 
-  // Changer de catégorie réinitialise le produit choisi
   const changeCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setForm(f => ({ ...f, category: e.target.value, name: "" }));
-    setProductChoice("");
-    setCustomProduct(false);
+    setProductChoice(""); setCustomProduct(false);
   };
-  // Choix d'un produit dans la liste (ou « Autre » → saisie libre)
   const changeProduct = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const v = e.target.value;
     setProductChoice(v);
@@ -53,8 +51,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
 
   const choisirPhoto = async (file: File | undefined) => {
     if (!file) return;
-    setUploading(true);
-    setUploadError(null);
+    setUploading(true); setUploadError(null);
     try {
       setForm(f => ({ ...f, image: "" }));
       const url = await api.supplier.uploadImage(file);
@@ -67,12 +64,10 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
     }
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submit = async () => {
     if (!form.name.trim()) { setError("Le nom du produit est requis."); return; }
     if (!form.description.trim()) { setError("Une description est requise."); return; }
-    setSending(true);
-    setError(null);
+    setSending(true); setError(null);
     try {
       await api.supplier.proposeProduct({ ...form, certifications: certs });
       nav("supplier-propose-confirm");
@@ -84,11 +79,13 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
     }
   };
 
-  return (
-    <ScreenShell nav={nav} title="Proposer un produit" back="supplier-products">
-      <FormCard title="Soumettre un produit à validation" subtitle="Renseignez la fiche la plus complète possible. Aucun produit n'est publié automatiquement : l'équipe À la Source examine chaque proposition avant toute décision.">
-        <form onSubmit={submit} className="space-y-5">
-          {/* Photo */}
+  const steps = [
+    {
+      label: "Le produit",
+      hint: "Identité",
+      validate: () => form.name.trim() ? null : "Sélectionnez ou saisissez le produit.",
+      content: (
+        <div className="space-y-5">
           <div>
             <FieldLabel>Photo du produit</FieldLabel>
             <div className="flex gap-4 items-start">
@@ -146,12 +143,31 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
               <TextInput required className="mt-2" placeholder="Nom du produit" value={form.name} onChange={set("name")} />
             )}
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div><FieldLabel>Conditionnement / MOQ</FieldLabel><TextInput placeholder="25 kg" value={form.moq} onChange={set("moq")} /></div>
-            <div><FieldLabel>Volumes disponibles</FieldLabel><TextInput placeholder="Ex : 2 000 kg / mois" value={form.volumes} onChange={set("volumes")} /></div>
+        </div>
+      ),
+    },
+    {
+      label: "Conditionnement & quantités",
+      hint: "Format, MOQ, volume",
+      content: (
+        <div className="space-y-5">
+          <PackagingMoqFields
+            packaging={form.packaging} moq={form.moq}
+            onPackaging={v => setForm(f => ({ ...f, packaging: v }))}
+            onMoq={v => setForm(f => ({ ...f, moq: v }))}
+          />
+          <div>
+            <FieldLabel>Volume disponible (capacité de production)</FieldLabel>
+            <TextInput placeholder="Ex : 2 000 kg / mois" value={form.volumes} onChange={set("volumes")} />
           </div>
-
+        </div>
+      ),
+    },
+    {
+      label: "Prix & récolte",
+      hint: "Confidentiel",
+      content: (
+        <div className="space-y-4">
           <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-4 space-y-4">
             <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">Informations commerciales — confidentielles</p>
             <div className="grid grid-cols-2 gap-4">
@@ -161,28 +177,46 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
             <div><FieldLabel>Période de récolte</FieldLabel><TextInput placeholder="Ex : novembre à février" value={form.harvest_period} onChange={set("harvest_period")} /></div>
             <p className="text-[11px] text-[#64697d]">Ces informations restent internes à À la Source et ne sont jamais affichées publiquement.</p>
           </div>
-
-          <div><FieldLabel required>Description</FieldLabel><TextArea required rows={3} placeholder="Caractéristiques, usage, conditionnement, origine exacte…" value={form.description} onChange={set("description")} /></div>
+        </div>
+      ),
+    },
+    {
+      label: "Présentation",
+      hint: "Description & certifications",
+      validate: () => form.description.trim() ? null : "Une description est requise.",
+      content: (
+        <div className="space-y-5">
+          <div><FieldLabel required>Description</FieldLabel><TextArea rows={3} placeholder="Caractéristiques, usage, origine exacte…" value={form.description} onChange={set("description")} /></div>
           <div>
             <FieldLabel>Bienfaits</FieldLabel>
             <TextArea rows={3} placeholder="Apports nutritionnels, atouts pour l'acheteur…" value={form.benefits} onChange={set("benefits")}
               className="border-[rgba(196,97,58,0.3)] bg-[#fffaf7] focus:border-[#C4613A]" />
           </div>
-
           <div>
             <FieldLabel>Certifications détenues pour ce produit</FieldLabel>
             <div className="grid grid-cols-3 gap-2 mt-1">
-              {CERT_OPTIONS.map(c => (
+              {CERTS_FOURNISSEUR.map(c => (
                 <label key={c} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="accent-[#0d2265]" checked={certs.includes(c)} onChange={() => toggleCert(c)} />{c}</label>
               ))}
             </div>
           </div>
+        </div>
+      ),
+    },
+  ];
 
-          <FormError error={error} />
-          <BtnNavy type="submit" className="w-full justify-center">{sending ? "Envoi…" : "Soumettre à validation"} <ArrowRight className="w-4 h-4" /></BtnNavy>
-        </form>
-      </FormCard>
-    </ScreenShell>
+  return (
+    <FormWizard
+      nav={nav}
+      title="Proposer un produit"
+      intro="Soumettez une fiche complète. Aucun produit n'est publié automatiquement : l'équipe À la Source examine chaque proposition."
+      steps={steps}
+      onSubmit={submit}
+      submitting={sending}
+      submitLabel="Soumettre à validation"
+      error={error}
+      footNote="Aucune publication automatique — validation par l'équipe À la Source."
+    />
   );
 }
 

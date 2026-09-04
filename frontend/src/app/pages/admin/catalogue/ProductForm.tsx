@@ -7,16 +7,17 @@ import type { ApiAdminProduct, ApiSupplier } from "@/lib/api";
 import { CAT_CATEGORIES, PAYS_ORIGINE } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { StockStatus } from "@/lib/leads";
+import { PackagingMoqFields } from "@/app/components/common/fields";
 
 export interface ProductFormValues {
-  name: string; ref: string; origin: string; category: string; moq: string;
+  name: string; ref: string; origin: string; category: string; packaging: string; moq: string;
   image: string; description: string; benefits: string;
   supplier_id: string; delay: string; stock: string; status: StockStatus;
   price_per_kg: string; bulk_price: string; harvest_period: string;
 }
 
 export const emptyProduct = (supplierId?: number): ProductFormValues => ({
-  name: "", ref: "", origin: "", category: "Épicerie", moq: "",
+  name: "", ref: "", origin: "", category: "Épicerie", packaging: "", moq: "",
   image: "", description: "", benefits: "",
   supplier_id: supplierId ? String(supplierId) : "", delay: "", stock: "0", status: "En stock",
   price_per_kg: "", bulk_price: "", harvest_period: "",
@@ -24,7 +25,7 @@ export const emptyProduct = (supplierId?: number): ProductFormValues => ({
 
 export const productToForm = (p: ApiAdminProduct): ProductFormValues => ({
   name: p.name, ref: p.ref, origin: p.origin ?? "", category: p.category ?? "Épicerie",
-  moq: p.moq, image: p.image, description: p.description, benefits: p.benefits,
+  packaging: p.packaging ?? "", moq: p.moq, image: p.image, description: p.description, benefits: p.benefits,
   supplier_id: String(p.supplier_id), delay: p.delay, stock: String(p.stock_kg), status: p.status,
   price_per_kg: p.price_per_kg ?? "", bulk_price: p.bulk_price ?? "", harvest_period: p.harvest_period ?? "",
 });
@@ -32,7 +33,6 @@ export const productToForm = (p: ApiAdminProduct): ProductFormValues => ({
 const TEXT_FIELDS = [
   ["name", "Nom du produit *", "Fonio"],
   ["ref", "Référence", "ALS-XX-000"],
-  ["moq", "Conditionnement / MOQ", "25 kg"],
   ["delay", "Délai indicatif", "2–3 semaines"],
 ] as const;
 
@@ -142,6 +142,17 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
                 <option>En stock</option><option>Sur commande</option><option>Rupture</option>
               </select>
             </div>
+          </div>
+
+          {/* Conditionnement & MOQ — même logique que la proposition fournisseur */}
+          <div className="mb-3">
+            {/* key = ref → réinitialise les champs structurés en changeant de produit édité */}
+            <PackagingMoqFields
+              key={values.ref || "new"}
+              packaging={values.packaging} moq={values.moq}
+              onPackaging={v => set("packaging", v)}
+              onMoq={v => set("moq", v)}
+            />
           </div>
 
           <div className="grid md:grid-cols-2 gap-3">

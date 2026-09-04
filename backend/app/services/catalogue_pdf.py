@@ -378,7 +378,8 @@ def _product_card(c: canvas.Canvas, product, x: float, y: float) -> None:
 
     # Caractéristiques essentielles — ancrées au bas de la fiche pour un alignement régulier
     rows = [
-        ("Conditionnement", product.moq or "Sur demande"),
+        ("Conditionnement", getattr(product, "packaging", "") or "Sur demande"),
+        ("MOQ", product.moq or "Sur demande"),
         ("Disponibilité", getattr(product.status, "value", str(product.status))),
     ]
     baseline = y - CARD_H + FOOTER_BAR + 14

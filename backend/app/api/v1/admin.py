@@ -363,6 +363,7 @@ def decide_proposal(
                 benefits=proposal.benefits,
                 origin=proposal.origin,
                 category=proposal.category or "Épicerie",
+                packaging=proposal.packaging,
                 moq=proposal.moq or (proposal.volumes or ""),
                 image=proposal.image,
                 price_per_kg=proposal.price_per_kg,
@@ -558,14 +559,14 @@ def export_leads(_: AdminUser = Depends(get_current_admin), db: Session = Depend
 @router.get("/export/products")
 def export_products(_: AdminUser = Depends(get_current_admin), db: Session = Depends(get_db)):
     rows = [
-        [p.ref, p.name, p.category or "", p.origin or "", p.moq, p.supplier.name if p.supplier else "",
+        [p.ref, p.name, p.category or "", p.origin or "", p.packaging, p.moq, p.supplier.name if p.supplier else "",
          p.stock_kg, p.status.value, p.delay, "oui" if p.visible else "non",
          "oui" if p.featured else "non", p.updated_at.strftime("%d/%m/%Y")]
         for p in db.scalars(select(Product).order_by(Product.ref))
     ]
     return _csv_response(
         "produits.csv",
-        ["reference", "nom", "categorie", "origine", "moq", "fournisseur", "stock_kg",
+        ["reference", "nom", "categorie", "origine", "conditionnement", "moq", "fournisseur", "stock_kg",
          "disponibilite", "delai", "visible", "vedette", "maj"],
         rows,
     )

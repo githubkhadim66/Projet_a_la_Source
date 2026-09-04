@@ -34,7 +34,7 @@ def seed_catalogue() -> None:
             if existant is None:
                 db.add(Product(
                     supplier_id=supplier.id,
-                    ref=ref, name=name, category=category, origin=origin, moq=moq,
+                    ref=ref, name=name, category=category, origin=origin, packaging=moq, moq="",
                     description=description, benefits=benefits,
                     image="",                       # photo à téléverser depuis l'espace admin
                     visible=True, featured=False, in_catalogue=True,

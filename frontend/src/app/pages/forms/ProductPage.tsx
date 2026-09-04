@@ -105,9 +105,15 @@ export function ProductPage({ nav }: { nav: Nav }) {
                       <span className="text-[#0d2265] font-medium text-right">Fournisseur vérifié — {current.origin}</span>
                     </div>
                   )}
-                  {current.moq && (
+                  {current.packaging && (
                     <div className="flex justify-between gap-4 text-sm border-b border-[rgba(13,34,101,0.07)] pb-2">
                       <span className="text-[#64697d]">Conditionnement</span>
+                      <span className="text-[#0d2265] font-medium text-right">{current.packaging}</span>
+                    </div>
+                  )}
+                  {current.moq && (
+                    <div className="flex justify-between gap-4 text-sm border-b border-[rgba(13,34,101,0.07)] pb-2">
+                      <span className="text-[#64697d]">Quantité minimum (MOQ)</span>
                       <span className="text-[#0d2265] font-medium text-right">{current.moq}</span>
                     </div>
                   )}

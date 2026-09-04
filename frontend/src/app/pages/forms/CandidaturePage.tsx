@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArrowRight, CheckCircle, Upload } from "lucide-react";
 import * as api from "@/lib/api";
+import { CAT_CATEGORIES, CERTS_FOURNISSEUR } from "@/lib/constants";
 import type { Nav } from "@/lib/routes";
 import { BtnNavy } from "@/app/components/common/buttons";
 import { FieldLabel, FormError, RGPD, SelectInput, TextInput } from "@/app/components/common/fields";
@@ -58,7 +59,7 @@ export function CandidatureForm({ nav }: { nav: Nav }) {
           <div>
             <FieldLabel required>Types de produits</FieldLabel>
             <div className="grid grid-cols-2 gap-2 mt-1">
-              {["Épicerie","Boissons","Fruits & légumes","Matières premières"].map(c => (
+              {CAT_CATEGORIES.map(c => (
                 <label key={c} className="flex items-center gap-2 text-sm text-[#0a0a0f] cursor-pointer">
                   <input type="checkbox" className="accent-[#0d2265]" checked={productTypes.includes(c)} onChange={() => toggleIn(productTypes, setProductTypes, c)} />{c}
                 </label>
@@ -69,7 +70,7 @@ export function CandidatureForm({ nav }: { nav: Nav }) {
           <div>
             <FieldLabel>Certifications détenues</FieldLabel>
             <div className="grid grid-cols-3 gap-2 mt-1">
-              {["Bio","Halal","HACCP","ISO","Autre","Aucune"].map(c => (
+              {CERTS_FOURNISSEUR.map(c => (
                 <label key={c} className="flex items-center gap-2 text-sm text-[#0a0a0f] cursor-pointer">
                   <input type="checkbox" className="accent-[#0d2265]" checked={certs.includes(c)} onChange={() => toggleIn(certs, setCerts, c)} />{c}
                 </label>

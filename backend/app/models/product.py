@@ -24,7 +24,10 @@ class Product(Base):
     name: Mapped[str] = mapped_column(String(255))
     category: Mapped[str | None] = mapped_column(String(100), nullable=True)
     origin: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    moq: Mapped[str] = mapped_column(String(50), default="")
+    # Conditionnement = format de vente (ex. « Sac de 25 kg »).
+    packaging: Mapped[str] = mapped_column(String(100), default="")
+    # MOQ = quantité minimum de commande (ex. « 500 kg (20 sacs) »).
+    moq: Mapped[str] = mapped_column(String(100), default="")
     image: Mapped[str] = mapped_column(String(500), default="")
 
     # Fiche produit : présentation commerciale et bénéfices nutritionnels
@@ -80,7 +83,8 @@ class ProductProposal(Base):
     benefits: Mapped[str] = mapped_column(Text, default="")
     origin: Mapped[str] = mapped_column(String(100), default="")
     category: Mapped[str] = mapped_column(String(100), default="")
-    moq: Mapped[str] = mapped_column(String(50), default="")
+    packaging: Mapped[str] = mapped_column(String(100), default="")
+    moq: Mapped[str] = mapped_column(String(100), default="")
     image: Mapped[str] = mapped_column(String(500), default="")
     volumes: Mapped[str | None] = mapped_column(String(255), nullable=True)
     # Informations commerciales internes proposées par le fournisseur

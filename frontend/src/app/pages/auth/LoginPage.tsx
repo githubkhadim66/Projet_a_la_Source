@@ -46,7 +46,7 @@ export function Login({ nav }: { nav: Nav }) {
   };
 
   return (
-    <ScreenShell nav={nav} title="Connexion">
+    <ScreenShell nav={nav} title="Connexion" directBack>
       <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10 text-center">
         <div className="w-14 h-14 bg-[rgba(13,34,101,0.06)] flex items-center justify-center mx-auto mb-6">
           <Lock className="w-7 h-7 text-[#0d2265]" />

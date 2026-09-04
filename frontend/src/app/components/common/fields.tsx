@@ -1,9 +1,10 @@
 /** Champs de formulaire partagés (labels, inputs, sélecteurs, tags, certifications, RGPD). */
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Check, Info } from "lucide-react";
 import {
-  CERTS_OPTIONS, INCOTERM_INFO, INCOTERM_STRATEGIES, INCOTERMS_CHOIX,
+  CERTS_OPTIONS, composeMoq, composePackaging, EMBALLAGE_PLURIEL, EMBALLAGES,
+  INCOTERM_INFO, INCOTERM_STRATEGIES, INCOTERMS_CHOIX, MESURES,
 } from "@/lib/constants";
 
 export function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
@@ -90,6 +91,104 @@ export function FormSelect({ label, required, children, ...props }: { label: str
       <select {...props} required={required} className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors appearance-none">
         {children}
       </select>
+    </div>
+  );
+}
+
+/** Reconstruit les champs structurés à partir d'un libellé de conditionnement. */
+function parsePackaging(s: string): { type: string; size: string; unit: string } {
+  const t = (s || "").trim();
+  if (!t) return { type: "Sac", size: "", unit: "kg" };
+  if (/^vrac$/i.test(t)) return { type: "Vrac", size: "", unit: "kg" };
+  const m = /^(.+?)\s+de\s+([\d.,]+)\s*(kg|l)\b/i.exec(t);
+  if (m) {
+    const type = EMBALLAGES.find(e => e.toLowerCase() === m[1].toLowerCase()) || "Sac";
+    return { type, size: m[2], unit: m[3].toLowerCase() === "l" ? "L" : "kg" };
+  }
+  const m2 = /^([\d.,]+)\s*(kg|l)\b/i.exec(t); // ancien format libre « 25 kg »
+  if (m2) return { type: "Sac", size: m2[1], unit: m2[2].toLowerCase() === "l" ? "L" : "kg" };
+  return { type: "Sac", size: "", unit: "kg" };
+}
+
+/** Reconstruit valeur + unité à partir d'un libellé de MOQ (« 500 kg (20 sacs) »). */
+function parseMoq(s: string): { value: string; unit: string } {
+  const t = (s || "").trim();
+  const m = /^([\d.,\s]+?)\s*(kg|tonnes?|l)\b/i.exec(t);
+  if (m) {
+    const u = m[2].toLowerCase();
+    const unit = u.startsWith("t") ? "tonnes" : u === "l" ? "L" : "kg";
+    return { value: m[1].replace(/\s/g, ""), unit };
+  }
+  return { value: "", unit: "kg" };
+}
+
+/** Saisie structurée du Conditionnement (format) et de la MOQ, avec calcul auto de
+ *  l'équivalent (20 sacs ⇄ 500 kg). Rapporte les libellés composés vers le parent.
+ *  Partagé entre la proposition fournisseur et l'ajout produit côté admin. */
+export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
+  packaging: string; moq: string;
+  onPackaging: (v: string) => void; onMoq: (v: string) => void;
+}) {
+  const p0 = parsePackaging(packaging);
+  const m0 = parseMoq(moq);
+  const [packType, setPackType] = useState(p0.type);
+  const [packSize, setPackSize] = useState(p0.size);
+  const [packUnit, setPackUnit] = useState(p0.unit);
+  const [moqValue, setMoqValue] = useState(m0.value);
+  const [moqUnit, setMoqUnit] = useState(m0.unit);
+
+  const isVrac = packType === "Vrac";
+  const packPlural = EMBALLAGE_PLURIEL[packType] || packType.toLowerCase();
+  const moqUnits = ["kg", "tonnes", "L", ...(!isVrac ? [packPlural] : [])];
+  const moqIsColis = moqUnit === packPlural && !isVrac;
+  const packagingText = composePackaging(packType, packSize, packUnit);
+  const moqText = composeMoq(moqValue, moqIsColis ? "colis" : "base", moqUnit, packType, packSize, packUnit);
+
+  // Remonte les libellés composés — mais pas au montage, pour ne pas écraser
+  // une valeur existante tant que l'utilisateur n'a rien modifié.
+  const firstPack = useRef(true);
+  const firstMoq = useRef(true);
+  useEffect(() => {
+    if (firstPack.current) { firstPack.current = false; return; }
+    onPackaging(packagingText);
+  }, [packagingText]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (firstMoq.current) { firstMoq.current = false; return; }
+    onMoq(moqText);
+  }, [moqText]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const selCls = "border border-[rgba(13,34,101,0.18)] bg-white px-3 py-2.5 text-sm focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer";
+  const inCls = "border border-[rgba(13,34,101,0.18)] bg-white px-3 py-2.5 text-sm focus:outline-none focus:border-[#0d2265]";
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm text-[#0a0a0f] mb-1.5">Conditionnement (format de vente)</label>
+        <div className="grid grid-cols-3 gap-2">
+          <select value={packType} onChange={e => setPackType(e.target.value)} className={selCls}>
+            {EMBALLAGES.map(t => <option key={t}>{t}</option>)}
+          </select>
+          {!isVrac && <>
+            <input type="text" inputMode="decimal" placeholder="25" value={packSize} onChange={e => setPackSize(e.target.value)} className={inCls} />
+            <select value={packUnit} onChange={e => setPackUnit(e.target.value)} className={selCls}>
+              {MESURES.map(u => <option key={u}>{u}</option>)}
+            </select>
+          </>}
+        </div>
+        {packagingText && <p className="text-xs text-[#2E6B4F] mt-1.5">→ {packagingText}</p>}
+      </div>
+      <div>
+        <label className="block text-sm text-[#0a0a0f] mb-1.5">MOQ — quantité minimum de commande</label>
+        <div className="grid grid-cols-2 gap-2">
+          <input type="text" inputMode="decimal" placeholder="500" value={moqValue} onChange={e => setMoqValue(e.target.value)} className={inCls} />
+          <select value={moqUnit} onChange={e => setMoqUnit(e.target.value)} className={selCls}>
+            {moqUnits.map(u => <option key={u}>{u}</option>)}
+          </select>
+        </div>
+        {moqText
+          ? <p className="text-xs text-[#2E6B4F] mt-1.5">→ MOQ : {moqText}</p>
+          : <p className="text-[11px] text-[#64697d] mt-1.5">Choisissez « {packPlural} » pour saisir la MOQ en nombre de colis — l'équivalent en {packUnit} est calculé.</p>}
+      </div>
     </div>
   );
 }

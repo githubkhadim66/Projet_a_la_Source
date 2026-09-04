@@ -134,7 +134,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
                 <span className="font-semibold text-sm text-[#0a0a0f]">{p.name}</span>
                 {p.category && <span className="text-[10px] text-[#64697d] bg-[#f0f2f7] px-1.5 py-0.5">{p.category}</span>}
               </div>
-              <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.moq ? ` · ${p.moq}` : ""}</p>
+              <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.packaging ? ` · ${p.packaging}` : ""}{p.moq ? ` · MOQ ${p.moq}` : ""}</p>
             </div>
             <button onClick={() => setMembership(p, false)}
               className="shrink-0 border border-[rgba(13,34,101,0.15)] text-[#64697d] text-xs px-3 py-1.5 cursor-pointer hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors">
@@ -162,7 +162,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
             </div>
             <div className="flex-1 min-w-0">
               <span className="font-semibold text-sm text-[#0a0a0f]">{p.name}</span>
-              <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.moq ? ` · ${p.moq}` : ""} · {p.supplier_name}</p>
+              <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.packaging ? ` · ${p.packaging}` : ""}{p.moq ? ` · MOQ ${p.moq}` : ""} · {p.supplier_name}</p>
             </div>
             <button onClick={() => setMembership(p, true)}
               className="shrink-0 flex items-center gap-1.5 bg-[#0d2265] text-white text-xs font-semibold px-3 py-1.5 cursor-pointer hover:bg-[#091a52] transition-colors">

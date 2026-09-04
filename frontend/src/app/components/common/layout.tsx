@@ -3,10 +3,12 @@
 import type { Nav, Screen } from "@/lib/routes";
 import { goBack } from "@/lib/nav";
 
-export function ScreenShell({ children, nav, title, back = "landing" }: { children: React.ReactNode; nav: Nav; title?: string; back?: Screen }) {
-  // Retour métier explicite (ex. « supplier-products ») → écran ciblé.
+export function ScreenShell({ children, nav, title, back = "landing", directBack = false }: { children: React.ReactNode; nav: Nav; title?: string; back?: Screen; directBack?: boolean }) {
+  // Retour métier explicite (ex. « supplier-products ») ou `directBack` → écran ciblé.
   // Retour générique (accueil par défaut) → page précédente réelle via l'historique.
-  const onBack = () => (back === "landing" ? goBack(nav, "landing") : nav(back));
+  // `directBack` est utilisé pour les écrans d'authentification, où l'historique
+  // contient des pages protégées après une connexion/déconnexion (évite la boucle).
+  const onBack = () => (!directBack && back === "landing" ? goBack(nav, "landing") : nav(back));
   return (
     <div className="min-h-screen bg-[#f4f5f9] font-['Inter',sans-serif]">
       <div className="bg-[#0d2265] px-6 py-4 flex items-center gap-4">

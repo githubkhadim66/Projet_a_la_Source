@@ -114,14 +114,14 @@ def seed() -> None:
                     if not existing.image:
                         existing.origin = existing.origin or origin
                         existing.category = existing.category or category
-                        existing.moq = existing.moq or moq
+                        existing.packaging = existing.packaging or moq
                         existing.image = image
                         existing.featured = featured
                     continue
                 db.add(Product(
                     supplier_id=suppliers_by_email[supplier_email].id,
                     ref=ref, name=name, origin=origin, category=category,
-                    moq=moq, image=image, visible=visible, featured=featured,
+                    packaging=moq, moq="", image=image, visible=visible, featured=featured,
                     stock_kg=stock, status=stock_status, delay=delay,
                     updated_at=now - timedelta(days=days_ago),
                 ))

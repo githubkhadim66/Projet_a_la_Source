@@ -82,6 +82,7 @@ class ProductOut(BaseModel):
     name: str
     category: str | None
     origin: str | None
+    packaging: str = ""
     moq: str
     image: str
     description: str
@@ -116,6 +117,7 @@ class PublicProductOut(BaseModel):
     name: str
     category: str | None
     origin: str | None
+    packaging: str = ""
     moq: str
     image: str
     description: str
@@ -129,6 +131,7 @@ class ProductCreate(BaseModel):
     name: str = Field(min_length=1, max_length=255)
     category: str | None = None
     origin: str | None = None
+    packaging: str = ""
     moq: str = ""
     image: str = ""
     description: str = ""
@@ -148,6 +151,7 @@ class ProductAdminUpdate(BaseModel):
     name: str | None = None
     category: str | None = None
     origin: str | None = None
+    packaging: str | None = None
     moq: str | None = None
     image: str | None = None
     description: str | None = None
@@ -183,6 +187,7 @@ class ProposalCreate(BaseModel):
     benefits: str = ""
     origin: str = ""
     category: str = ""
+    packaging: str = ""
     moq: str = ""
     image: str = ""
     volumes: str | None = None
@@ -202,6 +207,7 @@ class ProposalOut(BaseModel):
     benefits: str
     origin: str
     category: str
+    packaging: str = ""
     moq: str
     image: str
     volumes: str | None

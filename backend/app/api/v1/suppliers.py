@@ -134,6 +134,7 @@ def propose_product(
         benefits=data.benefits,
         origin=data.origin,
         category=data.category,
+        packaging=data.packaging,
         moq=data.moq,
         image=data.image,
         volumes=data.volumes,

@@ -207,8 +207,12 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                       {[
                         ["Catégorie", viewProposal.category],
                         ["Origine", viewProposal.origin],
-                        ["Conditionnement", viewProposal.moq],
+                        ["Conditionnement", viewProposal.packaging],
+                        ["MOQ", viewProposal.moq],
                         ["Volumes", viewProposal.volumes],
+                        ["Prix au kilo", viewProposal.price_per_kg],
+                        ["Prix en vrac", viewProposal.bulk_price],
+                        ["Période de récolte", viewProposal.harvest_period],
                       ].filter(([, v]) => v).map(([label, value]) => (
                         <div key={label}>
                           <p className="text-[10px] font-bold text-[#64697d] uppercase tracking-widest">{label}</p>

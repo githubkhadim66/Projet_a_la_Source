@@ -78,6 +78,7 @@ export interface ApiPublicProduct {
   name: string;
   category: string | null;
   origin: string | null;
+  packaging: string;
   moq: string;
   image: string;
   description: string;
@@ -92,6 +93,7 @@ export interface ApiProduct {
   name: string;
   category: string | null;
   origin: string | null;
+  packaging: string;
   moq: string;
   image: string;
   description: string;
@@ -138,9 +140,13 @@ export interface ApiProposal {
   benefits: string;
   origin: string;
   category: string;
+  packaging: string;
   moq: string;
   image: string;
   volumes: string | null;
+  price_per_kg: string;
+  bulk_price: string;
+  harvest_period: string;
   certifications: string[];
   status: "En attente" | "Approuvé" | "Refusé";
   created_at: string;
@@ -259,7 +265,7 @@ export const supplier = {
     }),
   proposeProduct: (data: {
     name: string; description: string; benefits?: string; origin?: string; category?: string;
-    moq?: string; image?: string; volumes?: string; certifications: string[];
+    packaging?: string; moq?: string; image?: string; volumes?: string; certifications: string[];
     price_per_kg?: string; bulk_price?: string; harvest_period?: string;
   }) =>
     request<ApiProposal>("/suppliers/me/proposals", {
@@ -333,7 +339,7 @@ export const admin = {
     request<ApiAdminProduct>(`/admin/products/${id}/restore`, { method: "POST", headers: adminHeaders() }),
   createProduct: (data: {
     supplier_id: number; ref: string; name: string; category?: string; origin?: string;
-    moq?: string; image?: string; description?: string; benefits?: string;
+    packaging?: string; moq?: string; image?: string; description?: string; benefits?: string;
     visible?: boolean; featured?: boolean; in_catalogue?: boolean;
     stock_kg?: number; status?: ApiStockStatus; delay?: string;
     price_per_kg?: string; bulk_price?: string; harvest_period?: string;
@@ -341,7 +347,7 @@ export const admin = {
     method: "POST", body: JSON.stringify(data), headers: adminHeaders(),
   }),
   updateProduct: (id: number, data: Partial<{
-    name: string; category: string; origin: string; moq: string; image: string;
+    name: string; category: string; origin: string; packaging: string; moq: string; image: string;
     description: string; benefits: string;
     visible: boolean; featured: boolean; in_catalogue: boolean;
     stock_kg: number; status: ApiStockStatus; delay: string;
