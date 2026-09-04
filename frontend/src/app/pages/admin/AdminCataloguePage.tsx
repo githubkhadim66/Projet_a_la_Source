@@ -22,6 +22,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   const [catTab, setCatTab] = useState<"produits"|"stocks"|"pdf"|"demandes"|"archives">("produits");
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("Toutes");
+  const [filterOrigin, setFilterOrigin] = useState("Tous");
   const [showForm, setShowForm] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [form, setForm] = useState<ProductFormValues>(emptyProduct());
@@ -93,6 +94,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
     name: form.name, origin: form.origin, category: form.category, moq: form.moq,
     image: form.image, description: form.description, benefits: form.benefits,
     stock_kg: Number(form.stock) || 0, status: form.status, delay: form.delay,
+    price_per_kg: form.price_per_kg, bulk_price: form.bulk_price, harvest_period: form.harvest_period,
   });
 
   const submitForm = async () => {
@@ -122,10 +124,14 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   const ruptures = products.filter(p => p.status === "Rupture").length;
   const staleCount = products.filter(p => p.stale).length;
 
+  // Pays présents dans le catalogue (valorisation du local — filtre interne)
+  const origins = Array.from(new Set(products.map(p => p.origin).filter(Boolean) as string[])).sort();
+
   const filteredProds = products.filter(p => {
     const q = search.toLowerCase();
     return (!q || p.name.toLowerCase().includes(q) || p.ref.toLowerCase().includes(q) || p.supplier_name.toLowerCase().includes(q))
-      && (filterCat === "Toutes" || p.category === filterCat);
+      && (filterCat === "Toutes" || p.category === filterCat)
+      && (filterOrigin === "Tous" || p.origin === filterOrigin);
   });
 
   const filteredStocks = products.filter(s => {
@@ -249,6 +255,14 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
               </button>
             ))}
           </div>
+        )}
+        {catTab === "produits" && origins.length > 0 && (
+          <select value={filterOrigin} onChange={e => setFilterOrigin(e.target.value)}
+            title="Filtrer par pays d'origine"
+            className="px-2.5 py-2 text-xs font-medium border bg-white text-[#0d2265] border-[rgba(13,34,101,0.15)] focus:outline-none focus:border-[#0d2265] cursor-pointer appearance-none">
+            <option value="Tous">Tous les pays</option>
+            {origins.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
         )}
       </div>
       )}

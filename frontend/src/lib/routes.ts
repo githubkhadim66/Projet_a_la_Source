@@ -2,6 +2,7 @@
 
 export type Screen =
   | "landing"
+  | "produit"
   | "catalogue" | "catalogue-confirm"
   | "devis" | "devis-confirm"
   | "sourcing" | "sourcing-confirm"
@@ -15,6 +16,7 @@ export type Nav = (s: Screen) => void;
 
 export const SCREEN_PATHS: Record<Screen, string> = {
   "landing": "/",
+  "produit": "/produit",
   "catalogue": "/catalogue",
   "catalogue-confirm": "/catalogue/confirmation",
   "devis": "/devis",

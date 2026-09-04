@@ -1,12 +1,16 @@
 /** Gabarits d'écran : coquille avec bandeau marine, carte de formulaire, confirmation. */
 
 import type { Nav, Screen } from "@/lib/routes";
+import { goBack } from "@/lib/nav";
 
 export function ScreenShell({ children, nav, title, back = "landing" }: { children: React.ReactNode; nav: Nav; title?: string; back?: Screen }) {
+  // Retour métier explicite (ex. « supplier-products ») → écran ciblé.
+  // Retour générique (accueil par défaut) → page précédente réelle via l'historique.
+  const onBack = () => (back === "landing" ? goBack(nav, "landing") : nav(back));
   return (
     <div className="min-h-screen bg-[#f4f5f9] font-['Inter',sans-serif]">
       <div className="bg-[#0d2265] px-6 py-4 flex items-center gap-4">
-        <button onClick={() => nav(back)} className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 cursor-pointer transition-colors">
+        <button onClick={onBack} className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 cursor-pointer transition-colors">
           ← Retour
         </button>
         {title && <span className="text-white/60 text-sm">·</span>}

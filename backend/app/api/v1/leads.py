@@ -76,12 +76,18 @@ def create_devis_lead(data: DevisLeadCreate, db: Session = Depends(get_db)):
         email=data.email,
         country=data.country,
         payload={
+            "sector": data.sector,
             "products": data.products,
             "volume": data.volume,
             "packaging": data.packaging,
             "incoterm": data.incoterm,
+            "forecast": data.forecast,
             "certifications": data.certifications,
             "transport_needed": data.transport_needed,
+            "delivery_delay": data.delivery_delay,
+            "delivery_continent": data.delivery_continent,
+            "delivery_place": data.delivery_place,
+            "delivery_contact": data.delivery_contact,
         },
     )
     db.add(lead)
@@ -107,13 +113,22 @@ def create_sourcing_lead(data: SourcingLeadCreate, db: Session = Depends(get_db)
         email=data.email,
         country=data.country,
         payload={
+            "sector": data.sector,
             "product": data.product,
             "description": data.description,
+            "origin": data.origin,
             "volume": data.volume,
             "budget": data.budget,
             "quality_level": data.quality_level,
+            "forecast": data.forecast,
+            "incoterm": data.incoterm,
+            "other_need": data.other_need,
             "certifications": data.certifications,
             "transport_needed": data.transport_needed,
+            "delivery_delay": data.delivery_delay,
+            "delivery_continent": data.delivery_continent,
+            "delivery_place": data.delivery_place,
+            "delivery_contact": data.delivery_contact,
         },
     )
     db.add(lead)

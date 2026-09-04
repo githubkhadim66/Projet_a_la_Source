@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Check, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiAdminProduct, ApiSupplier } from "@/lib/api";
-import { CAT_CATEGORIES } from "@/lib/constants";
+import { CAT_CATEGORIES, PAYS_ORIGINE } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { StockStatus } from "@/lib/leads";
 
@@ -12,24 +12,26 @@ export interface ProductFormValues {
   name: string; ref: string; origin: string; category: string; moq: string;
   image: string; description: string; benefits: string;
   supplier_id: string; delay: string; stock: string; status: StockStatus;
+  price_per_kg: string; bulk_price: string; harvest_period: string;
 }
 
 export const emptyProduct = (supplierId?: number): ProductFormValues => ({
   name: "", ref: "", origin: "", category: "Épicerie", moq: "",
   image: "", description: "", benefits: "",
   supplier_id: supplierId ? String(supplierId) : "", delay: "", stock: "0", status: "En stock",
+  price_per_kg: "", bulk_price: "", harvest_period: "",
 });
 
 export const productToForm = (p: ApiAdminProduct): ProductFormValues => ({
   name: p.name, ref: p.ref, origin: p.origin ?? "", category: p.category ?? "Épicerie",
   moq: p.moq, image: p.image, description: p.description, benefits: p.benefits,
   supplier_id: String(p.supplier_id), delay: p.delay, stock: String(p.stock_kg), status: p.status,
+  price_per_kg: p.price_per_kg ?? "", bulk_price: p.bulk_price ?? "", harvest_period: p.harvest_period ?? "",
 });
 
 const TEXT_FIELDS = [
   ["name", "Nom du produit *", "Fonio"],
   ["ref", "Référence", "ALS-XX-000"],
-  ["origin", "Origine", "Afrique de l'Ouest"],
   ["moq", "Conditionnement / MOQ", "25 kg"],
   ["delay", "Délai indicatif", "2–3 semaines"],
 ] as const;
@@ -110,6 +112,14 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
                 {CAT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
+            <div>
+              <label className="block text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">Origine (pays)</label>
+              <select value={values.origin} onChange={e => set("origin", e.target.value)}
+                className="w-full border border-[rgba(13,34,101,0.18)] px-3 py-2 text-sm appearance-none bg-white focus:outline-none focus:border-[#0d2265]">
+                <option value="">Sélectionner…</option>
+                {PAYS_ORIGINE.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
             {!isEdit && (
               <div>
                 <label className="block text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">Fournisseur *</label>
@@ -146,6 +156,24 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
               <textarea rows={4} value={values.benefits} onChange={e => set("benefits", e.target.value)}
                 placeholder="Apports nutritionnels, atouts pour l'acheteur…"
                 className="w-full border border-[rgba(196,97,58,0.3)] px-3 py-2 text-sm bg-[#fffaf7] focus:outline-none focus:border-[#C4613A] resize-none" />
+            </div>
+          </div>
+
+          {/* Informations commerciales internes — jamais publiées (« Prix sur devis ») */}
+          <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-3 mt-3">
+            <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-2">Prix &amp; récolte — internes</p>
+            <div className="grid sm:grid-cols-3 gap-3">
+              {([
+                ["price_per_kg", "Prix au kilo", "1 200 FCFA/kg"],
+                ["bulk_price", "Prix en vrac", "950 FCFA/kg dès 1 t"],
+                ["harvest_period", "Période de récolte", "novembre à février"],
+              ] as const).map(([key, label, ph]) => (
+                <div key={key}>
+                  <label className="block text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">{label}</label>
+                  <input value={values[key]} onChange={e => set(key, e.target.value)} placeholder={ph}
+                    className="w-full border border-[rgba(13,34,101,0.18)] px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#0d2265]" />
+                </div>
+              ))}
             </div>
           </div>
         </div>

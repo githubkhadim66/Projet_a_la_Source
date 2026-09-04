@@ -2,6 +2,12 @@
 
 Sourcing & export de produits d'origine africaine. Landing page bilingue de génération de leads, catalogue PDF gated, espace fournisseurs étanche et back-office admin — conformément au **CDC MVP v1.0** et au document **Parcours utilisateurs v1.0**.
 
+## Environnement en ligne
+
+| Environnement | URL | Détails |
+|---|---|---|
+| VPS Contabo (test partagé) | http://158.220.87.172 | Pas de nom de domaine, pas de HTTPS. Déployé via Docker Compose (`docker-compose.server.yml`) — procédure complète dans [deploy/DEPLOIEMENT-SERVEUR.md](deploy/DEPLOIEMENT-SERVEUR.md). Mise à jour : `git pull && docker compose -f docker-compose.server.yml --env-file .env.server up -d --build`. |
+
 ## Architecture
 
 ```

@@ -1,0 +1,176 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   Animations de la landing — sobres, fluides, respectueuses de la charte.
+   Philosophie : le mouvement sert la lecture (révéler, guider le regard,
+   inviter au clic) ; jamais le spectacle. Tout se désactive si l'utilisateur
+   a demandé « réduire les animations ».
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* Courbe d'accélération maison : départ franc, arrivée douce. */
+:root { --als-ease: cubic-bezier(0.22, 0.8, 0.3, 1); }
+
+/* ── 1. Révélation au défilement ──────────────────────────────────────────── */
+/* État initial : légèrement plus bas et transparent. */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition:
+    opacity 0.7s var(--als-ease),
+    transform 0.7s var(--als-ease);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Variante latérale (pour colonnes gauche/droite). */
+.reveal-left  { transform: translateX(-28px); }
+.reveal-right { transform: translateX(28px); }
+.reveal-left.is-visible,
+.reveal-right.is-visible { transform: none; }
+
+/* ── 2. Entrée du hero au chargement ──────────────────────────────────────── */
+@keyframes als-hero-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: none; }
+}
+.als-hero-in {
+  opacity: 0;
+  animation: als-hero-in 0.85s var(--als-ease) forwards;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+/* ── 3. Micro-interaction : élévation au survol (cartes cliquables) ────────── */
+.als-lift {
+  transition: transform 0.28s var(--als-ease), box-shadow 0.28s var(--als-ease);
+}
+.als-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -22px rgba(13, 34, 101, 0.45);
+}
+
+/* ── 4. CTA principal : invitation au clic ────────────────────────────────── */
+/* a) léger soulèvement + ombre chaude au survol */
+.als-cta {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s var(--als-ease), box-shadow 0.25s var(--als-ease);
+}
+.als-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -12px rgba(196, 97, 58, 0.6);
+}
+.als-cta:active { transform: translateY(0); }
+
+/* b) reflet qui balaie le bouton au survol — discret, une seule passe */
+.als-cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -60%;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent,
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  transform: skewX(-18deg);
+  transition: left 0.6s var(--als-ease);
+  pointer-events: none;
+}
+.als-cta:hover::after { left: 130%; }
+
+/* ── 5. Ligne accent qui se dessine en bas des cartes ─────────────────────── */
+/* a) au survol (cartes cliquables — services) */
+.als-underline { position: relative; }
+.als-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: #C4613A;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s var(--als-ease);
+}
+.als-underline:hover::after,
+.group:hover .als-underline::after { transform: scaleX(1); }
+
+/* b) à l'apparition (barre des chiffres clés) — se dessine quand la section
+      entre à l'écran, en même temps que le comptage. */
+.als-underline-draw::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 100%;
+  background: #C4613A;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.7s var(--als-ease);
+  transition-delay: var(--draw-delay, 0ms);
+}
+.reveal.is-visible .als-underline-draw::after { transform: scaleX(1); }
+
+/* ── 5bis. Cascade : les enfants d'une section révélée entrent en séquence ─── */
+/* Piloté par le <Reveal> de la section — aucun observer supplémentaire.        */
+.stagger-item {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s var(--als-ease),
+    transform 0.6s var(--als-ease);
+  transition-delay: var(--i-delay, 0ms);
+}
+.reveal.is-visible .stagger-item { opacity: 1; transform: none; }
+
+/* Variantes latérales pour « faire converger » deux blocs. */
+.stagger-item.from-left  { transform: translateX(-26px); }
+.stagger-item.from-right { transform: translateX(26px); }
+.reveal.is-visible .stagger-item.from-left,
+.reveal.is-visible .stagger-item.from-right { transform: none; }
+
+/* ── 5ter. Ouverture douce d'un panneau (réponse FAQ, panneau d'onglet) ───── */
+@keyframes als-expand {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.als-expand { animation: als-expand 0.35s var(--als-ease); }
+
+/* ── 5quater. Ken-burns : respiration lente d'une image de fond ───────────── */
+@keyframes als-kenburns {
+  from { transform: scale(1.06); }
+  to   { transform: scale(1); }
+}
+.als-kenburns { animation: als-kenburns 14s ease-out forwards; }
+
+/* ── 6. Flèche qui avance au survol (liens « → ») ─────────────────────────── */
+.als-arrow { transition: transform 0.25s var(--als-ease); }
+.group:hover .als-arrow,
+.als-arrow-parent:hover .als-arrow { transform: translateX(4px); }
+
+/* ── Respect de la préférence système ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .reveal-right {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .als-hero-in { animation: none !important; opacity: 1 !important; }
+  .als-lift:hover,
+  .als-cta:hover { transform: none !important; }
+  .als-cta::after { display: none !important; }
+  .als-underline::after,
+  .als-underline-draw::after { transform: scaleX(1) !important; transition: none !important; }
+  .stagger-item { opacity: 1 !important; transform: none !important; transition: none !important; }
+  .als-expand { animation: none !important; }
+  .als-kenburns { animation: none !important; }
+}

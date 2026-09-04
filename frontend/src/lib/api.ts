@@ -103,6 +103,9 @@ export interface ApiProduct {
   stock_kg: number;
   status: ApiStockStatus;
   delay: string;
+  price_per_kg: string;
+  bulk_price: string;
+  harvest_period: string;
   updated_at: string;
 }
 
@@ -201,14 +204,19 @@ export const leads = {
 
   devis: (p: {
     company: string; contact: string; email: string; country: string; products: string[];
-    volume?: string; packaging?: string; incoterm?: string; certifications: string[];
-    transport_needed: boolean; language?: "fr" | "en";
+    sector?: string; volume?: string; packaging?: string; incoterm?: string; forecast?: string;
+    certifications: string[]; transport_needed: boolean;
+    delivery_delay?: string; delivery_continent?: string; delivery_place?: string; delivery_contact?: string;
+    language?: "fr" | "en";
   }) => request<{ id: number }>("/leads/devis", { method: "POST", body: JSON.stringify(p) }),
 
   sourcing: (p: {
     company: string; contact: string; email: string; country: string; product: string;
-    description: string; volume?: string; budget?: string; quality_level?: string;
-    certifications: string[]; transport_needed: boolean; language?: "fr" | "en";
+    description: string; sector?: string; origin?: string; volume?: string; budget?: string;
+    quality_level?: string; forecast?: string; incoterm?: string; other_need?: string;
+    certifications: string[]; transport_needed: boolean;
+    delivery_delay?: string; delivery_continent?: string; delivery_place?: string; delivery_contact?: string;
+    language?: "fr" | "en";
   }) => request<{ id: number }>("/leads/sourcing", { method: "POST", body: JSON.stringify(p) }),
 
   candidature: (p: {
@@ -252,6 +260,7 @@ export const supplier = {
   proposeProduct: (data: {
     name: string; description: string; benefits?: string; origin?: string; category?: string;
     moq?: string; image?: string; volumes?: string; certifications: string[];
+    price_per_kg?: string; bulk_price?: string; harvest_period?: string;
   }) =>
     request<ApiProposal>("/suppliers/me/proposals", {
       method: "POST", body: JSON.stringify(data), headers: supplierHeaders(),
@@ -327,6 +336,7 @@ export const admin = {
     moq?: string; image?: string; description?: string; benefits?: string;
     visible?: boolean; featured?: boolean; in_catalogue?: boolean;
     stock_kg?: number; status?: ApiStockStatus; delay?: string;
+    price_per_kg?: string; bulk_price?: string; harvest_period?: string;
   }) => request<ApiAdminProduct>("/admin/products", {
     method: "POST", body: JSON.stringify(data), headers: adminHeaders(),
   }),
@@ -335,6 +345,7 @@ export const admin = {
     description: string; benefits: string;
     visible: boolean; featured: boolean; in_catalogue: boolean;
     stock_kg: number; status: ApiStockStatus; delay: string;
+    price_per_kg: string; bulk_price: string; harvest_period: string;
   }>) => request<ApiAdminProduct>(`/admin/products/${id}`, {
     method: "PATCH", body: JSON.stringify(data), headers: adminHeaders(),
   }),

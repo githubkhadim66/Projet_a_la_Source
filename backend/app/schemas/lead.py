@@ -31,12 +31,18 @@ class DevisLeadCreate(_AntiSpam):
     contact: str = Field(min_length=1, max_length=255)
     email: EmailStr
     country: str = Field(min_length=1, max_length=100)
+    sector: str | None = None
     products: list[str] = Field(min_length=1)
     volume: str | None = None
     packaging: str | None = None
     incoterm: str | None = None
+    forecast: str | None = None
     certifications: list[str] = []
     transport_needed: bool = False
+    delivery_delay: str | None = None
+    delivery_continent: str | None = None
+    delivery_place: str | None = None
+    delivery_contact: str | None = None
     language: Language = "fr"
 
 
@@ -45,13 +51,22 @@ class SourcingLeadCreate(_AntiSpam):
     contact: str = Field(min_length=1, max_length=255)
     email: EmailStr
     country: str = Field(min_length=1, max_length=100)
+    sector: str | None = None
     product: str = Field(min_length=1, max_length=255)
     description: str = Field(min_length=1)
+    origin: str | None = None
     volume: str | None = None
     budget: str | None = None
     quality_level: str | None = None
+    forecast: str | None = None
+    incoterm: str | None = None
+    other_need: str | None = None
     certifications: list[str] = []
     transport_needed: bool = False
+    delivery_delay: str | None = None
+    delivery_continent: str | None = None
+    delivery_place: str | None = None
+    delivery_contact: str | None = None
     language: Language = "fr"
 
 

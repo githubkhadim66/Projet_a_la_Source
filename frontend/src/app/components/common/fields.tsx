@@ -1,8 +1,10 @@
 /** Champs de formulaire partagés (labels, inputs, sélecteurs, tags, certifications, RGPD). */
 
 import { useState } from "react";
-import { AlertCircle, Check } from "lucide-react";
-import { CERTS_OPTIONS } from "@/lib/constants";
+import { AlertCircle, Check, Info } from "lucide-react";
+import {
+  CERTS_OPTIONS, INCOTERM_INFO, INCOTERM_STRATEGIES, INCOTERMS_CHOIX,
+} from "@/lib/constants";
 
 export function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -92,22 +94,132 @@ export function FormSelect({ label, required, children, ...props }: { label: str
   );
 }
 
-export function TagInput({ tags, setTags, placeholder }: { tags: string[]; setTags: (t: string[]) => void; placeholder?: string }) {
-  const [input, setInput] = useState("");
-  const add = (v: string) => { const s = v.trim(); if (s && !tags.includes(s)) setTags([...tags, s]); setInput(""); };
+/** Sélecteur d'incoterm avec explication en langage clair + panneau « comprendre ». */
+export function IncotermField({ value, onChange, label = "Incoterm souhaité" }: {
+  value: string; onChange: (v: string) => void; label?: string;
+}) {
+  const [open, setOpen] = useState(false);
   return (
-    <div className="flex flex-wrap gap-2 items-center border border-[rgba(13,34,101,0.15)] px-3 py-2 min-h-[42px] focus-within:border-[#0d2265] transition-colors">
-      {tags.map(t => (
-        <span key={t} className="flex items-center gap-1 bg-[#eef1f8] text-[#0d2265] text-xs px-2 py-0.5">
-          {t}
-          <button type="button" onClick={() => setTags(tags.filter(x => x !== t))} className="text-[#64697d] hover:text-[#0d2265] cursor-pointer">&times;</button>
-        </span>
-      ))}
-      <input value={input} onChange={e => setInput(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(input); } }}
-        onBlur={() => add(input)}
-        placeholder={placeholder || "+ ajouter…"}
-        className="text-sm text-[#0a0a0f] outline-none flex-1 min-w-[90px] placeholder:text-[#9ca3af]" />
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <label className="text-sm text-[#0a0a0f]">{label}</label>
+        <button type="button" onClick={() => setOpen(o => !o)}
+          className="text-xs font-semibold text-[#0d2265] hover:text-[#C4613A] cursor-pointer inline-flex items-center gap-1 transition-colors">
+          <Info className="w-3.5 h-3.5" /> Comprendre les incoterms
+        </button>
+      </div>
+      <select value={value} onChange={e => onChange(e.target.value)}
+        className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors appearance-none">
+        {INCOTERMS_CHOIX.map(i => <option key={i}>{i}</option>)}
+      </select>
+      {INCOTERM_INFO[value] && (
+        <p className="text-xs text-[#64697d] mt-1.5 leading-relaxed">{INCOTERM_INFO[value]}</p>
+      )}
+      {open && (
+        <div className="mt-2 bg-[#f4f5f9] border border-[rgba(13,34,101,0.1)] p-3 space-y-2.5">
+          <p className="text-[11px] font-bold text-[#C4613A] uppercase tracking-wide">Choisir selon votre confort</p>
+          {INCOTERM_STRATEGIES.map(s => (
+            <div key={s.title}>
+              <p className="text-xs font-semibold text-[#0d2265]">{s.emoji} {s.title}</p>
+              <p className="text-xs text-[#64697d] leading-relaxed">{s.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Bascule à 2+ choix mutuellement exclusifs (ex. Afrique/Europe, Oui/Non). */
+export function ChoiceToggle({ label, options, value, onChange }: {
+  label: string; options: string[]; value: string; onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="block text-sm text-[#0a0a0f] mb-1.5">{label}</label>
+      <div className="flex flex-wrap gap-2">
+        {options.map(o => (
+          <button key={o} type="button" onClick={() => onChange(o)}
+            className={`px-4 py-2 text-xs font-semibold border cursor-pointer transition-colors ${value === o ? "border-[#0d2265] bg-[#0d2265] text-white" : "border-[rgba(13,34,101,0.2)] text-[#0d2265] hover:border-[#0d2265]"}`}>
+            {o}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function TagInput({ tags, setTags, placeholder, suggestions = [] }: {
+  tags: string[]; setTags: (t: string[]) => void; placeholder?: string; suggestions?: string[];
+}) {
+  const [input, setInput] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+
+  const add = (v: string) => {
+    const s = v.trim();
+    if (s && !tags.includes(s)) setTags([...tags, s]);
+    setInput(""); setOpen(false); setActive(-1);
+  };
+
+  // Suggestions du catalogue correspondant à la saisie (évite les fautes d'orthographe).
+  // On matche sur le début d'un mot du libellé (ex. « gin » → « Gingembre »), pas
+  // n'importe quelle sous-chaîne (« gin » ne doit pas matcher « ori-gin-es »).
+  const q = input.trim().toLowerCase();
+  const matches = q
+    ? suggestions.filter(s => {
+        if (tags.includes(s)) return false;
+        const l = s.toLowerCase();
+        return l.startsWith(q) || l.split(/[\s(«»,·/-]+/).some(w => w.startsWith(q));
+      }).slice(0, 8)
+    : [];
+  const showList = open && matches.length > 0;
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (showList && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      e.preventDefault();
+      const n = matches.length;
+      setActive(a => e.key === "ArrowDown" ? (a + 1) % n : (a - 1 + n) % n);
+      return;
+    }
+    if (e.key === "Enter" || e.key === ",") {
+      e.preventDefault();
+      add(showList && active >= 0 ? matches[active] : input);
+      return;
+    }
+    if (e.key === "Escape") { setOpen(false); setActive(-1); }
+  };
+
+  return (
+    <div className="relative">
+      <div className="flex flex-wrap gap-2 items-center border border-[rgba(13,34,101,0.15)] px-3 py-2 min-h-[42px] focus-within:border-[#0d2265] transition-colors">
+        {tags.map(t => (
+          <span key={t} className="flex items-center gap-1 bg-[#eef1f8] text-[#0d2265] text-xs px-2 py-0.5">
+            {t}
+            <button type="button" onClick={() => setTags(tags.filter(x => x !== t))} className="text-[#64697d] hover:text-[#0d2265] cursor-pointer">&times;</button>
+          </span>
+        ))}
+        <input value={input}
+          onChange={e => { setInput(e.target.value); setOpen(true); setActive(-1); }}
+          onKeyDown={onKeyDown}
+          onFocus={() => setOpen(true)}
+          onBlur={() => { add(input); }}
+          placeholder={placeholder || "+ ajouter…"}
+          className="text-sm text-[#0a0a0f] outline-none flex-1 min-w-[90px] placeholder:text-[#9ca3af]" />
+      </div>
+      {showList && (
+        <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-[rgba(13,34,101,0.15)] shadow-[0_10px_30px_-12px_rgba(13,34,101,0.35)] max-h-56 overflow-auto">
+          {matches.map((m, i) => (
+            <li key={m}>
+              {/* onMouseDown + preventDefault : ajoute sans déclencher le blur de l'input */}
+              <button type="button" onMouseDown={e => { e.preventDefault(); add(m); }}
+                className={`w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors ${i === active ? "bg-[#f4f5f9] text-[#0d2265]" : "text-[#0a0a0f] hover:bg-[#f4f5f9]"}`}>
+                {m}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

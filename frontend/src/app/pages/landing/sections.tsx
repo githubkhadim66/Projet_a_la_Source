@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  ArrowRight, Calendar, Check, CheckCircle, ChevronDown, ChevronUp,
+  ArrowRight, Calendar, Check, CheckCircle, ChevronDown,
   Download, FileText, Package, Search, Shield, Truck,
 } from "lucide-react";
 import * as api from "@/lib/api";
@@ -10,6 +10,7 @@ import { CALENDLY_URL, IMG_HERO } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
 import { BtnAccent, BtnNavy, BtnOutlineWhite, BtnWhite } from "@/app/components/common/buttons";
+import { CountUp } from "@/app/components/common/CountUp";
 
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
@@ -17,30 +18,30 @@ export function Hero({ nav }: { nav: Nav }) {
   return (
     <section className="relative flex items-center overflow-hidden" style={{ minHeight: "clamp(420px,62vh,680px)" }}>
       <div className="absolute inset-0">
-        <img src={IMG_HERO} alt="Épices et produits du terroir africain" className="w-full h-full object-cover object-center" />
+        <img src={IMG_HERO} alt="Épices et produits du terroir africain" className="w-full h-full object-cover object-center als-kenburns" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#080f2e]/98 via-[#0d2265]/80 to-transparent" />
       </div>
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full" style={{ paddingTop: "clamp(3rem,8vh,5rem)", paddingBottom: "clamp(3rem,8vh,5rem)" }}>
         <div className="max-w-[620px]">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-6 h-[1.5px] bg-white/40" />
+          <div className="flex items-center gap-3 mb-6 als-hero-in" style={{ ["--hero-delay" as string]: "60ms" }}>
+            {/* <div className="w-6 h-[1.5px] bg-white/40" /> */}
             <p className="text-[10px] font-bold text-white/50 tracking-[0.22em] uppercase">Sourcing · Export · Afrique · Europe</p>
           </div>
           <h1
-            className="font-['Playfair_Display',Georgia,serif] font-bold text-white leading-[1.06] mb-5"
-            style={{ fontSize: "clamp(2.6rem,5vw,4rem)" }}
+            className="font-['Playfair_Display',Georgia,serif] font-bold text-white leading-[1.06] mb-5 als-hero-in"
+            style={{ fontSize: "clamp(2.6rem,5vw,4rem)", ["--hero-delay" as string]: "160ms" }}
           >
-            Matières premières et produits finis africains — de la source à votre entrepôt.
+            Matières premières et produits finis africains : de la source à votre entrepôt.
           </h1>
-          <p className="text-white/55 leading-relaxed mb-9" style={{ fontSize: "15px" }}>
+          <p className="text-white/55 leading-relaxed mb-9 als-hero-in" style={{ fontSize: "15px", ["--hero-delay" as string]: "280ms" }}>
             Un seul interlocuteur entre vos exigences et un réseau de fournisseurs audités.
           </p>
-          <div className="flex flex-wrap items-center gap-5">
-            <BtnAccent onClick={() => window.open(CALENDLY_URL, '_blank')}>
+          <div className="flex flex-wrap items-center gap-5 als-hero-in als-arrow-parent" style={{ ["--hero-delay" as string]: "400ms" }}>
+            <BtnAccent onClick={() => window.open(CALENDLY_URL, '_blank')} className="als-cta">
               Échanger avec un expert
             </BtnAccent>
-            <button onClick={() => nav("devis")} className="text-white/60 text-sm font-medium cursor-pointer hover:text-white transition-colors">
-              Demander une cotation →
+            <button onClick={() => nav("devis")} className="inline-flex items-center gap-1.5 text-white/60 text-sm font-medium cursor-pointer hover:text-white transition-colors">
+              Demander une cotation <span className="als-arrow">→</span>
             </button>
           </div>
         </div>
@@ -66,8 +67,12 @@ export function KeyFigures() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-[rgba(13,34,101,0.08)]">
           {stats.map((s, i) => (
-            <div key={i} className="py-8 px-5 lg:px-6 text-center">
-              <p className="font-black text-[#0d2265] leading-none tabular-nums" style={{ fontSize: "clamp(2.2rem,3vw,3rem)" }}>{s.n}</p>
+            <div key={i} className="relative py-8 px-5 lg:px-6 text-center stagger-item" style={{ ["--i-delay" as string]: `${i * 110}ms` }}>
+              <p className="font-black text-[#0d2265] leading-none tabular-nums" style={{ fontSize: "clamp(2.2rem,3vw,3rem)" }}>
+                <span className="als-underline-draw inline-block pb-1.5" style={{ ["--draw-delay" as string]: `${i * 120}ms` }}>
+                  <CountUp value={s.n} />
+                </span>
+              </p>
               <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-[0.16em] mt-2 leading-snug">{s.tag}</p>
             </div>
           ))}
@@ -112,7 +117,8 @@ export function ServicesSection({ nav }: { nav: Nav }) {
             <div
               key={i}
               onClick={p.action}
-              className="relative bg-white p-9 group cursor-pointer hover:bg-[#0d2265] transition-colors duration-300"
+              className="relative bg-white p-9 group cursor-pointer hover:bg-[#0d2265] transition-colors duration-300 als-underline stagger-item"
+              style={{ ["--i-delay" as string]: `${i * 130}ms` }}
             >
               <span className="absolute top-6 right-7 text-[10px] text-[#64697d]/20 group-hover:text-white/15 transition-colors duration-300 tabular-nums font-mono">
                 {p.num}
@@ -143,6 +149,12 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
   const toggle = (name: string) => {
     setBasket(basket.includes(name) ? basket.filter(n => n !== name) : [...basket, name]);
   };
+
+  // Ouvre la fiche produit (page dédiée) — la référence est passée via localStorage.
+  const openProduct = (refId: string) => {
+    try { localStorage.setItem("als-product-ref", refId); } catch { /* stockage indispo */ }
+    nav("produit");
+  };
   return (
     <section id="catalogue" className="py-16 bg-[#f4f5f9]">
       <div className="max-w-7xl mx-auto px-6">
@@ -150,28 +162,38 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
           <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f]">
             50+ références
           </h2>
-          <BtnAccent onClick={() => nav("catalogue")}>
-            Catalogue complet <ArrowRight className="w-4 h-4" />
+          <BtnAccent onClick={() => nav("catalogue")} className="als-cta als-arrow-parent">
+            Catalogue complet <ArrowRight className="w-4 h-4 als-arrow" />
           </BtnAccent>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[rgba(13,34,101,0.1)]">
-          {products.map((p) => {
+          {products.map((p, i) => {
             const inBasket = basket.includes(p.name);
             return (
-              <div key={p.ref} className="bg-white group">
-                <div className="aspect-[4/3] overflow-hidden bg-[#eef1f8]">
-                  <img
-                    src={productImg(p.image)}
-                    alt={p.name}
-                    className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
-                  />
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-[10px] font-bold text-[#C4613A] tracking-[0.13em] uppercase">{p.category}</p>
-                    <p className="text-[10px] text-[#64697d] uppercase tracking-wide">{p.origin}</p>
+              <div key={p.ref} className="bg-white group als-lift stagger-item relative z-0 hover:z-10" style={{ ["--i-delay" as string]: `${i * 90}ms` }}>
+                <button type="button" onClick={() => openProduct(p.ref)} className="block w-full text-left cursor-pointer">
+                  <div className="aspect-[4/3] overflow-hidden bg-[#eef1f8] relative">
+                    <img
+                      src={productImg(p.image)}
+                      alt={p.name}
+                      className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
+                    />
+                    <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a0a0f]/70 to-transparent text-white text-[11px] font-semibold px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      Voir la fiche <ArrowRight className="w-3 h-3" />
+                    </span>
                   </div>
-                  <h3 className="font-semibold text-[#0a0a0f] text-sm mb-3">{p.name}</h3>
+                  <div className="px-5 pt-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-bold text-[#C4613A] tracking-[0.13em] uppercase">{p.category}</p>
+                      {p.origin && (/sénégal|senegal/i.test(p.origin)
+                        ? <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#C4613A] bg-[#C4613A]/10 px-1.5 py-0.5 uppercase tracking-wide">★ {p.origin}</span>
+                        : <span className="text-[10px] text-[#64697d] uppercase tracking-wide">{p.origin}</span>
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-[#0a0a0f] text-sm mb-3 group-hover:text-[#0d2265] transition-colors">{p.name}</h3>
+                  </div>
+                </button>
+                <div className="px-5 pb-5">
                   <button
                     onClick={() => toggle(p.name)}
                     className={`w-full py-2 text-xs font-semibold transition-colors duration-300 cursor-pointer border flex items-center justify-center gap-1.5 ${
@@ -215,9 +237,9 @@ export function HowItWorks({ nav }: { nav: Nav }) {
           </div>
           <div className="flex-1 grid grid-cols-2 gap-px bg-[rgba(13,34,101,0.1)]">
             {steps.map((s, i) => (
-              <div key={i} className="bg-white p-7 hover:bg-[#f8f9fc] transition-colors duration-300">
-                <p className="text-[4rem] font-black text-[rgba(13,34,101,0.05)] leading-none mb-1">{s.n}</p>
-                <div className="text-[#0d2265] mb-2">{s.icon}</div>
+              <div key={i} className="bg-white p-7 hover:bg-[#f8f9fc] transition-colors duration-300 group stagger-item" style={{ ["--i-delay" as string]: `${i * 120}ms` }}>
+                <p className="text-[4rem] font-black text-[rgba(13,34,101,0.05)] group-hover:text-[rgba(196,97,58,0.12)] leading-none mb-1 transition-colors duration-300">{s.n}</p>
+                <div className="text-[#0d2265] mb-2 transition-transform duration-300 group-hover:-translate-y-0.5">{s.icon}</div>
                 <h3 className="text-sm font-semibold text-[#0a0a0f] leading-snug">{s.title}</h3>
               </div>
             ))}
@@ -263,14 +285,9 @@ export function QuoteSection({ nav }: { nav: Nav }) {
             <h2 className="font-['Playfair_Display',Georgia,serif] text-[2.6rem] font-bold text-white leading-[1.05]">
               Dites-nous ce qu&apos;il vous faut.
             </h2>
-            <div className="flex gap-8 mt-10">
-              {[{ n: "48h", l: "Réponse" }, { n: "0", l: "Engagement" }, { n: "1", l: "Interlocuteur" }].map(s => (
-                <div key={s.n}>
-                  <p className="text-xl font-bold text-white">{s.n}</p>
-                  <p className="text-[10px] text-white/35 mt-0.5 uppercase tracking-wider">{s.l}</p>
-                </div>
-              ))}
-            </div>
+            <p className="text-base text-white/70 leading-relaxed mt-10 max-w-md">
+              Une réponse sous 48 h, sans aucun engagement, avec un seul interlocuteur du début à la fin.
+            </p>
           </div>
           {/* Right */}
           <div className="py-16 pl-14 flex flex-col">
@@ -282,7 +299,7 @@ export function QuoteSection({ nav }: { nav: Nav }) {
                 </button>
               ))}
             </div>
-            <ul className="space-y-2.5 mb-8">
+            <ul key={tab} className="space-y-2.5 mb-8 als-expand">
               {p.bullets.map(b => (
                 <li key={b} className="flex items-center gap-3 text-sm text-white/60">
                   <div className="w-1 h-1 rounded-full bg-[#C4613A] shrink-0" />
@@ -290,8 +307,8 @@ export function QuoteSection({ nav }: { nav: Nav }) {
                 </li>
               ))}
             </ul>
-            <BtnWhite onClick={p.action}>
-              {p.icon} {p.cta} <ArrowRight className="w-4 h-4" />
+            <BtnWhite onClick={p.action} className="als-cta als-arrow-parent">
+              {p.icon} {p.cta} <ArrowRight className="w-4 h-4 als-arrow" />
             </BtnWhite>
           </div>
         </div>
@@ -330,23 +347,23 @@ export function Expertise({ nav: _nav }: { nav: Nav }) {
         </h2>
         {/* Pullquotes */}
         <div className="grid md:grid-cols-2 gap-6 mb-10">
-          <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A]">
+          <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A] stagger-item" style={{ ["--i-delay" as string]: "0ms" }}>
             <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
-              « De la parcelle jusqu&apos;au conteneur — nous connaissons les producteurs par leur nom. »
+              « De la parcelle jusqu&apos;au conteneur ; nous connaissons les producteurs par leur nom. »
             </p>
-            <p className="text-xs text-[#64697d]">Ousmane BA — cofondateur</p>
+            <p className="text-xs text-[#64697d]">Ousmane BA Cofondateur</p>
           </div>
-          <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A]">
+          <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A] stagger-item" style={{ ["--i-delay" as string]: "120ms" }}>
             <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
               « Un sourcing avec le meilleur rapport qualité prix afin de vous démarquer de la concurrence. »
             </p>
-            <p className="text-xs text-[#64697d]">Oumou Soumano — cofondatrice</p>
+            <p className="text-xs text-[#64697d]">Oumou Soumano Cofondatrice</p>
           </div>
         </div>
         {/* Founder cards */}
         <div className="grid lg:grid-cols-2 gap-6 mb-10">
           {founders.map((f, i) => (
-            <div key={i} className="border border-[rgba(13,34,101,0.12)] p-7">
+            <div key={i} className="border border-[rgba(13,34,101,0.12)] p-7 als-lift stagger-item" style={{ ["--i-delay" as string]: `${200 + i * 130}ms` }}>
               <div className="flex items-start gap-4 mb-4">
                 <div className="w-10 h-10 bg-[rgba(13,34,101,0.05)] flex items-center justify-center shrink-0">
                   <span className="text-xs font-bold text-[#64697d] tracking-wide">{f.initials}</span>
@@ -391,11 +408,11 @@ export function SupplierSection({ nav }: { nav: Nav }) {
           Vous produisez en Afrique ?<br />Accédez au marché européen.
         </h2>
         <div className="grid lg:grid-cols-2 gap-px bg-white/[0.06]">
-          <div className="bg-transparent border border-white/10 p-8 hover:bg-white/[0.04] transition-colors duration-300">
+          <div className="bg-transparent border border-white/10 p-8 hover:bg-white/[0.04] transition-colors duration-300 stagger-item from-left">
             <h3 className="font-bold text-white text-xl mb-6">Devenir fournisseur référencé</h3>
-            <BtnWhite onClick={() => nav("candidature")}>Candidater <ArrowRight className="w-4 h-4" /></BtnWhite>
+            <BtnWhite onClick={() => nav("candidature")} className="als-arrow-parent">Candidater <ArrowRight className="w-4 h-4 als-arrow" /></BtnWhite>
           </div>
-          <div className="bg-transparent border border-white/10 p-8 hover:bg-white/[0.04] transition-colors duration-300">
+          <div className="bg-transparent border border-white/10 p-8 hover:bg-white/[0.04] transition-colors duration-300 stagger-item from-right" style={{ ["--i-delay" as string]: "120ms" }}>
             <h3 className="font-bold text-white text-xl mb-6">Déjà référencé ?</h3>
             <BtnOutlineWhite onClick={() => nav("login")}>Espace fournisseurs <ArrowRight className="w-4 h-4" /></BtnOutlineWhite>
           </div>
@@ -424,6 +441,8 @@ export function SocialProof() {
   return (
     <section className="py-16 bg-[#f4f5f9]">
       <div className="max-w-7xl mx-auto px-6">
+        {/* Témoignages masqués : placeholders en attente des vrais (accord écrit requis).
+            Seule la barre d'engagements factuels reste affichée.
         <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f] mb-10">Ils nous font confiance.</h2>
         <div className="grid lg:grid-cols-3 gap-px bg-[rgba(13,34,101,0.1)] mb-px">
           {TESTIMONIALS.map((t, i) => (
@@ -437,9 +456,10 @@ export function SocialProof() {
             </div>
           ))}
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[rgba(13,34,101,0.1)] border-t border-[rgba(13,34,101,0.08)]">
+        */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[rgba(13,34,101,0.1)]">
           {ENGAGEMENTS.map((e, i) => (
-            <div key={i} className="bg-white p-8 flex items-start gap-3">
+            <div key={i} className="bg-white p-8 flex items-start gap-3 stagger-item" style={{ ["--i-delay" as string]: `${i * 110}ms` }}>
               <div className="w-5 h-5 bg-[#0d2265] flex items-center justify-center shrink-0 mt-0.5">
                 <Check className="w-3 h-3 text-white" />
               </div>
@@ -471,19 +491,18 @@ export function FAQSection() {
         <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f] mb-8 text-left">Questions fréquentes</h2>
         <div>
           {FAQS.map((f, i) => (
-            <div key={i} className="py-6 border-b border-[rgba(13,34,101,0.08)]">
+            <div key={i} className="py-6 border-b border-[rgba(13,34,101,0.08)] stagger-item" style={{ ["--i-delay" as string]: `${i * 70}ms` }}>
               <button onClick={() => setOpen(open === i ? null : i)}
                 className="w-full flex items-center justify-between text-left cursor-pointer group">
                 <span className={`text-[15px] pr-8 transition-colors duration-300 ${open === i ? "font-semibold text-[#0d2265]" : "font-medium text-[#0a0a0f] group-hover:text-[#0d2265]"}`}>
                   {f.q}
                 </span>
-                {open === i
-                  ? <ChevronUp className="w-4 h-4 text-[#0d2265] shrink-0" />
-                  : <ChevronDown className="w-4 h-4 text-[#64697d] shrink-0" />
-                }
+                <span className={`shrink-0 transition-transform duration-300 ${open === i ? "rotate-180 text-[#0d2265]" : "text-[#64697d]"}`}>
+                  <ChevronDown className="w-4 h-4" />
+                </span>
               </button>
               {open === i && (
-                <div className="mt-3">
+                <div className="mt-3 als-expand">
                   <p className="text-sm text-[#64697d] leading-loose">{f.a}</p>
                 </div>
               )}
@@ -507,20 +526,20 @@ export function FinalCTA({ nav }: { nav: Nav }) {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-16">
           <div>
             <h2
-              className="font-['Playfair_Display',Georgia,serif] font-bold text-white leading-[1.0]"
+              className="font-['Playfair_Display',Georgia,serif] font-bold text-white leading-[1.0] stagger-item"
               style={{ fontSize: "clamp(3rem,5vw,5rem)" }}
             >
               Votre prochain<br />approvisionnement<br />commence ici.
             </h2>
           </div>
           <div className="flex flex-col gap-3 shrink-0 min-w-[240px]">
-            <BtnAccent onClick={() => nav("catalogue")}>
+            <BtnAccent onClick={() => nav("catalogue")} className="als-cta stagger-item from-right" style={{ ["--i-delay" as string]: "120ms" }}>
               <Download className="w-4 h-4" /> Accéder au catalogue
             </BtnAccent>
-            <BtnOutlineWhite onClick={() => nav("devis")}>
+            <BtnOutlineWhite onClick={() => nav("devis")} className="als-cta stagger-item from-right" style={{ ["--i-delay" as string]: "200ms" }}>
               <FileText className="w-4 h-4" /> Demander un devis
             </BtnOutlineWhite>
-            <BtnOutlineWhite onClick={() => window.open(CALENDLY_URL, '_blank')}>
+            <BtnOutlineWhite onClick={() => window.open(CALENDLY_URL, '_blank')} className="stagger-item from-right" style={{ ["--i-delay" as string]: "280ms" }}>
               <Calendar className="w-4 h-4" /> Échanger avec l'experte
             </BtnOutlineWhite>
           </div>

@@ -43,6 +43,12 @@ class Product(Base):
     status: Mapped[StockStatus] = mapped_column(Enum(StockStatus), default=StockStatus.EN_STOCK)
     delay: Mapped[str] = mapped_column(String(100), default="")
 
+    # Informations commerciales INTERNES (jamais exposées au public : « Prix sur devis »).
+    # Saisies par le fournisseur / l'admin — prix du fournisseur vers À la Source.
+    price_per_kg: Mapped[str] = mapped_column(String(50), default="")
+    bulk_price: Mapped[str] = mapped_column(String(50), default="")
+    harvest_period: Mapped[str] = mapped_column(String(100), default="")
+
     # Archivage réversible : un produit archivé disparaît du site et du catalogue,
     # mais reste en base (restaurable) — la corbeille ne perd donc jamais un produit.
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -77,6 +83,10 @@ class ProductProposal(Base):
     moq: Mapped[str] = mapped_column(String(50), default="")
     image: Mapped[str] = mapped_column(String(500), default="")
     volumes: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Informations commerciales internes proposées par le fournisseur
+    price_per_kg: Mapped[str] = mapped_column(String(50), default="")
+    bulk_price: Mapped[str] = mapped_column(String(50), default="")
+    harvest_period: Mapped[str] = mapped_column(String(100), default="")
     certifications: Mapped[list] = mapped_column(JSON, default=list)
     status: Mapped[ProposalStatus] = mapped_column(Enum(ProposalStatus), default=ProposalStatus.EN_ATTENTE)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))

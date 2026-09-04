@@ -214,6 +214,40 @@ export function AdminLeads({ nav }: { nav: Nav }) {
                   {selected.product}
                 </div>
               )}
+              {(() => {
+                const p = (selected.payload ?? {}) as Record<string, unknown>;
+                const fmt = (v: unknown) => Array.isArray(v) ? v.join(", ") : String(v);
+                const has = (v: unknown) => v != null && v !== "" && !(Array.isArray(v) && v.length === 0);
+                const rows: [string, string][] = [];
+                const add = (label: string, v: unknown) => { if (has(v)) rows.push([label, fmt(v)]); };
+                add("Domaine d'activité", p.sector);
+                add("Provenance souhaitée", p.origin);
+                add("Volume / quantité", p.volume);
+                add("Besoin prévisionnel", p.forecast);
+                add("Conditionnement", p.packaging);
+                add("Incoterm", p.incoterm);
+                add("Niveau de qualité", p.quality_level);
+                add("Budget", p.budget);
+                add("Certifications", p.certifications);
+                add("Délai souhaité", p.delivery_delay);
+                if ("transport_needed" in p) add("Transport organisé par nous", p.transport_needed ? "Oui" : "Non");
+                add("Destination", p.delivery_continent);
+                add("Lieu de livraison", p.delivery_place);
+                add("Contact sur place", p.delivery_contact);
+                add("Autre besoin", p.other_need);
+                if (rows.length === 0) return null;
+                return (
+                  <div className="pt-2 border-t border-[rgba(13,34,101,0.07)] space-y-1.5">
+                    <p className="text-[9px] font-bold text-[#64697d] uppercase tracking-widest mb-1">Détails de la demande</p>
+                    {rows.map(([label, val]) => (
+                      <div key={label} className="flex justify-between gap-3">
+                        <span className="text-[#64697d] shrink-0 text-xs">{label}</span>
+                        <span className="text-[#0a0a0f] text-xs font-medium text-right break-words">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
               <div className="pt-2 border-t border-[rgba(13,34,101,0.07)]">
                 <p className="text-[9px] font-bold text-[#64697d] uppercase tracking-widest mb-2">Statut actuel</p>
                 <span className={`text-xs font-semibold px-2.5 py-1.5 inline-block ${statusBadge[selected.status]}`}>{selected.status}</span>

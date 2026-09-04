@@ -3,20 +3,24 @@
 import { useRef, useState } from "react";
 import { ArrowRight, CheckCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
-import { CAT_CATEGORIES } from "@/lib/constants";
+import { CAT_CATEGORIES, PAYS_ORIGINE, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
 import { BtnNavy } from "@/app/components/common/buttons";
 import { FieldLabel, FormError, TextArea, TextInput } from "@/app/components/common/fields";
 import { Confirm, FormCard, ScreenShell } from "@/app/components/common/layout";
 
-const CERT_OPTIONS = ["Bio", "Halal", "HACCP", "ISO", "Autre", "Aucune"];
+const CERT_OPTIONS = ["Bio", "Halal", "Casher", "HACCP", "ISO", "Autre", "Aucune"];
 
 export function SupplierPropose({ nav }: { nav: Nav }) {
   const [form, setForm] = useState({
     name: "", origin: "", category: "Épicerie", moq: "", volumes: "",
+    price_per_kg: "", bulk_price: "", harvest_period: "",
     description: "", benefits: "", image: "",
   });
+  // Produit choisi dans la liste de la catégorie, ou saisi librement (« Autre »)
+  const [productChoice, setProductChoice] = useState("");
+  const [customProduct, setCustomProduct] = useState(false);
   const [certs, setCerts] = useState<string[]>([]);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +31,23 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }));
   const toggleCert = (c: string) => setCerts(cs => cs.includes(c) ? cs.filter(x => x !== c) : [...cs, c]);
+
+  const AUTRE = "Autre (préciser)";
+  const produitsCategorie = PRODUITS_PAR_CATEGORIE[form.category] ?? [];
+
+  // Changer de catégorie réinitialise le produit choisi
+  const changeCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setForm(f => ({ ...f, category: e.target.value, name: "" }));
+    setProductChoice("");
+    setCustomProduct(false);
+  };
+  // Choix d'un produit dans la liste (ou « Autre » → saisie libre)
+  const changeProduct = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const v = e.target.value;
+    setProductChoice(v);
+    if (v === AUTRE) { setCustomProduct(true); setForm(f => ({ ...f, name: "" })); }
+    else { setCustomProduct(false); setForm(f => ({ ...f, name: v })); }
+  };
 
   const logout = () => { api.setSupplierToken(null); nav("login"); };
 
@@ -95,22 +116,50 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
             </div>
           </div>
 
-          <div><FieldLabel required>Nom du produit</FieldLabel><TextInput required placeholder="Graine de fenugrec biologique" value={form.name} onChange={set("name")} /></div>
-
           <div className="grid grid-cols-2 gap-4">
-            <div><FieldLabel>Origine</FieldLabel><TextInput placeholder="Sénégal" value={form.origin} onChange={set("origin")} /></div>
             <div>
               <FieldLabel>Catégorie</FieldLabel>
-              <select value={form.category} onChange={set("category")}
+              <select value={form.category} onChange={changeCategory}
                 className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
                 {CAT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
+            <div>
+              <FieldLabel>Origine</FieldLabel>
+              <select value={form.origin} onChange={set("origin")}
+                className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
+                <option value="">Sélectionner</option>
+                {PAYS_ORIGINE.map(c => <option key={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <FieldLabel required>Produit</FieldLabel>
+            <select value={productChoice} onChange={changeProduct}
+              className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
+              <option value="">Sélectionner un produit…</option>
+              {produitsCategorie.map(p => <option key={p}>{p}</option>)}
+              <option>{AUTRE}</option>
+            </select>
+            {customProduct && (
+              <TextInput required className="mt-2" placeholder="Nom du produit" value={form.name} onChange={set("name")} />
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div><FieldLabel>Conditionnement / MOQ</FieldLabel><TextInput placeholder="25 kg" value={form.moq} onChange={set("moq")} /></div>
             <div><FieldLabel>Volumes disponibles</FieldLabel><TextInput placeholder="Ex : 2 000 kg / mois" value={form.volumes} onChange={set("volumes")} /></div>
+          </div>
+
+          <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-4 space-y-4">
+            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">Informations commerciales — confidentielles</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div><FieldLabel>Prix au kilo</FieldLabel><TextInput placeholder="Ex : 1 200 FCFA/kg" value={form.price_per_kg} onChange={set("price_per_kg")} /></div>
+              <div><FieldLabel>Prix en vrac</FieldLabel><TextInput placeholder="Ex : 950 FCFA/kg dès 1 t" value={form.bulk_price} onChange={set("bulk_price")} /></div>
+            </div>
+            <div><FieldLabel>Période de récolte</FieldLabel><TextInput placeholder="Ex : novembre à février" value={form.harvest_period} onChange={set("harvest_period")} /></div>
+            <p className="text-[11px] text-[#64697d]">Ces informations restent internes à À la Source et ne sont jamais affichées publiquement.</p>
           </div>
 
           <div><FieldLabel required>Description</FieldLabel><TextArea required rows={3} placeholder="Caractéristiques, usage, conditionnement, origine exacte…" value={form.description} onChange={set("description")} /></div>

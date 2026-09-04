@@ -93,6 +93,9 @@ class ProductOut(BaseModel):
     stock_kg: int
     status: StockStatus
     delay: str
+    price_per_kg: str = ""
+    bulk_price: str = ""
+    harvest_period: str = ""
     updated_at: datetime
 
 
@@ -136,6 +139,9 @@ class ProductCreate(BaseModel):
     stock_kg: int = 0
     status: StockStatus = StockStatus.EN_STOCK
     delay: str = ""
+    price_per_kg: str = ""
+    bulk_price: str = ""
+    harvest_period: str = ""
 
 
 class ProductAdminUpdate(BaseModel):
@@ -152,6 +158,9 @@ class ProductAdminUpdate(BaseModel):
     stock_kg: int | None = Field(default=None, ge=0)
     status: StockStatus | None = None
     delay: str | None = None
+    price_per_kg: str | None = None
+    bulk_price: str | None = None
+    harvest_period: str | None = None
 
 
 class CatalogueReorder(BaseModel):
@@ -177,6 +186,9 @@ class ProposalCreate(BaseModel):
     moq: str = ""
     image: str = ""
     volumes: str | None = None
+    price_per_kg: str = ""
+    bulk_price: str = ""
+    harvest_period: str = ""
     certifications: list[str] = []
 
 
@@ -193,6 +205,9 @@ class ProposalOut(BaseModel):
     moq: str
     image: str
     volumes: str | None
+    price_per_kg: str = ""
+    bulk_price: str = ""
+    harvest_period: str = ""
     certifications: list
     status: ProposalStatus
     created_at: datetime

@@ -14,6 +14,7 @@ import type { Nav, Screen } from "@/lib/routes";
 import { LandingPage } from "./pages/landing/LandingPage";
 import { CatalogueConfirm, CatalogueForm } from "./pages/forms/CataloguePage";
 import { DevisForm, FormConfirm } from "./pages/forms/DevisPage";
+import { ProductPage } from "./pages/forms/ProductPage";
 import { SourcingForm } from "./pages/forms/SourcingPage";
 import { CandidatureConfirm, CandidatureForm } from "./pages/forms/CandidaturePage";
 import { RDVScreen } from "./pages/forms/RdvPage";
@@ -47,6 +48,7 @@ export default function App() {
   }, []);
 
   switch (screen) {
+    case "produit": return <ProductPage nav={nav} />;
     case "catalogue": return <CatalogueForm nav={nav} onSuccess={setCatalogueUrl} />;
     case "catalogue-confirm": return <CatalogueConfirm nav={nav} downloadUrl={catalogueUrl} />;
     case "devis": return <DevisForm nav={nav} />;

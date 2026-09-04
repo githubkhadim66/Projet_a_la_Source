@@ -137,6 +137,9 @@ def propose_product(
         moq=data.moq,
         image=data.image,
         volumes=data.volumes,
+        price_per_kg=data.price_per_kg,
+        bulk_price=data.bulk_price,
+        harvest_period=data.harvest_period,
         certifications=data.certifications,
     )
     db.add(proposal)
