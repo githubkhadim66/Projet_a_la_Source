@@ -64,7 +64,7 @@ export function AdminLeads({ nav }: { nav: Nav }) {
         categories: Array.isArray(lead.payload?.product_types) ? lead.payload.product_types as string[] : [],
       });
       setAccountPwd(created.temp_password);
-      setAccountMsg(`Compte créé — identifiant : ${created.email}`);
+      setAccountMsg(`Compte créé · identifiant : ${created.email}`);
       changeStatus(lead.id, "Référencé");
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 409) {
@@ -84,7 +84,7 @@ export function AdminLeads({ nav }: { nav: Nav }) {
 
   const LEAD_STATUS_FILTERS: (LeadStatus | "Tous")[] = ["Tous", "Nouveau", "En cours", "Devis envoyé", "Traité", "Gagné", "Perdu"];
 
-  // Suppression définitive d'un lead sur demande (RGPD — SEC-03)
+  // Suppression définitive d'un lead sur demande (RGPD · SEC-03)
   const removeLead = async (lead: Lead) => {
     if (!window.confirm(`Supprimer définitivement le lead « ${lead.company} » ?\nCette action est irréversible (RGPD).`)) return;
     try {
@@ -174,7 +174,7 @@ export function AdminLeads({ nav }: { nav: Nav }) {
                     <span className="text-[#64697d] text-xs">{lead.country}</span>
                   </div>
                   <p className="text-xs text-[#64697d]">{lead.contact}
-                    {lead.product && <span className="text-[#64697d]"> — {lead.product.length > 60 ? lead.product.slice(0,60)+"…" : lead.product}</span>}
+                    {lead.product && <span className="text-[#64697d]"> · {lead.product.length > 60 ? lead.product.slice(0,60)+"…" : lead.product}</span>}
                   </p>
                 </div>
                 {/* Right */}
@@ -272,7 +272,7 @@ export function AdminLeads({ nav }: { nav: Nav }) {
                           <p className="text-xs text-emerald-700 mt-1">Mot de passe temporaire :{" "}
                             <code className="bg-white px-1.5 py-0.5 border border-emerald-200 font-mono font-bold">{accountPwd}</code>
                           </p>
-                          <p className="text-[10px] text-emerald-600 mt-1">Transmettez-le de façon sécurisée — il ne sera plus affiché. Le fournisseur pourra le changer à sa première connexion.</p>
+                          <p className="text-[10px] text-emerald-600 mt-1">Transmettez-le de façon sécurisée · il ne sera plus affiché. Le fournisseur pourra le changer à sa première connexion.</p>
                         </>
                       )}
                     </div>

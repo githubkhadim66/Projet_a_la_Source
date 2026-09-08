@@ -75,7 +75,7 @@ export function AdminRdv({ nav }: { nav: Nav }) {
                 <td className="px-4 py-3 font-semibold text-[#0a0a0f]">{a.name}</td>
                 <td className="px-4 py-3 text-[#64697d]">{a.company}</td>
                 <td className="px-4 py-3 text-[#64697d] text-xs break-all">{a.email}</td>
-                <td className="px-4 py-3 text-[#64697d] text-xs">{a.motif || "—"}</td>
+                <td className="px-4 py-3 text-[#64697d] text-xs">{a.motif || "·"}</td>
                 <td className="px-4 py-3">
                   <span className={`text-xs font-medium px-2 py-1 ${badge(a.status)}`}>{a.status}</span>
                 </td>

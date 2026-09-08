@@ -75,7 +75,7 @@ export function ProductPage({ nav }: { nav: Nav }) {
         ) : !current ? (
           <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10 text-center">
             <p className="text-[#0a0a0f] font-semibold mb-2">Produit introuvable.</p>
-            <p className="text-sm text-[#64697d] mb-6">Ce produit n'est pas au catalogue — nous pouvons le sourcer pour vous.</p>
+            <p className="text-sm text-[#64697d] mb-6">Ce produit n'est pas au catalogue · nous pouvons le sourcer pour vous.</p>
             <button onClick={() => nav("sourcing")} className="inline-flex items-center gap-1.5 bg-[#C4613A] text-white text-sm font-semibold px-6 py-3 hover:bg-[#A84E2D] transition-colors cursor-pointer">
               Sourcing sur mesure <ArrowRight className="w-4 h-4" />
             </button>
@@ -92,7 +92,7 @@ export function ProductPage({ nav }: { nav: Nav }) {
                   <p className="text-[10px] font-bold text-[#C4613A] tracking-[0.15em] uppercase">{current.category}</p>
                   {current.origin && (isSenegal(current.origin)
                     ? <span className="inline-flex items-center gap-1 text-[9px] font-bold text-[#C4613A] bg-[#C4613A]/10 px-1.5 py-0.5 uppercase tracking-wide">★ {current.origin}</span>
-                    : <span className="text-[10px] text-[#64697d] uppercase tracking-wide">Vérifié — {current.origin}</span>
+                    : <span className="text-[10px] text-[#64697d] uppercase tracking-wide">Vérifié · {current.origin}</span>
                   )}
                 </div>
                 <h1 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f] leading-tight mb-3">{current.name}</h1>
@@ -102,7 +102,7 @@ export function ProductPage({ nav }: { nav: Nav }) {
                   {current.origin && (
                     <div className="flex justify-between gap-4 text-sm border-b border-[rgba(13,34,101,0.07)] pb-2">
                       <span className="text-[#64697d]">Origine</span>
-                      <span className="text-[#0d2265] font-medium text-right">Fournisseur vérifié — {current.origin}</span>
+                      <span className="text-[#0d2265] font-medium text-right">Fournisseur vérifié · {current.origin}</span>
                     </div>
                   )}
                   {current.packaging && (
@@ -129,7 +129,7 @@ export function ProductPage({ nav }: { nav: Nav }) {
                     Demander un devis <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-[11px] text-[#64697d] mt-3 leading-relaxed">Fournisseur vérifié — identité protégée. Aucun contact direct : À la Source porte votre devis de bout en bout.</p>
+                <p className="text-[11px] text-[#64697d] mt-3 leading-relaxed">Fournisseur vérifié · identité protégée. Aucun contact direct : À la Source porte votre devis de bout en bout.</p>
               </div>
             </div>
 

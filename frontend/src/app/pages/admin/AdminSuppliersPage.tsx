@@ -42,7 +42,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
       setForm({ name:"", country:"Sénégal", email:"", contact_name:"", categories:[] });
       setSelected(created);
       setTempPwd(created.temp_password);
-      setBanner(`Compte créé pour ${created.name} — identifiant : ${created.email}`);
+      setBanner(`Compte créé pour ${created.name} · identifiant : ${created.email}`);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 409) setFormError("Cet e-mail est déjà référencé.");
       else onApiError(err);
@@ -65,7 +65,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
     try {
       const res = await api.admin.resetSupplierPassword(s.id);
       setTempPwd(res.temp_password);
-      setBanner(`Mot de passe réinitialisé pour ${s.name} — identifiant : ${s.email}`);
+      setBanner(`Mot de passe réinitialisé pour ${s.name} · identifiant : ${s.email}`);
     } catch (err) {
       onApiError(err);
     }
@@ -76,7 +76,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
       await api.admin.decideProposal(p.id, decision);
       setProposals(prev => prev.filter(x => x.id !== p.id));
       if (decision === "Approuvé") {
-        setBanner(`Proposition « ${p.name} » validée — un produit masqué a été créé, complétez sa fiche dans Catalogue & stocks.`);
+        setBanner(`Proposition « ${p.name} » validée · un produit masqué a été créé, complétez sa fiche dans Catalogue & stocks.`);
         api.admin.suppliers().then(setSuppliers).catch(() => {});
       }
     } catch (err) {
@@ -133,7 +133,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
         </div>
       </div>
 
-      {/* Propositions — action requise, affichées en premier */}
+      {/* Propositions · action requise, affichées en premier */}
       {proposals.length > 0 && (
         <div className="mb-7 border-l-4 border-amber-400 bg-amber-50 px-5 py-4">
           <div className="flex items-center gap-2 mb-3">
@@ -248,7 +248,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
               <div className="px-5 py-4 border-t border-[rgba(13,34,101,0.08)] flex items-center gap-3 sticky bottom-0 bg-white">
                 <button onClick={() => { decideProposal(viewProposal, "Approuvé"); setViewProposal(null); }}
                   className="flex items-center gap-2 bg-[#0d2265] text-white text-sm font-semibold px-5 py-2.5 cursor-pointer hover:bg-[#091a52] transition-colors">
-                  <Check className="w-4 h-4" /> Valider — créer le produit
+                  <Check className="w-4 h-4" /> Valider · créer le produit
                 </button>
                 <button onClick={() => { decideProposal(viewProposal, "Refusé"); setViewProposal(null); }}
                   className="border border-red-200 text-red-600 text-sm font-semibold px-4 py-2.5 cursor-pointer hover:bg-red-50 transition-colors">
@@ -334,7 +334,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
             {tempPwd && (
               <>
                 <p className="text-sm text-emerald-700">Mot de passe temporaire : <code className="bg-white px-2 py-0.5 border border-emerald-200 font-mono font-bold">{tempPwd}</code></p>
-                <p className="text-xs text-emerald-600 mt-1">Transmettez ce mot de passe de façon sécurisée — il ne sera plus affiché.</p>
+                <p className="text-xs text-emerald-600 mt-1">Transmettez ce mot de passe de façon sécurisée · il ne sera plus affiché.</p>
               </>
             )}
           </div>
@@ -364,14 +364,14 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                     <p className="font-semibold text-[#0a0a0f]">{s.name}</p>
                     <p className="text-xs text-[#64697d] font-mono">{s.email}</p>
                   </td>
-                  <td className="px-4 py-3 text-[#64697d]">{s.country ?? "—"}</td>
+                  <td className="px-4 py-3 text-[#64697d]">{s.country ?? "·"}</td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       {s.categories.map(c => <span key={c} className="text-[10px] bg-[#eef1f8] text-[#0d2265] px-1.5 py-0.5">{c}</span>)}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-center text-[#64697d] font-medium">{s.products_count}</td>
-                  <td className="px-4 py-3 text-[#64697d] text-xs">{s.last_login_at ? fmtDate(s.last_login_at) : "—"}</td>
+                  <td className="px-4 py-3 text-[#64697d] text-xs">{s.last_login_at ? fmtDate(s.last_login_at) : "·"}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-medium px-2 py-1 ${badgeStatus(s.is_active)}`}>{statusLabel(s)}</span>
                   </td>
@@ -441,13 +441,13 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
             ) : (
               <div className="space-y-3 text-sm">
                 {[
-                  { label: "Pays", val: selected.country ?? "—" },
+                  { label: "Pays", val: selected.country ?? "·" },
                   { label: "E-mail", val: selected.email },
-                  { label: "Contact", val: selected.contact_name ?? "—" },
-                  { label: "Téléphone", val: selected.phone ?? "—" },
-                  { label: "Ville", val: selected.city ?? "—" },
+                  { label: "Contact", val: selected.contact_name ?? "·" },
+                  { label: "Téléphone", val: selected.phone ?? "·" },
+                  { label: "Ville", val: selected.city ?? "·" },
                   { label: "Créé le", val: fmtDate(selected.created_at) },
-                  { label: "Dernière connexion", val: selected.last_login_at ? fmtDate(selected.last_login_at) : "—" },
+                  { label: "Dernière connexion", val: selected.last_login_at ? fmtDate(selected.last_login_at) : "·" },
                   { label: "Produits référencés", val: String(selected.products_count) },
                 ].map(row => (
                   <div key={row.label} className="flex justify-between gap-3">

@@ -1,4 +1,4 @@
-/** Proposition d'un produit par le fournisseur — assistant multi-étapes.
+/** Proposition d'un produit par le fournisseur · assistant multi-étapes.
  *  Conditionnement (format de vente) et MOQ (quantité minimum) sont distincts,
  *  avec calcul automatique de l'équivalent (ex. 20 sacs = 500 kg).
  */
@@ -6,12 +6,13 @@
 import { useRef, useState } from "react";
 import { CheckCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
-import { CAT_CATEGORIES, CERTS_FOURNISSEUR, PAYS_ORIGINE, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
+import { CAT_CATEGORIES, CERTS_FOURNISSEUR, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
-import { FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
+import { CountrySelect, FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
 import { Confirm, ScreenShell } from "@/app/components/common/layout";
 import { FormWizard } from "@/app/components/common/FormWizard";
+import { SupplierShell } from "./SupplierShell";
 
 const AUTRE = "Autre (préciser)";
 
@@ -107,7 +108,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-[#64697d] mt-1.5">JPG, PNG ou WebP — 5 Mo maximum.</p>
+                <p className="text-[11px] text-[#64697d] mt-1.5">JPG, PNG ou WebP · 5 Mo maximum.</p>
                 {uploadError && <p className="text-[11px] text-red-600 mt-1">{uploadError}</p>}
               </div>
             </div>
@@ -121,14 +122,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
                 {CAT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
-            <div>
-              <FieldLabel>Origine</FieldLabel>
-              <select value={form.origin} onChange={set("origin")}
-                className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
-                <option value="">Sélectionner</option>
-                {PAYS_ORIGINE.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
+            <CountrySelect label="Origine" value={form.origin} onChange={v => setForm(f => ({ ...f, origin: v }))} />
           </div>
 
           <div>
@@ -169,7 +163,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
       content: (
         <div className="space-y-4">
           <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-4 space-y-4">
-            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">Informations commerciales — confidentielles</p>
+            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">Informations commerciales · confidentielles</p>
             <div className="grid grid-cols-2 gap-4">
               <div><FieldLabel>Prix au kilo</FieldLabel><TextInput placeholder="Ex : 1 200 FCFA/kg" value={form.price_per_kg} onChange={set("price_per_kg")} /></div>
               <div><FieldLabel>Prix en vrac</FieldLabel><TextInput placeholder="Ex : 950 FCFA/kg dès 1 t" value={form.bulk_price} onChange={set("bulk_price")} /></div>
@@ -206,17 +200,20 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
   ];
 
   return (
-    <FormWizard
-      nav={nav}
-      title="Proposer un produit"
-      intro="Soumettez une fiche complète. Aucun produit n'est publié automatiquement : l'équipe À la Source examine chaque proposition."
-      steps={steps}
-      onSubmit={submit}
-      submitting={sending}
-      submitLabel="Soumettre à validation"
-      error={error}
-      footNote="Aucune publication automatique — validation par l'équipe À la Source."
-    />
+    <SupplierShell nav={nav} active="propose">
+      <FormWizard
+        nav={nav}
+        embedded
+        title="Proposer un produit"
+        intro="Soumettez une fiche complète. Aucun produit n'est publié automatiquement : l'équipe À la Source examine chaque proposition."
+        steps={steps}
+        onSubmit={submit}
+        submitting={sending}
+        submitLabel="Soumettre à validation"
+        error={error}
+        footNote="Aucune publication automatique · validation par l'équipe À la Source."
+      />
+    </SupplierShell>
   );
 }
 

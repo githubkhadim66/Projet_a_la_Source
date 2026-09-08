@@ -60,7 +60,7 @@ export function RDVScreen({ nav }: { nav: Nav }) {
       setDone(true);
     } catch (err) {
       const msg = err instanceof api.ApiError && err.status === 409
-        ? "Ce créneau vient d'être réservé — choisissez-en un autre."
+        ? "Ce créneau vient d'être réservé · choisissez-en un autre."
         : "Une erreur est survenue. Réessayez.";
       setError(msg);
       if (day !== null) api.rdv.slots(days[day].iso).then(res => setSlots(res.slots)).catch(() => {});
@@ -124,9 +124,9 @@ export function RDVScreen({ nav }: { nav: Nav }) {
 
         {day !== null && (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#0a0a0f] mb-3">Créneaux — {days[day].label}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#0a0a0f] mb-3">Créneaux · {days[day].label}</p>
             {loadingSlots && <p className="text-xs text-[#64697d]">Chargement des disponibilités…</p>}
-            {!loadingSlots && slots.length === 0 && <p className="text-xs text-[#64697d]">Aucun créneau disponible ce jour — choisissez un autre jour.</p>}
+            {!loadingSlots && slots.length === 0 && <p className="text-xs text-[#64697d]">Aucun créneau disponible ce jour · choisissez un autre jour.</p>}
             <div className="grid grid-cols-4 gap-1.5">
               {slots.map(s => (
                 <button key={s} type="button" onClick={() => setSlot(s)}
@@ -151,7 +151,7 @@ export function RDVScreen({ nav }: { nav: Nav }) {
             <div><FieldLabel required>E-mail</FieldLabel><TextInput type="email" required placeholder="vous@entreprise.fr" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <FormError error={error} />
             <BtnNavy className="w-full justify-center" onClick={book}>
-              <Calendar className="w-4 h-4" /> {sending ? "Confirmation…" : `Confirmer — ${days[day!].label} à ${slot}`}
+              <Calendar className="w-4 h-4" /> {sending ? "Confirmation…" : `Confirmer · ${days[day!].label} à ${slot}`}
             </BtnNavy>
           </div>
         )}

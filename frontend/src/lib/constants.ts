@@ -9,6 +9,24 @@ export const IMG_MARKET = "https://images.unsplash.com/photo-1778079247396-9c0e0
 
 // Options des formulaires
 export const PAYS_EU = ["France","Allemagne","Belgique","Pays-Bas","Espagne","Italie","Portugal","Suisse","Luxembourg","Autre"];
+
+// Liste mondiale des pays (français), pour les champs « Pays » avec recherche.
+export const PAYS_MONDE = [
+  "Afghanistan","Afrique du Sud","Albanie","Algérie","Allemagne","Andorre","Angola","Antigua-et-Barbuda","Arabie saoudite","Argentine","Arménie","Australie","Autriche","Azerbaïdjan",
+  "Bahamas","Bahreïn","Bangladesh","Barbade","Belgique","Belize","Bénin","Bhoutan","Biélorussie","Birmanie (Myanmar)","Bolivie","Bosnie-Herzégovine","Botswana","Brésil","Brunei","Bulgarie","Burkina Faso","Burundi",
+  "Cambodge","Cameroun","Canada","Cap-Vert","Chili","Chine","Chypre","Colombie","Comores","Congo","Congo (RDC)","Corée du Nord","Corée du Sud","Costa Rica","Côte d'Ivoire","Croatie","Cuba",
+  "Danemark","Djibouti","Dominique","Égypte","Émirats arabes unis","Équateur","Érythrée","Espagne","Estonie","Eswatini","États-Unis","Éthiopie",
+  "Fidji","Finlande","France","Gabon","Gambie","Géorgie","Ghana","Grèce","Grenade","Guatemala","Guinée","Guinée-Bissau","Guinée équatoriale","Guyana",
+  "Haïti","Honduras","Hongrie","Îles Marshall","Îles Salomon","Inde","Indonésie","Irak","Iran","Irlande","Islande","Israël","Italie",
+  "Jamaïque","Japon","Jordanie","Kazakhstan","Kenya","Kirghizistan","Kiribati","Koweït","Laos","Lesotho","Lettonie","Liban","Liberia","Libye","Liechtenstein","Lituanie","Luxembourg",
+  "Macédoine du Nord","Madagascar","Malaisie","Malawi","Maldives","Mali","Malte","Maroc","Maurice","Mauritanie","Mexique","Micronésie","Moldavie","Monaco","Mongolie","Monténégro","Mozambique",
+  "Namibie","Nauru","Népal","Nicaragua","Niger","Nigeria","Norvège","Nouvelle-Zélande","Oman","Ouganda","Ouzbékistan",
+  "Pakistan","Palaos","Palestine","Panama","Papouasie-Nouvelle-Guinée","Paraguay","Pays-Bas","Pérou","Philippines","Pologne","Portugal","Qatar",
+  "République centrafricaine","République dominicaine","République tchèque","Roumanie","Royaume-Uni","Russie","Rwanda",
+  "Saint-Christophe-et-Niévès","Saint-Marin","Saint-Vincent-et-les-Grenadines","Sainte-Lucie","Salvador","Samoa","Sao Tomé-et-Principe","Sénégal","Serbie","Seychelles","Sierra Leone","Singapour","Slovaquie","Slovénie","Somalie","Soudan","Soudan du Sud","Sri Lanka","Suède","Suisse","Suriname","Syrie",
+  "Tadjikistan","Tanzanie","Tchad","Thaïlande","Timor oriental","Togo","Tonga","Trinité-et-Tobago","Tunisie","Turkménistan","Turquie","Tuvalu",
+  "Ukraine","Uruguay","Vanuatu","Vatican","Venezuela","Viêt Nam","Yémen","Zambie","Zimbabwe",
+];
 export const CERTS_OPTIONS = ["Bio UE","HACCP","Halal","Casher","ISO 22000"];
 // Certifications côté fournisseur (candidature + proposition de produit)
 export const CERTS_FOURNISSEUR = ["Bio","Halal","Casher","HACCP","ISO","Autre","Aucune"];
@@ -18,17 +36,17 @@ export const INCOTERMS_CHOIX = [...INCOTERMS, "À conseiller"];
 
 // Sens de chaque incoterm (aide en langage clair sous le sélecteur)
 export const INCOTERM_INFO: Record<string, string> = {
-  "EXW": "Ex Works — Vous gérez tout : enlèvement à l'usine, douane de départ, transport principal et douane d'arrivée. Risque maximal.",
-  "FCA": "Free Carrier — Le vendeur dédouane et remet la marchandise au transporteur au départ ; vous gérez le transport principal.",
-  "FAS": "Free Alongside Ship — Le vendeur livre le long du navire au port de départ ; vous prenez le relais.",
-  "FOB": "Free On Board — Le vendeur charge à bord au port de départ ; vous gérez le fret et l'arrivée. Bon compromis.",
-  "CFR": "Cost & Freight — Le vendeur paie le fret jusqu'au port d'arrivée ; le risque vous est transféré dès le chargement.",
-  "CIF": "Cost, Insurance & Freight — Comme CFR, avec l'assurance payée par le vendeur jusqu'au port d'arrivée.",
-  "CPT": "Carriage Paid To — Le vendeur paie le transport jusqu'au lieu convenu ; risque transféré au premier transporteur.",
-  "CIP": "Carriage & Insurance Paid To — Comme CPT, avec l'assurance jusqu'au lieu convenu.",
-  "DPU": "Delivered at Place Unloaded — Le vendeur livre et décharge la marchandise au lieu convenu.",
-  "DAP": "Delivered at Place — Le vendeur livre chez vous ; vous payez seulement les taxes de douane à l'arrivée.",
-  "DDP": "Delivered Duty Paid — Livraison clé en main : le vendeur paie tout, y compris vos taxes locales.",
+  "EXW": "Ex Works · Vous gérez tout : enlèvement à l'usine, douane de départ, transport principal et douane d'arrivée. Risque maximal.",
+  "FCA": "Free Carrier · Le vendeur dédouane et remet la marchandise au transporteur au départ ; vous gérez le transport principal.",
+  "FAS": "Free Alongside Ship · Le vendeur livre le long du navire au port de départ ; vous prenez le relais.",
+  "FOB": "Free On Board · Le vendeur charge à bord au port de départ ; vous gérez le fret et l'arrivée. Bon compromis.",
+  "CFR": "Cost & Freight · Le vendeur paie le fret jusqu'au port d'arrivée ; le risque vous est transféré dès le chargement.",
+  "CIF": "Cost, Insurance & Freight · Comme CFR, avec l'assurance payée par le vendeur jusqu'au port d'arrivée.",
+  "CPT": "Carriage Paid To · Le vendeur paie le transport jusqu'au lieu convenu ; risque transféré au premier transporteur.",
+  "CIP": "Carriage & Insurance Paid To · Comme CPT, avec l'assurance jusqu'au lieu convenu.",
+  "DPU": "Delivered at Place Unloaded · Le vendeur livre et décharge la marchandise au lieu convenu.",
+  "DAP": "Delivered at Place · Le vendeur livre chez vous ; vous payez seulement les taxes de douane à l'arrivée.",
+  "DDP": "Delivered Duty Paid · Livraison clé en main : le vendeur paie tout, y compris vos taxes locales.",
   "À conseiller": "Vous ne savez pas lequel choisir ? Indiquez-le : nous vous recommandons l'incoterm le plus adapté à votre projet.",
 };
 
@@ -46,9 +64,9 @@ export function incotermBuyerArranges(incoterm: string): boolean | null {
 
 // Les 3 stratégies acheteur (panneau « Comprendre les incoterms »)
 export const INCOTERM_STRATEGIES = [
-  { emoji: "🚨", title: "Risque maximal — EXW", text: "Vous gérez tout : transporteur à l'usine, douanes, transport. Un blocage en douane ou une casse est à votre charge. À éviter si vous débutez." },
-  { emoji: "🤝", title: "Équilibre & contrôle — FCA / FOB", text: "Le vendeur dédouane et dépose au port ou à l'aéroport de départ ; vous prenez le relais. Meilleur compromis : vous maîtrisez le transport international sans gérer les formalités du pays vendeur." },
-  { emoji: "🛋️", title: "Confort absolu — DAP / DDP", text: "Le vendeur achemine jusqu'à vos locaux. En DAP vous payez les taxes à l'arrivée ; en DDP tout est inclus (clé en main). Point de vigilance : le transport est refacturé, souvent avec une marge." },
+  { emoji: "🚨", title: "Risque maximal · EXW", text: "Vous gérez tout : transporteur à l'usine, douanes, transport. Un blocage en douane ou une casse est à votre charge. À éviter si vous débutez." },
+  { emoji: "🤝", title: "Équilibre & contrôle · FCA / FOB", text: "Le vendeur dédouane et dépose au port ou à l'aéroport de départ ; vous prenez le relais. Meilleur compromis : vous maîtrisez le transport international sans gérer les formalités du pays vendeur." },
+  { emoji: "🛋️", title: "Confort absolu · DAP / DDP", text: "Le vendeur achemine jusqu'à vos locaux. En DAP vous payez les taxes à l'arrivée ; en DDP tout est inclus (clé en main). Point de vigilance : le transport est refacturé, souvent avec une marge." },
 ];
 export const CONDITIONNEMENTS = ["Palettes","Sacs","Cartons","Vrac","Autre"];
 export const MOTIFS_RDV = ["Projet d'importation","Recherche de fournisseurs","Logistique, formalités, certifications"];
@@ -59,6 +77,8 @@ export const CAT_CATEGORIES = ["Matières premières","Épicerie","Épices","Boi
 export const SECTEURS = ["Agroalimentaire","Distribution / Grossiste","Cosmétique","Restauration / CHR","Industrie","Autre"];
 // Délai de livraison souhaité
 export const DELAIS_LIVRAISON = ["Dès que possible","Sous 2 semaines","Sous 1 mois","1 à 3 mois","Flexible"];
+// Délai indicatif de préparation/expédition d'un produit (renseigné par le fournisseur).
+export const DELAIS_PRODUIT = ["Sous 1 semaine","1 à 2 semaines","2 à 3 semaines","3 à 4 semaines","1 à 2 mois","Selon la récolte"];
 // Pays de provenance souhaité (sourcing sur mesure)
 export const ORIGINES = ["Sénégal","Côte d'Ivoire","Mali","Burkina Faso","Ghana","Cameroun","Maroc","Nigeria","Togo","Bénin","Guinée","Autre / à définir"];
 // Destination de la livraison finale
@@ -66,7 +86,7 @@ export const CONTINENTS_LIVRAISON = ["Afrique","Europe"];
 // Unité du besoin prévisionnel
 export const PREVISION_UNITES = ["par mois","par an"];
 
-// Pays d'origine des produits (valorisation du local — filtre catalogue admin)
+// Pays d'origine des produits (valorisation du local · filtre catalogue admin)
 export const PAYS_ORIGINE = [
   "Sénégal","Côte d'Ivoire","Mali","Burkina Faso","Ghana","Guinée","Bénin","Togo",
   "Nigeria","Cameroun","Maroc","Autre",

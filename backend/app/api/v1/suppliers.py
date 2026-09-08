@@ -9,6 +9,7 @@ from app.core.config import settings
 from app.core.security import create_token, hash_password, verify_password
 from app.db.session import get_db
 from app.models import Product, ProductProposal, Supplier
+from app.models.product import StockStatus
 from app.schemas.supplier import (
     ProductOut,
     ProductStockUpdate,
@@ -99,11 +100,26 @@ def update_my_product(
     # 404 (et non 403) si le produit appartient à un autre fournisseur : aucune fuite d'existence
     if product is None or product.supplier_id != supplier.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit introuvable")
+    was_rupture = product.status == StockStatus.RUPTURE
     updates = data.model_dump(exclude_unset=True)
     for field, value in updates.items():
         setattr(product, field, value)
+    # FRS-05 : tout enregistrement vaut confirmation du stock → on tamponne la date du jour,
+    # même si aucune valeur n'a changé (sinon `onupdate` ne se déclenche pas et la fiche
+    # resterait « à actualiser » alors que le fournisseur vient de la confirmer).
+    product.updated_at = datetime.now(UTC)
     db.commit()
     db.refresh(product)
+    # Passage en rupture : l'intermédiaire À la Source doit être prévenu pour gérer les acheteurs.
+    if product.status == StockStatus.RUPTURE and not was_rupture:
+        emails.notify_internal(
+            f"Rupture de stock · {product.name}",
+            f"Le fournisseur {supplier.name} a signalé une rupture de stock.\n\n"
+            f"Produit : {product.name} ({product.ref})\n"
+            f"Origine : {product.origin or 'non précisée'}\n"
+            f"Signalée le {product.updated_at:%d/%m/%Y à %H:%M} UTC.\n\n"
+            "Pensez à informer les acheteurs concernés et à proposer une alternative si besoin.",
+        )
     return product
 
 

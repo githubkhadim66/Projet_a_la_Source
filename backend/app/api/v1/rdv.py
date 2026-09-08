@@ -56,6 +56,6 @@ def book(data: RdvCreate, db: Session = Depends(get_db)):
     )
     emails.notify_internal(
         f"Nouveau RDV expert #{appt.id}",
-        f"{appt.name} ({appt.company}) — {appt.day} {appt.slot} ({appt.duration_minutes} min)",
+        f"{appt.name} ({appt.company}) · {appt.day} {appt.slot} ({appt.duration_minutes} min)",
     )
     return appt

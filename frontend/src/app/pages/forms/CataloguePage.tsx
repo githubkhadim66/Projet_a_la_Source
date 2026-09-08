@@ -6,7 +6,7 @@ import * as api from "@/lib/api";
 import { CALENDLY_URL } from "@/lib/constants";
 import type { Nav } from "@/lib/routes";
 import { BtnNavy, BtnOutlineNavy } from "@/app/components/common/buttons";
-import { FieldLabel, FormError, RGPD, SelectInput, TextInput } from "@/app/components/common/fields";
+import { CountrySelect, FieldLabel, FormError, RGPD, TextInput } from "@/app/components/common/fields";
 import { Confirm, FormCard, ScreenShell } from "@/app/components/common/layout";
 
 export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: string) => void }) {
@@ -34,8 +34,8 @@ export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: s
   return (
     <ScreenShell nav={nav} title="Télécharger le catalogue">
       <FormCard
-        title="Catalogue édition Juillet 2026"
-        subtitle="Épicerie, boissons, fruits & légumes, matières premières : parcourez nos références d'origine africaine. Les prix sont communiqués sur devis, sous 24 à 48 h ouvrées."
+        title="Recevez notre catalogue à jour"
+        subtitle="Épicerie, boissons, fruits & légumes, matières premières : parcourez nos références d'origine africaine, dans leur dernière édition. Les prix sont communiqués sur devis, sous 24 à 48 h ouvrées."
       >
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -45,13 +45,7 @@ export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: s
           <div><FieldLabel required>Société</FieldLabel><TextInput placeholder="Épicerie du Marché SAS" required value={form.company} onChange={set("company")} /></div>
           <div><FieldLabel required>E-mail professionnel</FieldLabel><TextInput type="email" placeholder="m.dupont@epicerie.fr" required value={form.email} onChange={set("email")} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <FieldLabel required>Pays</FieldLabel>
-              <SelectInput required value={form.country} onChange={set("country")}>
-                <option value="">Sélectionner…</option>
-                {["France","Belgique","Suisse","Luxembourg","Allemagne","Pays-Bas","Espagne","Italie","Royaume-Uni","Autre"].map(c=><option key={c}>{c}</option>)}
-              </SelectInput>
-            </div>
+            <CountrySelect label="Pays" required value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
             <div><FieldLabel>Fonction</FieldLabel><TextInput placeholder="Directeur des achats" value={form.role} onChange={set("role")} /></div>
           </div>
           <div><FieldLabel>Téléphone</FieldLabel><TextInput type="tel" placeholder="+33 6 00 00 00 00" value={form.phone} onChange={set("phone")} /></div>
@@ -73,7 +67,7 @@ export function CatalogueConfirm({ nav, downloadUrl }: { nav: Nav; downloadUrl: 
         <Confirm
           icon={<CheckCircle className="w-8 h-8 text-[#0d2265]" />}
           title="Merci !"
-          subtitle="Votre catalogue est en route — vous le recevrez par e-mail dans quelques instants."
+          subtitle="Votre catalogue est en route · vous le recevrez par e-mail dans quelques instants."
           nav={nav}
         >
           <div className="space-y-4">

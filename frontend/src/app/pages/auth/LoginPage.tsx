@@ -18,7 +18,7 @@ export function Login({ nav }: { nav: Nav }) {
   // Déjà connecté ? Direction l'espace correspondant.
   useEffect(() => {
     if (api.getAdminToken()) { nav("admin-dashboard"); return; }
-    if (api.getSupplierToken()) nav("supplier-products");
+    if (api.getSupplierToken()) nav("supplier-dashboard");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -34,7 +34,7 @@ export function Login({ nav }: { nav: Nav }) {
         nav("admin-dashboard");
       } else {
         api.setSupplierToken(res.access_token);
-        nav(res.must_change_password ? "supplier-password" : "supplier-products");
+        nav(res.must_change_password ? "supplier-password" : "supplier-dashboard");
       }
     } catch (err) {
       setError(err instanceof api.ApiError && err.status === 401

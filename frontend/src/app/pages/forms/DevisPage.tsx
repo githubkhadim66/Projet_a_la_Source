@@ -5,11 +5,11 @@ import { Calendar, CheckCircle, Search } from "lucide-react";
 import * as api from "@/lib/api";
 import {
   CALENDLY_URL, CONDITIONNEMENTS, CONTINENTS_LIVRAISON, DELAIS_LIVRAISON,
-  incotermBuyerArranges, PAYS_EU, PREVISION_UNITES, SECTEURS,
+  incotermBuyerArranges, PREVISION_UNITES, SECTEURS,
 } from "@/lib/constants";
 import type { Nav } from "@/lib/routes";
 import { BtnOutlineNavy } from "@/app/components/common/buttons";
-import { CertToggle, ChoiceToggle, FormInput, FormSelect, IncotermField, TagInput } from "@/app/components/common/fields";
+import { CertToggle, ChoiceToggle, CountrySelect, FormInput, FormSelect, IncotermField, SelectOther, TagInput } from "@/app/components/common/fields";
 import { Confirm, ScreenShell } from "@/app/components/common/layout";
 import { FormWizard } from "@/app/components/common/FormWizard";
 
@@ -91,17 +91,11 @@ export function DevisForm({ nav }: { nav: Nav }) {
       content: (
         <div className="space-y-4">
           <FormInput label="Société" required type="text" placeholder="SARL Import Europe" value={company} onChange={e => setCompany(e.target.value)} />
-          <FormInput label="Contact & fonction" required type="text" placeholder="Marie Dupont — Responsable achats" value={contact} onChange={e => setContact(e.target.value)} />
+          <FormInput label="Contact & fonction" required type="text" placeholder="Marie Dupont · Responsable achats" value={contact} onChange={e => setContact(e.target.value)} />
           <FormInput label="E-mail professionnel" required type="email" placeholder="contact@entreprise.fr" value={email} onChange={e => setEmail(e.target.value)} />
           <div className="grid grid-cols-2 gap-4">
-            <FormSelect label="Pays" required value={country} onChange={e => setCountry(e.target.value)}>
-              <option value="">Sélectionner</option>
-              {PAYS_EU.map(c => <option key={c}>{c}</option>)}
-            </FormSelect>
-            <FormSelect label="Domaine d'activité" value={sector} onChange={e => setSector(e.target.value)}>
-              <option value="">Sélectionner</option>
-              {SECTEURS.map(s => <option key={s}>{s}</option>)}
-            </FormSelect>
+            <CountrySelect label="Pays" required value={country} onChange={setCountry} />
+            <SelectOther label="Domaine d'activité" options={SECTEURS} value={sector} onChange={setSector} placeholder="Votre secteur…" />
           </div>
         </div>
       ),
@@ -114,12 +108,12 @@ export function DevisForm({ nav }: { nav: Nav }) {
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-[#0a0a0f] mb-1.5">Matières recherchées<span className="text-[#C4613A] ml-0.5">*</span></label>
-            <TagInput tags={tags} setTags={setTags} suggestions={catalogueNames} placeholder="Commencez à écrire — choisissez dans notre catalogue…" />
+            <TagInput tags={tags} setTags={setTags} suggestions={catalogueNames} placeholder="Commencez à écrire · choisissez dans notre catalogue…" />
             {unknownTags.length > 0 ? (
               <div className="mt-2 flex items-start gap-2 bg-[#fbede3] border border-[#C4613A]/30 px-3 py-2.5 text-xs text-[#A84E2D] leading-relaxed">
                 <Search className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                 <span>
-                  {unknownTags.map(t => `« ${t} »`).join(", ")} {unknownTags.length > 1 ? "ne figurent" : "ne figure"} pas à notre catalogue — nous {unknownTags.length > 1 ? "les" : "le"} sourçons pour vous.{" "}
+                  {unknownTags.map(t => `« ${t} »`).join(", ")} {unknownTags.length > 1 ? "ne figurent" : "ne figure"} pas à notre catalogue · nous {unknownTags.length > 1 ? "les" : "le"} sourçons pour vous.{" "}
                   <button type="button" onClick={goSourcing} className="underline font-semibold cursor-pointer hover:text-[#C4613A]">Passer en sourcing sur mesure →</button>
                 </span>
               </div>
@@ -131,13 +125,7 @@ export function DevisForm({ nav }: { nav: Nav }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <FormInput label="Volume estimé" type="text" placeholder="12 tonnes" value={volume} onChange={e => setVolume(e.target.value)} />
-            <div>
-              <label className="block text-sm text-[#0a0a0f] mb-1.5">Conditionnement</label>
-              <select value={conditionnement} onChange={e => setConditionnement(e.target.value)}
-                className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors appearance-none">
-                {CONDITIONNEMENTS.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
+            <SelectOther label="Conditionnement" options={CONDITIONNEMENTS} value={conditionnement} onChange={setConditionnement} placeholder="Préciser le conditionnement…" />
           </div>
           <IncotermField value={incoterm} onChange={setIncoterm} label="Incoterm" />
           <div>
@@ -184,7 +172,7 @@ export function DevisForm({ nav }: { nav: Nav }) {
 
           {buyerArranges === true && (
             <p className="text-xs text-[#64697d] bg-[#f4f5f9] px-3 py-2 border-l-2 border-[#C4613A]/40">
-              Avec cet incoterm, vous organisez le transport principal — nous n'intervenons pas sur l'acheminement.
+              Avec cet incoterm, vous organisez le transport principal · nous n'intervenons pas sur l'acheminement.
             </p>
           )}
 
@@ -226,7 +214,7 @@ export function FormConfirm({ nav, type }: { nav: Nav; type: "devis" | "sourcing
           icon={<CheckCircle className="w-8 h-8 text-[#0d2265]" />}
           title="Demande bien reçue"
           subtitle={type === "devis"
-            ? "Notre équipe vous revient sous 24 à 48 h ouvrées avec une proposition complète — produits, logistique, incoterm."
+            ? "Notre équipe vous revient sous 24 à 48 h ouvrées avec une proposition complète · produits, logistique, incoterm."
             : "Votre demande de sourcing sur mesure est transmise. Notre équipe vous contacte sous 24 à 48 h ouvrées pour qualifier votre besoin."}
           nav={nav}
         >

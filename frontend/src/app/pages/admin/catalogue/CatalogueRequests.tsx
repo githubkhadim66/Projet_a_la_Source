@@ -96,7 +96,7 @@ export function CatalogueRequests({ onApiError }: { onApiError: (err: unknown) =
         </table>
       </div>
 
-      {/* Fenêtre d'envoi — présentée comme un message e-mail */}
+      {/* Fenêtre d'envoi · présentée comme un message e-mail */}
       {compose && (
         <>
           <div className="fixed inset-0 bg-black/40 z-[100]" onClick={() => !sending && setCompose(null)} />
@@ -135,7 +135,7 @@ export function CatalogueRequests({ onApiError }: { onApiError: (err: unknown) =
                 </div>
                 <p className="flex items-center gap-1.5 text-xs text-[#64697d] mt-3">
                   <Paperclip className="w-3.5 h-3.5" />
-                  Lien de téléchargement sécurisé, valable 24 h — il contient toujours la dernière édition du catalogue.
+                  Lien de téléchargement sécurisé, valable 24 h · il contient toujours la dernière édition du catalogue.
                 </p>
               </div>
 

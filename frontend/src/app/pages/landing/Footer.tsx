@@ -47,7 +47,7 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
                 <Phone className="w-4 h-4 shrink-0" /> +33 1 00 00 00 00
               </a>
               <a href="#" className="flex items-center gap-2 hover:text-white transition-colors">
-                <Globe className="w-4 h-4 shrink-0" /> LinkedIn — Oumou Soumano
+                <Globe className="w-4 h-4 shrink-0" /> LinkedIn · Oumou Soumano
               </a>
             </div>
           </div>

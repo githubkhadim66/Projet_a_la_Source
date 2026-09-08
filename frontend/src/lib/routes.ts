@@ -9,7 +9,7 @@ export type Screen =
   | "candidature" | "candidature-confirm"
   | "rdv"
   | "login" | "supplier-password" | "supplier-coordonnees"
-  | "supplier-products" | "supplier-propose" | "supplier-propose-confirm"
+  | "supplier-dashboard" | "supplier-products" | "supplier-propose" | "supplier-propose-confirm"
   | "admin-dashboard" | "admin-leads" | "admin-catalogue" | "admin-fournisseurs" | "admin-rdv";
 
 export type Nav = (s: Screen) => void;
@@ -29,6 +29,7 @@ export const SCREEN_PATHS: Record<Screen, string> = {
   "login": "/login",
   "supplier-password": "/fournisseurs/mot-de-passe",
   "supplier-coordonnees": "/fournisseurs/coordonnees",
+  "supplier-dashboard": "/fournisseurs/tableau-de-bord",
   "supplier-products": "/fournisseurs/produits",
   "supplier-propose": "/fournisseurs/proposer",
   "supplier-propose-confirm": "/fournisseurs/proposer/confirmation",

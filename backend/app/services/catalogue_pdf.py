@@ -67,7 +67,7 @@ def _load_image_bytes(image: str) -> bytes | None:
         f"https://images.unsplash.com/photo-{image}?w=500&h=350&fit=crop&auto=format&q=70"
     )
     req = Request(url, headers={"User-Agent": "alasource-catalogue/1.0"})
-    with urlopen(req, timeout=8) as resp:  # noqa: S310 — source interne ou identifiant produit
+    with urlopen(req, timeout=8) as resp:  # noqa: S310 · source interne ou identifiant produit
         return resp.read()
 
 
@@ -488,9 +488,9 @@ def build_catalogue_pdf(products: list, edition: str | None = None) -> bytes:
     edition = edition or edition_label()
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
-    c.setTitle(f"Catalogue À la Source — {edition}")
+    c.setTitle(f"Catalogue À la Source · {edition}")
     c.setAuthor("À la Source")
-    c.setSubject("Catalogue produits — sourcing & export de produits d'origine africaine")
+    c.setSubject("Catalogue produits · sourcing & export de produits d'origine africaine")
 
     by_category: dict[str, int] = {}
     for p in products:

@@ -93,7 +93,7 @@ export function ServicesSection({ nav }: { nav: Nav }) {
     },
     {
       icon: <CheckCircle className="w-8 h-8" />, tag: "Conformité", title: "Normes UE garanties",
-      line: "HACCP, Bio, Halal — conformité européenne vérifiée pour chaque produit.",
+      line: "HACCP, Bio, Halal · conformité européenne vérifiée pour chaque produit.",
       action: () => window.open(CALENDLY_URL, '_blank'), cta: "Discuter de vos besoins", num: "02",
     },
     {
@@ -137,7 +137,7 @@ export function ServicesSection({ nav }: { nav: Nav }) {
   );
 }
 
-// ─── Vitrine catalogue (produits en vedette — dynamique) ─────────────────────
+// ─── Vitrine catalogue (produits en vedette · dynamique) ─────────────────────
 
 export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: string[]; setBasket: (b: string[]) => void }) {
   const [products, setProducts] = useState<api.ApiPublicProduct[]>([]);
@@ -150,7 +150,7 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
     setBasket(basket.includes(name) ? basket.filter(n => n !== name) : [...basket, name]);
   };
 
-  // Ouvre la fiche produit (page dédiée) — la référence est passée via localStorage.
+  // Ouvre la fiche produit (page dédiée) · la référence est passée via localStorage.
   const openProduct = (refId: string) => {
     try { localStorage.setItem("als-product-ref", refId); } catch { /* stockage indispo */ }
     nav("produit");
@@ -351,13 +351,13 @@ export function Expertise({ nav: _nav }: { nav: Nav }) {
             <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
               « De la parcelle jusqu&apos;au conteneur ; nous connaissons les producteurs par leur nom. »
             </p>
-            <p className="text-xs text-[#64697d]">Ousmane BA Cofondateur</p>
+            <p className="text-xs text-[#64697d]">Ousmane BA · Cofondateur</p>
           </div>
           <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A] stagger-item" style={{ ["--i-delay" as string]: "120ms" }}>
             <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
               « Un sourcing avec le meilleur rapport qualité prix afin de vous démarquer de la concurrence. »
             </p>
-            <p className="text-xs text-[#64697d]">Oumou Soumano Cofondatrice</p>
+            <p className="text-xs text-[#64697d]">Oumou Soumano · Cofondatrice</p>
           </div>
         </div>
         {/* Founder cards */}
@@ -425,7 +425,7 @@ export function SupplierSection({ nav }: { nav: Nav }) {
 // ─── Preuve sociale ──────────────────────────────────────────────────────────
 
 const TESTIMONIALS = [
-  { quote: "Nous cherchions du beurre de karité en volumes réguliers, avec certification Bio. À la Source a livré une première commande conforme en six semaines — sans aucun écart sur le cahier des charges.", name: "Sophie M.", role: "Responsable achats", company: "Cosmétiques Naturels Pro", country: "France" },
+  { quote: "Nous cherchions du beurre de karité en volumes réguliers, avec certification Bio. À la Source a livré une première commande conforme en six semaines · sans aucun écart sur le cahier des charges.", name: "Sophie M.", role: "Responsable achats", company: "Cosmétiques Naturels Pro", country: "France" },
   { quote: "Ce que j'apprécie, c'est la transparence totale sur les délais et les incoterms. Le devis était clair, la logistique pilotée sans accroc. Je recommande sans hésitation.", name: "Klaus H.", role: "Directeur des opérations", company: "BioImport GmbH", country: "Allemagne" },
   { quote: "En tant qu'épicerie fine, nous avons besoin de cohérence qualitative lot après lot. À la Source est le seul interlocuteur qui nous a garanti cette constance, dès la première livraison.", name: "Pauline R.", role: "Co-fondatrice", company: "Épicerie Léontine", country: "Belgique" },
 ];
@@ -477,10 +477,10 @@ export function SocialProof() {
 const FAQS = [
   { q: "Quels types de produits proposez-vous ?", a: "Notre catalogue couvre quatre familles : épicerie (épices, condiments, farines…), boissons (jus, infusions, sirops…), fruits & légumes (frais, séchés, transformés) et matières premières (huiles végétales, beurres, gommes…). Près de 50 références sont disponibles, et nous acceptons les demandes de sourcing sur mesure pour tout produit absent du catalogue." },
   { q: "Comment garantissez-vous la conformité aux normes européennes ?", a: "Chaque fournisseur est audité sur place par notre équipe avant d'être référencé. Pour chaque produit, nous évaluons les normes sanitaires (HACCP), la traçabilité, l'étiquetage et les certifications requises (Bio, Halal, ISO). Si un produit nécessite une mise à niveau, nous accompagnons le fournisseur dans ce processus avant toute commande." },
-  { q: "Quels sont vos délais de réponse et de livraison ?", a: "Nous répondons à toute demande de devis sous 24 à 48 h ouvrées. Les délais de livraison varient selon le produit, le mode de transport et la destination — ils sont précisés dans chaque devis. Le fret maritime vers l'Europe occidentale prend en général 12 à 25 jours selon le port d'origine." },
+  { q: "Quels sont vos délais de réponse et de livraison ?", a: "Nous répondons à toute demande de devis sous 24 à 48 h ouvrées. Les délais de livraison varient selon le produit, le mode de transport et la destination · ils sont précisés dans chaque devis. Le fret maritime vers l'Europe occidentale prend en général 12 à 25 jours selon le port d'origine." },
   { q: "Quelles quantités minimum commandez-vous (MOQ) ?", a: "Les quantités minimum (MOQ) varient selon les produits et les fournisseurs. Elles sont indiquées dans le catalogue pour chaque référence, et précisées à la demande de devis. Pour les premières commandes ou les commandes tests, nous étudions chaque situation au cas par cas." },
   { q: "Quels incoterms proposez-vous ? Gérez-vous les formalités douanières ?", a: "Nous travaillons sur les principaux incoterms : EXW, FOB, CIF, CFR, DAP, DDP. Le plus adapté est proposé dans chaque devis. Nous prenons en charge les formalités d'export côté africain et, sur demande, accompagnons jusqu'à la livraison en entrepôt européen." },
-  { q: "Est-il possible de commander des échantillons ou de visiter les fournisseurs ?", a: "L'envoi d'échantillons est possible pour la plupart de nos références — ils sont facturés au coût réel. Les visites fournisseurs sont organisées dans le cadre de partenariats établis : notre experte coordonne chaque visite pour garantir des échanges productifs et en phase avec vos exigences qualité." },
+  { q: "Est-il possible de commander des échantillons ou de visiter les fournisseurs ?", a: "L'envoi d'échantillons est possible pour la plupart de nos références · ils sont facturés au coût réel. Les visites fournisseurs sont organisées dans le cadre de partenariats établis : notre experte coordonne chaque visite pour garantir des échanges productifs et en phase avec vos exigences qualité." },
 ];
 
 export function FAQSection() {

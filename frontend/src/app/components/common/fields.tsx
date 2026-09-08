@@ -4,8 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Check, Info } from "lucide-react";
 import {
   CERTS_OPTIONS, composeMoq, composePackaging, EMBALLAGE_PLURIEL, EMBALLAGES,
-  INCOTERM_INFO, INCOTERM_STRATEGIES, INCOTERMS_CHOIX, MESURES,
+  INCOTERM_INFO, INCOTERM_STRATEGIES, INCOTERMS_CHOIX, MESURES, PAYS_MONDE,
 } from "@/lib/constants";
+
+/** Recherche insensible aux accents et à la casse. */
+const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 export function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
@@ -95,6 +98,79 @@ export function FormSelect({ label, required, children, ...props }: { label: str
   );
 }
 
+/** Sélecteur de pays avec recherche (liste mondiale, insensible aux accents). */
+export function CountrySelect({ label, required, value, onChange, options = PAYS_MONDE, placeholder = "Rechercher un pays…" }: {
+  label: string; required?: boolean; value: string; onChange: (v: string) => void; options?: string[]; placeholder?: string;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
+  const q = normalize(query.trim());
+  const matches = (query.trim() ? options.filter(c => normalize(c).includes(q)) : options).slice(0, 8);
+
+  const pick = (c: string) => { onChange(c); setQuery(c); setOpen(false); setActive(-1); };
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      e.preventDefault(); const n = matches.length;
+      setActive(a => e.key === "ArrowDown" ? (a + 1) % n : (a - 1 + n) % n);
+    } else if (e.key === "Enter" && open && active >= 0) { e.preventDefault(); pick(matches[active]); }
+    else if (e.key === "Escape") { setOpen(false); setActive(-1); }
+  };
+
+  return (
+    <div className="relative">
+      <label className="block text-sm text-[#0a0a0f] mb-1.5">{label}{required && <span className="text-[#C4613A] ml-0.5">*</span>}</label>
+      <input
+        value={open ? query : value}
+        onFocus={() => { setQuery(value); setOpen(true); setActive(-1); }}
+        onChange={e => { setQuery(e.target.value); setOpen(true); setActive(-1); }}
+        onKeyDown={onKeyDown}
+        onBlur={() => setTimeout(() => setOpen(false), 120)}
+        placeholder={placeholder}
+        className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors" />
+      {open && matches.length > 0 && (
+        <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-[rgba(13,34,101,0.15)] shadow-[0_10px_30px_-12px_rgba(13,34,101,0.35)] max-h-56 overflow-auto">
+          {matches.map((c, i) => (
+            <li key={c}>
+              <button type="button" onMouseDown={e => { e.preventDefault(); pick(c); }}
+                className={`w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors ${i === active ? "bg-[#f4f5f9] text-[#0d2265]" : "text-[#0a0a0f] hover:bg-[#f4f5f9]"}`}>
+                {c}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/** Liste déroulante dont l'option « Autre » ouvre un champ de saisie libre. */
+export function SelectOther({ label, required, options, value, onChange, otherLabel = "Autre", placeholder = "Préciser…" }: {
+  label: string; required?: boolean; options: string[]; value: string; onChange: (v: string) => void; otherLabel?: string; placeholder?: string;
+}) {
+  const opts = options.filter(o => o !== otherLabel && o !== "Autre / à définir");
+  const [isOther, setIsOther] = useState(value !== "" && !opts.includes(value));
+  const selCls = "w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors appearance-none";
+  return (
+    <div>
+      <label className="block text-sm text-[#0a0a0f] mb-1.5">{label}{required && <span className="text-[#C4613A] ml-0.5">*</span>}</label>
+      <select value={isOther ? otherLabel : value} onChange={e => {
+        const v = e.target.value;
+        if (v === otherLabel) { setIsOther(true); onChange(""); }
+        else { setIsOther(false); onChange(v); }
+      }} className={selCls}>
+        <option value="">Sélectionner</option>
+        {opts.map(o => <option key={o}>{o}</option>)}
+        <option>{otherLabel}</option>
+      </select>
+      {isOther && (
+        <input type="text" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}
+          className="mt-2 w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors" />
+      )}
+    </div>
+  );
+}
+
 /** Reconstruit les champs structurés à partir d'un libellé de conditionnement. */
 function parsePackaging(s: string): { type: string; size: string; unit: string } {
   const t = (s || "").trim();
@@ -144,7 +220,7 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
   const packagingText = composePackaging(packType, packSize, packUnit);
   const moqText = composeMoq(moqValue, moqIsColis ? "colis" : "base", moqUnit, packType, packSize, packUnit);
 
-  // Remonte les libellés composés — mais pas au montage, pour ne pas écraser
+  // Remonte les libellés composés · mais pas au montage, pour ne pas écraser
   // une valeur existante tant que l'utilisateur n'a rien modifié.
   const firstPack = useRef(true);
   const firstMoq = useRef(true);
@@ -178,7 +254,7 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
         {packagingText && <p className="text-xs text-[#2E6B4F] mt-1.5">→ {packagingText}</p>}
       </div>
       <div>
-        <label className="block text-sm text-[#0a0a0f] mb-1.5">MOQ — quantité minimum de commande</label>
+        <label className="block text-sm text-[#0a0a0f] mb-1.5">MOQ · quantité minimum de commande</label>
         <div className="grid grid-cols-2 gap-2">
           <input type="text" inputMode="decimal" placeholder="500" value={moqValue} onChange={e => setMoqValue(e.target.value)} className={inCls} />
           <select value={moqUnit} onChange={e => setMoqUnit(e.target.value)} className={selCls}>
@@ -187,7 +263,7 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
         </div>
         {moqText
           ? <p className="text-xs text-[#2E6B4F] mt-1.5">→ MOQ : {moqText}</p>
-          : <p className="text-[11px] text-[#64697d] mt-1.5">Choisissez « {packPlural} » pour saisir la MOQ en nombre de colis — l'équivalent en {packUnit} est calculé.</p>}
+          : <p className="text-[11px] text-[#64697d] mt-1.5">Choisissez « {packPlural} » pour saisir la MOQ en nombre de colis · l'équivalent en {packUnit} est calculé.</p>}
       </div>
     </div>
   );

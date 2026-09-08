@@ -124,7 +124,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   const ruptures = products.filter(p => p.status === "Rupture").length;
   const staleCount = products.filter(p => p.stale).length;
 
-  // Pays présents dans le catalogue (valorisation du local — filtre interne)
+  // Pays présents dans le catalogue (valorisation du local · filtre interne)
   const origins = Array.from(new Set(products.map(p => p.origin).filter(Boolean) as string[])).sort();
 
   const filteredProds = products.filter(p => {
@@ -142,7 +142,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   const stockDot = (st: StockStatus) =>
     st === "En stock" ? "bg-emerald-500" : st === "Sur commande" ? "bg-amber-400" : "bg-red-500";
 
-  // Relance d'actualisation des stocks (FRS-05) — une relance par fournisseur
+  // Relance d'actualisation des stocks (FRS-05) · une relance par fournisseur
   const [remindMsg, setRemindMsg] = useState<string | null>(null);
   const remindSupplier = async (supplierId: number) => {
     try {

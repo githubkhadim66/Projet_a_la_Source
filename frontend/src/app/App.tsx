@@ -21,6 +21,7 @@ import { RDVScreen } from "./pages/forms/RdvPage";
 import { Login } from "./pages/auth/LoginPage";
 import { SupplierChangePassword } from "./pages/supplier/SupplierPasswordPage";
 import { SupplierCoordonnees } from "./pages/supplier/SupplierCoordonneesPage";
+import { SupplierDashboard } from "./pages/supplier/SupplierDashboardPage";
 import { SupplierProducts } from "./pages/supplier/SupplierProductsPage";
 import { SupplierPropose, SupplierProposeConfirm } from "./pages/supplier/SupplierProposePage";
 import { AdminDashboard } from "./pages/admin/AdminDashboardPage";
@@ -61,6 +62,7 @@ export default function App() {
     case "login": return <Login nav={nav} />;
     case "supplier-password": return <SupplierChangePassword nav={nav} />;
     case "supplier-coordonnees": return <SupplierCoordonnees nav={nav} />;
+    case "supplier-dashboard": return <SupplierDashboard nav={nav} />;
     case "supplier-products": return <SupplierProducts nav={nav} />;
     case "supplier-propose": return <SupplierPropose nav={nav} />;
     case "supplier-propose-confirm": return <SupplierProposeConfirm nav={nav} />;

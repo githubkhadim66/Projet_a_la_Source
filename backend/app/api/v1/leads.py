@@ -60,7 +60,7 @@ def create_catalogue_lead(data: CatalogueLeadCreate, db: Session = Depends(get_d
     )
     emails.notify_internal(
         f"Nouveau lead catalogue #{lead.id}",
-        f"{lead.contact_name} — {lead.company} ({lead.country}) — {lead.email}",
+        f"{lead.contact_name} · {lead.company} ({lead.country}) · {lead.email}",
     )
     return CatalogueLeadResponse(id=lead.id, download_url=download_url)
 
@@ -97,7 +97,7 @@ def create_devis_lead(data: DevisLeadCreate, db: Session = Depends(get_db)):
     emails.send_template("E2_devis", lead.email, lead.language, name=lead.contact_name)
     emails.notify_internal(
         f"Nouvelle demande de devis #{lead.id}",
-        f"{lead.company} — {', '.join(data.products)} — {lead.email}",
+        f"{lead.company} · {', '.join(data.products)} · {lead.email}",
     )
     return {"id": lead.id}
 
@@ -138,7 +138,7 @@ def create_sourcing_lead(data: SourcingLeadCreate, db: Session = Depends(get_db)
     emails.send_template("E2_devis", lead.email, lead.language, name=lead.contact_name)
     emails.notify_internal(
         f"Nouvelle demande de sourcing #{lead.id}",
-        f"{lead.company} — {data.product} — {lead.email}",
+        f"{lead.company} · {data.product} · {lead.email}",
     )
     return {"id": lead.id}
 
@@ -169,6 +169,6 @@ def create_candidature(data: CandidatureCreate, db: Session = Depends(get_db)):
     emails.send_template("E3_candidature", lead.email, lead.language, name=lead.contact_name)
     emails.notify_internal(
         f"Nouvelle candidature fournisseur #{lead.id}",
-        f"{lead.company} ({lead.country}) — {lead.email}",
+        f"{lead.company} ({lead.country}) · {lead.email}",
     )
     return {"id": lead.id}

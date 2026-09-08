@@ -427,7 +427,7 @@ def remind_supplier_stock(
     stale = [p for p in supplier.products if _is_stale(p.updated_at)]
     if not stale:
         return {"message": "Aucune référence à relancer pour ce fournisseur.", "count": 0}
-    listing = "\n".join(f"- {p.name} ({p.ref}) — dernière màj {p.updated_at:%d/%m/%Y}" for p in stale)
+    listing = "\n".join(f"- {p.name} ({p.ref}) · dernière màj {p.updated_at:%d/%m/%Y}" for p in stale)
     emails.send_template(
         "stock_reminder", supplier.email, "fr",
         name=supplier.contact_name or supplier.name, days=STALE_DAYS, products=listing,
@@ -489,7 +489,7 @@ def catalogue_preview(_: AdminUser = Depends(get_current_admin), db: Session = D
     if not products:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Aucun produit dans le catalogue — ajoutez-en au moins un.",
+            detail="Aucun produit dans le catalogue · ajoutez-en au moins un.",
         )
     pdf = build_catalogue_pdf(products)
     filename = f"catalogue-a-la-source-{date.today():%Y-%m}.pdf"

@@ -4,10 +4,10 @@ import { useRef, useState } from "react";
 import { Check, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiAdminProduct, ApiSupplier } from "@/lib/api";
-import { CAT_CATEGORIES, PAYS_ORIGINE } from "@/lib/constants";
+import { CAT_CATEGORIES } from "@/lib/constants";
 import { productImg } from "@/lib/format";
 import type { StockStatus } from "@/lib/leads";
-import { PackagingMoqFields } from "@/app/components/common/fields";
+import { CountrySelect, PackagingMoqFields } from "@/app/components/common/fields";
 
 export interface ProductFormValues {
   name: string; ref: string; origin: string; category: string; packaging: string; moq: string;
@@ -90,7 +90,7 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
               </button>
             )}
           </div>
-          <p className="text-[10px] text-[#64697d] mt-1.5 leading-relaxed">JPG, PNG ou WebP — 5 Mo maximum.</p>
+          <p className="text-[10px] text-[#64697d] mt-1.5 leading-relaxed">JPG, PNG ou WebP · 5 Mo maximum.</p>
           {uploadError && <p className="text-[10px] text-red-600 mt-1">{uploadError}</p>}
         </div>
 
@@ -112,14 +112,7 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
                 {CAT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">Origine (pays)</label>
-              <select value={values.origin} onChange={e => set("origin", e.target.value)}
-                className="w-full border border-[rgba(13,34,101,0.18)] px-3 py-2 text-sm appearance-none bg-white focus:outline-none focus:border-[#0d2265]">
-                <option value="">Sélectionner…</option>
-                {PAYS_ORIGINE.map(c => <option key={c}>{c}</option>)}
-              </select>
-            </div>
+            <CountrySelect label="Origine (pays)" value={values.origin} onChange={v => set("origin", v)} />
             {!isEdit && (
               <div>
                 <label className="block text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">Fournisseur *</label>
@@ -144,7 +137,7 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
             </div>
           </div>
 
-          {/* Conditionnement & MOQ — même logique que la proposition fournisseur */}
+          {/* Conditionnement & MOQ · même logique que la proposition fournisseur */}
           <div className="mb-3">
             {/* key = ref → réinitialise les champs structurés en changeant de produit édité */}
             <PackagingMoqFields
@@ -170,9 +163,9 @@ export function ProductForm({ values, setValues, suppliers, isEdit, error, onSub
             </div>
           </div>
 
-          {/* Informations commerciales internes — jamais publiées (« Prix sur devis ») */}
+          {/* Informations commerciales internes · jamais publiées (« Prix sur devis ») */}
           <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-3 mt-3">
-            <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-2">Prix &amp; récolte — internes</p>
+            <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-2">Prix &amp; récolte · internes</p>
             <div className="grid sm:grid-cols-3 gap-3">
               {([
                 ["price_per_kg", "Prix au kilo", "1 200 FCFA/kg"],

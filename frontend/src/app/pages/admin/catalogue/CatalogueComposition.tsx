@@ -60,7 +60,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
   const telecharger = async () => {
     try {
       await api.admin.downloadCataloguePreview();
-      flash("Catalogue PDF généré — le téléchargement a démarré.");
+      flash("Catalogue PDF généré · le téléchargement a démarré.");
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 409) flash(err.message);
       else onApiError(err);

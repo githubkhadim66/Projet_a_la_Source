@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { Info, Upload } from "lucide-react";
 import * as api from "@/lib/api";
 import {
-  CONTINENTS_LIVRAISON, DELAIS_LIVRAISON, incotermBuyerArranges, ORIGINES,
-  PAYS_EU, PREVISION_UNITES, SECTEURS,
+  CONTINENTS_LIVRAISON, DELAIS_LIVRAISON, incotermBuyerArranges,
+  PREVISION_UNITES, SECTEURS,
 } from "@/lib/constants";
 import type { Nav } from "@/lib/routes";
-import { CertToggle, ChoiceToggle, FormInput, FormSelect, IncotermField } from "@/app/components/common/fields";
+import { CertToggle, ChoiceToggle, CountrySelect, FormInput, FormSelect, IncotermField, SelectOther } from "@/app/components/common/fields";
 import { FormWizard } from "@/app/components/common/FormWizard";
 
 export function SourcingForm({ nav }: { nav: Nav }) {
@@ -87,17 +87,11 @@ export function SourcingForm({ nav }: { nav: Nav }) {
       content: (
         <div className="space-y-4">
           <FormInput label="Société" required type="text" placeholder="SARL Import Europe" value={company} onChange={e => setCompany(e.target.value)} />
-          <FormInput label="Contact & fonction" required type="text" placeholder="Nom Prénom — Fonction" value={contact} onChange={e => setContact(e.target.value)} />
+          <FormInput label="Contact & fonction" required type="text" placeholder="Nom Prénom · Fonction" value={contact} onChange={e => setContact(e.target.value)} />
           <FormInput label="E-mail professionnel" required type="email" placeholder="contact@entreprise.fr" value={email} onChange={e => setEmail(e.target.value)} />
           <div className="grid grid-cols-2 gap-4">
-            <FormSelect label="Pays" required value={country} onChange={e => setCountry(e.target.value)}>
-              <option value="">Sélectionner</option>
-              {PAYS_EU.map(c => <option key={c}>{c}</option>)}
-            </FormSelect>
-            <FormSelect label="Domaine d'activité" value={sector} onChange={e => setSector(e.target.value)}>
-              <option value="">Sélectionner</option>
-              {SECTEURS.map(s => <option key={s}>{s}</option>)}
-            </FormSelect>
+            <CountrySelect label="Pays" required value={country} onChange={setCountry} />
+            <SelectOther label="Domaine d'activité" options={SECTEURS} value={sector} onChange={setSector} placeholder="Votre secteur…" />
           </div>
         </div>
       ),
@@ -116,7 +110,7 @@ export function SourcingForm({ nav }: { nav: Nav }) {
               <div className="mt-2 flex items-start gap-2 bg-[#eaf2ed] border border-[#2E6B4F]/25 px-3 py-2.5 text-xs text-[#2E6B4F] leading-relaxed">
                 <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                 <span>
-                  « {catalogueMatch} » figure déjà à notre catalogue — vous pouvez obtenir un{" "}
+                  « {catalogueMatch} » figure déjà à notre catalogue · vous pouvez obtenir un{" "}
                   <button type="button" onClick={() => nav("devis")} className="underline font-semibold cursor-pointer hover:text-[#0d2265]">devis directement →</button>
                 </span>
               </div>
@@ -129,10 +123,7 @@ export function SourcingForm({ nav }: { nav: Nav }) {
               className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors resize-none" />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <FormSelect label="Pays de provenance souhaité" value={origin} onChange={e => setOrigin(e.target.value)}>
-              <option value="">Sélectionner</option>
-              {ORIGINES.map(o => <option key={o}>{o}</option>)}
-            </FormSelect>
+            <CountrySelect label="Pays de provenance souhaité" value={origin} onChange={setOrigin} />
             <FormInput label="Quantité souhaitée" type="text" placeholder="Ex. 5 000 kg" value={volume} onChange={e => setVolume(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -176,7 +167,7 @@ export function SourcingForm({ nav }: { nav: Nav }) {
             <div className="border border-dashed border-[rgba(13,34,101,0.2)] p-6 text-center">
               <Upload className="w-6 h-6 text-[#64697d] mx-auto mb-2" />
               <p className="text-sm text-[#64697d]">Cahier des charges, fiche technique, photos de référence</p>
-              <p className="text-xs text-[#9ca3af] mt-1">PDF, XLSX, JPG, PNG — 10 Mo max</p>
+              <p className="text-xs text-[#9ca3af] mt-1">PDF, XLSX, JPG, PNG · 10 Mo max</p>
             </div>
           </div>
         </div>
@@ -208,7 +199,7 @@ export function SourcingForm({ nav }: { nav: Nav }) {
 
           {buyerArranges === true && (
             <p className="text-xs text-[#64697d] bg-[#f4f5f9] px-3 py-2 border-l-2 border-[#C4613A]/40">
-              Avec cet incoterm, le client organise le transport principal — nous n'intervenons pas sur l'acheminement.
+              Avec cet incoterm, le client organise le transport principal · nous n'intervenons pas sur l'acheminement.
             </p>
           )}
 

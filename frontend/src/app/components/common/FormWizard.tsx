@@ -22,7 +22,7 @@ export interface WizardStep {
 
 export function FormWizard({
   nav, title, intro, steps, onSubmit, submitting = false,
-  submitLabel = "Envoyer", error, footNote,
+  submitLabel = "Envoyer", error, footNote, embedded = false,
 }: {
   nav: Nav;
   title: string;
@@ -33,6 +33,9 @@ export function FormWizard({
   submitLabel?: string;
   error?: string | null;
   footNote?: ReactNode;
+  /** Rendu à l'intérieur d'une coquille existante (barre latérale) :
+   *  supprime le fond plein écran et la barre supérieure propres au wizard. */
+  embedded?: boolean;
 }) {
   const [current, setCurrent] = useState(0);
   const [stepError, setStepError] = useState<string | null>(null);
@@ -50,21 +53,9 @@ export function FormWizard({
   // On ne peut revenir que vers une étape déjà franchie (pas sauter en avant sans valider)
   const goTo = (i: number) => { if (i < current) { setStepError(null); setCurrent(i); } };
 
-  return (
-    <div className="min-h-screen bg-[#f4f5f9] font-['Inter',sans-serif]">
-      {/* ── Barre supérieure ── */}
-      <div className="bg-[#0d2265] px-6 py-4 flex items-center gap-4">
-        <button onClick={() => goBack(nav, "landing")} className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 cursor-pointer transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Retour
-        </button>
-        <span className="text-white/50 text-sm">·</span>
-        <span className="text-white text-sm font-medium">{title}</span>
-        <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer font-['Playfair_Display',Georgia,serif]">
-          À la Source
-        </button>
-      </div>
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+  const body = (
+      <div className={embedded ? "max-w-4xl mx-auto w-full" : "max-w-3xl mx-auto px-4 sm:px-6 py-8"}>
+        {embedded && <h1 className="text-xl font-bold text-[#0a0a0f] mb-1">{title}</h1>}
         {intro && <p className="text-sm text-[#64697d] leading-relaxed mb-6 max-w-2xl">{intro}</p>}
 
         {/* ── Itinéraire horizontal ── */}
@@ -134,6 +125,23 @@ export function FormWizard({
           </div>
         </div>
       </div>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="min-h-screen bg-[#f4f5f9] font-['Inter',sans-serif]">
+      {/* ── Barre supérieure ── */}
+      <div className="bg-[#0d2265] px-6 py-4 flex items-center gap-4">
+        <button onClick={() => goBack(nav, "landing")} className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 cursor-pointer transition-colors">
+          <ArrowLeft className="w-4 h-4" /> Retour
+        </button>
+        <span className="text-white/50 text-sm">·</span>
+        <span className="text-white text-sm font-medium">{title}</span>
+        <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer font-['Playfair_Display',Georgia,serif]">
+          À la Source
+        </button>
+      </div>
+      {body}
     </div>
   );
 }

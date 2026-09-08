@@ -6,7 +6,7 @@ import * as api from "@/lib/api";
 import { CAT_CATEGORIES, CERTS_FOURNISSEUR } from "@/lib/constants";
 import type { Nav } from "@/lib/routes";
 import { BtnNavy } from "@/app/components/common/buttons";
-import { FieldLabel, FormError, RGPD, SelectInput, TextInput } from "@/app/components/common/fields";
+import { CountrySelect, FieldLabel, FormError, RGPD, TextInput } from "@/app/components/common/fields";
 import { Confirm, FormCard, ScreenShell } from "@/app/components/common/layout";
 
 export function CandidatureForm({ nav }: { nav: Nav }) {
@@ -47,13 +47,7 @@ export function CandidatureForm({ nav }: { nav: Nav }) {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div><FieldLabel>Téléphone</FieldLabel><TextInput type="tel" placeholder="+221 77 000 00 00" value={form.phone} onChange={set("phone")} /></div>
-            <div>
-              <FieldLabel required>Pays</FieldLabel>
-              <SelectInput required value={form.country} onChange={set("country")}>
-                <option value="">Sélectionner…</option>
-                {["Sénégal","Côte d'Ivoire","Mali","Burkina Faso","Ghana","Cameroun","Maroc","Autre"].map(c=><option key={c}>{c}</option>)}
-              </SelectInput>
-            </div>
+            <CountrySelect label="Pays" required value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
           </div>
           <div><FieldLabel>Ville</FieldLabel><TextInput placeholder="Dakar" value={form.city} onChange={set("city")} /></div>
           <div>
@@ -102,7 +96,7 @@ export function CandidatureConfirm({ nav }: { nav: Nav }) {
         <Confirm
           icon={<CheckCircle className="w-8 h-8 text-[#0d2265]" />}
           title="Candidature reçue"
-          subtitle="Merci pour votre candidature. Chaque dossier est étudié avec attention : notre équipe vous recontactera sous 10 jours ouvrés pour la suite — échanges, évaluation des produits, audit."
+          subtitle="Merci pour votre candidature. Chaque dossier est étudié avec attention : notre équipe vous recontactera sous 10 jours ouvrés pour la suite · échanges, évaluation des produits, audit."
           nav={nav}
         />
       </div>
