@@ -29,6 +29,28 @@ export class ApiError extends Error {
   }
 }
 
+// Libellés lisibles des champs, pour transformer les erreurs de validation FastAPI
+// (renvoyées en tableau technique) en un message clair pour l'utilisateur.
+const FIELD_LABELS: Record<string, string> = {
+  company: "Société", contact_name: "Nom du contact", contact: "Contact", name: "Nom",
+  email: "E-mail", phone: "Téléphone", country: "Pays", city: "Ville",
+  products: "Produits", product_types: "Catégories", sector: "Domaine d'activité",
+  volume: "Volume", incoterm: "Incoterm", subject: "Objet", message: "Message",
+  price_per_kg: "Prix au kilo", moq: "Quantité minimum (MOQ)", packaging: "Conditionnement",
+  description: "Description", origin: "Origine", category: "Catégorie",
+};
+
+/** Convertit un tableau d'erreurs de validation FastAPI en phrase lisible. */
+function humanizeValidation(errors: Array<{ loc?: unknown[]; msg?: string }>): string {
+  const fields = errors.map(e => {
+    const key = Array.isArray(e.loc) && e.loc.length ? String(e.loc[e.loc.length - 1]) : "";
+    return FIELD_LABELS[key] ?? key;
+  }).filter(Boolean);
+  const uniq = [...new Set(fields)];
+  if (uniq.length) return `Merci de vérifier ${uniq.length > 1 ? "ces champs" : "ce champ"} : ${uniq.join(", ")}.`;
+  return "Certaines informations sont invalides ou manquantes.";
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const { headers, ...rest } = options;
   const res = await fetch(`${BASE_URL}${path}`, {
@@ -36,10 +58,11 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
     headers: { "Content-Type": "application/json", ...(headers ?? {}) },
   });
   if (!res.ok) {
-    let detail = res.statusText;
+    let detail: unknown = res.statusText;
     try {
       const body = await res.json();
-      detail = body.detail ?? JSON.stringify(body);
+      // FastAPI : erreurs de validation = tableau ; erreurs simples = chaîne.
+      detail = Array.isArray(body.detail) ? humanizeValidation(body.detail) : (body.detail ?? JSON.stringify(body));
     } catch { /* corps non-JSON */ }
     throw new ApiError(res.status, typeof detail === "string" ? detail : JSON.stringify(detail));
   }
@@ -227,7 +250,7 @@ export const leads = {
 
   candidature: (p: {
     company: string; contact_name: string; email: string; phone?: string; country: string;
-    city?: string; product_types: string[]; volumes?: string; certifications: string[];
+    city?: string; product_types: string[]; products: string[]; certifications: string[];
     rgpd_consent: boolean; language?: "fr" | "en";
   }) => request<{ id: number }>("/leads/candidature", { method: "POST", body: JSON.stringify(p) }),
 };
@@ -258,8 +281,18 @@ export const supplier = {
     request<{ message: string }>("/suppliers/me/password", {
       method: "POST", body: JSON.stringify({ current_password, new_password }), headers: supplierHeaders(),
     }),
-  myProducts: () => request<ApiProduct[]>("/suppliers/me/products", { headers: supplierHeaders() }),
-  updateProduct: (id: number, data: { stock_kg?: number; status?: ApiStockStatus; delay?: string }) =>
+  myProducts: (archived = false) =>
+    request<ApiProduct[]>(`/suppliers/me/products${archived ? "?archived=true" : ""}`, { headers: supplierHeaders() }),
+  archiveProduct: (id: number) =>
+    request<ApiProduct>(`/suppliers/me/products/${id}/archive`, { method: "POST", headers: supplierHeaders() }),
+  restoreProduct: (id: number) =>
+    request<ApiProduct>(`/suppliers/me/products/${id}/restore`, { method: "POST", headers: supplierHeaders() }),
+  updateProduct: (id: number, data: {
+    stock_kg?: number; status?: ApiStockStatus; delay?: string;
+    name?: string; category?: string; origin?: string; packaging?: string; moq?: string;
+    image?: string; description?: string; benefits?: string;
+    price_per_kg?: string; bulk_price?: string; harvest_period?: string;
+  }) =>
     request<ApiProduct>(`/suppliers/me/products/${id}`, {
       method: "PATCH", body: JSON.stringify(data), headers: supplierHeaders(),
     }),
@@ -308,6 +341,10 @@ export const admin = {
   updateLeadStatus: (id: number, status: ApiLeadStatus) =>
     request<ApiLead>(`/admin/leads/${id}`, {
       method: "PATCH", body: JSON.stringify({ status }), headers: adminHeaders(),
+    }),
+  replyLead: (id: number, subject: string, message: string) =>
+    request<{ message: string }>(`/admin/leads/${id}/reply`, {
+      method: "POST", body: JSON.stringify({ subject, message }), headers: adminHeaders(),
     }),
   deleteLead: (id: number) =>
     request<void>(`/admin/leads/${id}`, { method: "DELETE", headers: adminHeaders() }),
@@ -407,9 +444,9 @@ export const admin = {
 
   proposals: (pendingOnly = false) =>
     request<ApiProposal[]>(`/admin/proposals${pendingOnly ? "?pending_only=true" : ""}`, { headers: adminHeaders() }),
-  decideProposal: (id: number, status: "Approuvé" | "Refusé") =>
+  decideProposal: (id: number, status: "Approuvé" | "Refusé", reason?: string) =>
     request<ApiProposal>(`/admin/proposals/${id}`, {
-      method: "PATCH", body: JSON.stringify({ status }), headers: adminHeaders(),
+      method: "PATCH", body: JSON.stringify({ status, reason }), headers: adminHeaders(),
     }),
 
   appointments: () => request<ApiAppointment[]>("/admin/appointments", { headers: adminHeaders() }),

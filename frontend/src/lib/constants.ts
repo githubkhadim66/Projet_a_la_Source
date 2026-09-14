@@ -100,16 +100,26 @@ export const EMBALLAGE_PLURIEL: Record<string, string> = {
   "Palette": "palettes", "Conteneur 20'": "conteneurs 20'", "Conteneur 40'": "conteneurs 40'",
 };
 export const MESURES = ["kg", "L"];
+// Unité logique par défaut selon l'emballage : les bidons contiennent des liquides (L),
+// le reste se mesure au poids (kg). Sélectionnée automatiquement, modifiable si besoin.
+export const EMBALLAGE_UNITE_DEFAUT: Record<string, "kg" | "L"> = {
+  "Sac": "kg", "Carton": "kg", "Bidon": "L", "Seau": "kg",
+  "Palette": "kg", "Conteneur 20'": "kg", "Conteneur 40'": "kg", "Vrac": "kg",
+};
+// Emballages ayant une contenance unitaire (« de X kg/L »). Les autres (palette,
+// conteneur, vrac) sont des formats en gros, sans poids/volume par colis.
+export const EMBALLAGES_AVEC_CONTENANCE = ["Sac", "Carton", "Bidon", "Seau"];
 
-/** Compose le libellé du conditionnement, ex. « Sac de 25 kg » (ou « Vrac »). */
+/** Compose le libellé du conditionnement, ex. « Sac de 25 kg », « Palette », « Vrac ». */
 export function composePackaging(type: string, size: string, unit: string): string {
   if (!type) return "";
-  if (type === "Vrac") return "Vrac";
+  // Palette / Conteneur / Vrac : format en gros, pas de contenance unitaire → juste le type.
+  if (!EMBALLAGES_AVEC_CONTENANCE.includes(type)) return type;
   return size.trim() ? `${type} de ${size.trim()} ${unit}` : "";
 }
 
-/** Compose le libellé de la MOQ avec l'équivalent calculé, ex. « 500 kg (20 sacs) ».
- *  `unitMode` = "base" (kg/L/tonnes) ou "colis" (multiples du conditionnement). */
+/** Compose le libellé de la MOQ avec l'équivalent calculé, ex. « 500 kg (20 sacs) »,
+ *  « 10 palettes ». `unitMode` = "base" (kg/L) ou "colis" (multiples du conditionnement). */
 export function composeMoq(
   value: string, unitMode: "base" | "colis", baseUnit: string,
   packType: string, packSize: string, packUnit: string,
@@ -119,9 +129,13 @@ export function composeMoq(
   const size = parseFloat((packSize || "").replace(",", "."));
   const plural = EMBALLAGE_PLURIEL[packType] || (packType ? packType.toLowerCase() : "colis");
 
-  if (unitMode === "colis" && size > 0) {
-    const total = v * size;
-    return `${total.toLocaleString("fr-FR")} ${packUnit} (${v.toLocaleString("fr-FR")} ${plural})`;
+  if (unitMode === "colis") {
+    // Avec contenance connue → total + équivalent colis ; sinon juste le nombre de colis.
+    if (size > 0) {
+      const total = v * size;
+      return `${total.toLocaleString("fr-FR")} ${packUnit} (${v.toLocaleString("fr-FR")} ${plural})`;
+    }
+    return `${v.toLocaleString("fr-FR")} ${plural}`;
   }
   // Mode base : équivalent en colis si l'unité correspond et que ça tombe juste
   let suffix = "";

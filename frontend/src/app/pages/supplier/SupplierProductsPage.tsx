@@ -5,7 +5,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Check, ChevronDown, Edit2, PackageX, Plus, Search } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, Edit2, PackageX, Pencil, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiProduct } from "@/lib/api";
 import { fmtDate, productImg } from "@/lib/format";
@@ -15,7 +15,9 @@ import type { Nav } from "@/lib/routes";
 import { DELAIS_PRODUIT } from "@/lib/constants";
 import { BtnNavy } from "@/app/components/common/buttons";
 import { FieldLabel, SelectInput, TextInput } from "@/app/components/common/fields";
+import { useConfirm, useToast } from "@/app/components/common/feedback";
 import { SupplierShell } from "./SupplierShell";
+import { SupplierProductEditModal } from "./SupplierProductEditModal";
 
 const AUTRE_DELAI = "Autre (préciser)";
 
@@ -28,17 +30,21 @@ const STATUS_BADGE: Record<StockStatus, string> = {
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 export function SupplierProducts({ nav }: { nav: Nav }) {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StockStatus | "all">("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
-  const [staleOnly, setStaleOnly] = useState(false);
+  // Filtre unique (exclusif) : "all" | statut | "stale" | "cat:<catégorie>". Un seul à la fois.
+  const [filter, setFilter] = useState<string>("all");
   const [expanded, setExpanded] = useState<number | null>(null);
   const [editing, setEditing] = useState<number | null>(null);
   const [editData, setEditData] = useState<{ stock: string; status: StockStatus; delay: string }>({ stock: "", status: "En stock", delay: "" });
   const [delayCustom, setDelayCustom] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [editInfo, setEditInfo] = useState<ApiProduct | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
+  const [archived, setArchived] = useState<ApiProduct[]>([]);
+  const [archivedLoaded, setArchivedLoaded] = useState(false);
 
   const logout = useCallback(() => { api.setSupplierToken(null); nav("login"); }, [nav]);
 
@@ -63,8 +69,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
   const save = async (id: number) => {
     const qty = Number(editData.stock);
     if (editData.status === "En stock" && (!editData.stock || qty <= 0)) {
-      setToast("Un produit « En stock » doit avoir une quantité supérieure à 0 · choisissez « Sur commande » ou « Rupture ».");
-      setTimeout(() => setToast(null), 4500);
+      toast("Un produit « En stock » doit avoir une quantité supérieure à 0 · choisissez « Sur commande » ou « Rupture ».", "error");
       return;
     }
     try {
@@ -74,14 +79,50 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
       const wasRupture = products.find(p => p.id === id)?.status === "Rupture";
       setProducts(ps => ps.map(p => p.id === id ? updated : p));
       setEditing(null);
-      setToast(updated.status === "Rupture" && !wasRupture
+      toast(updated.status === "Rupture" && !wasRupture
         ? "Rupture enregistrée · pensez à réapprovisionner au plus vite."
         : `Mise à jour enregistrée le ${fmtDate(updated.updated_at)}`);
-      setTimeout(() => setToast(null), 4000);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
-      setToast("Échec de l'enregistrement · réessayez.");
-      setTimeout(() => setToast(null), 3500);
+      toast("Échec de l'enregistrement · réessayez.", "error");
+    }
+  };
+
+  // Retrait doux (réversible) d'un produit · confirmation puis passage en corbeille.
+  const archiveProduct = async (p: ApiProduct) => {
+    const ok = await confirm({
+      title: `Retirer « ${p.name} » de la vente ?`,
+      message: "Il quittera le catalogue mais restera récupérable dans « Produits retirés ».",
+      confirmLabel: "Retirer", tone: "danger",
+    });
+    if (!ok) return;
+    try {
+      const done = await api.supplier.archiveProduct(p.id);
+      setProducts(ps => ps.filter(x => x.id !== p.id));
+      setArchived(a => [done, ...a.filter(x => x.id !== p.id)]);
+      toast("Produit retiré · l'équipe À la Source a été prévenue.");
+    } catch (err) {
+      if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
+      toast("Échec du retrait · réessayez.", "error");
+    }
+  };
+  const restoreProduct = async (p: ApiProduct) => {
+    try {
+      const done = await api.supplier.restoreProduct(p.id);
+      setArchived(a => a.filter(x => x.id !== p.id));
+      setProducts(ps => [done, ...ps.filter(x => x.id !== p.id)]);
+      toast("Produit restauré.");
+    } catch (err) {
+      if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
+      toast("Échec de la restauration · réessayez.", "error");
+    }
+  };
+  // Ouvre/ferme la corbeille · charge les produits retirés à la première ouverture.
+  const openArchived = () => {
+    setShowArchived(true);
+    if (!archivedLoaded) {
+      api.supplier.myProducts(true).then(a => { setArchived(a); setArchivedLoaded(true); })
+        .catch(err => { if (err instanceof api.ApiError && err.status === 401) logout(); });
     }
   };
 
@@ -97,19 +138,20 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
     () => [...new Set(products.map(p => p.category).filter((c): c is string => !!c))].sort((a, b) => a.localeCompare(b, "fr")),
     [products]);
 
-  const anyFilter = !!query || statusFilter !== "all" || categoryFilter !== "all" || staleOnly;
-  const resetFilters = () => { setQuery(""); setStatusFilter("all"); setCategoryFilter("all"); setStaleOnly(false); };
+  const anyFilter = !!query || filter !== "all";
+  const resetFilters = () => { setQuery(""); setFilter("all"); };
 
   const filtered = useMemo(() => {
     const q = norm(query.trim());
     return products.filter(p => {
-      if (statusFilter !== "all" && p.status !== statusFilter) return false;
-      if (categoryFilter !== "all" && p.category !== categoryFilter) return false;
-      if (staleOnly && !isStale(p)) return false;
+      // La recherche texte s'applique toujours ; le filtre (chip/catégorie) est exclusif.
       if (q && ![p.name, p.ref, p.origin ?? "", p.category ?? ""].some(v => norm(v).includes(q))) return false;
-      return true;
-    });
-  }, [products, query, statusFilter, categoryFilter, staleOnly]);
+      if (filter === "all") return true;
+      if (filter === "stale") return isStale(p);
+      if (filter.startsWith("cat:")) return p.category === filter.slice(4);
+      return p.status === filter; // En stock / Sur commande / Rupture
+    }).sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" }));
+  }, [products, query, filter]);
 
   return (
     <SupplierShell nav={nav} active="products" staleCount={staleCount}>
@@ -145,13 +187,14 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
         {/* Filtres */}
         {!loading && products.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            <Chip active={statusFilter === "all"} onClick={() => setStatusFilter("all")}>Tous</Chip>
-            <Chip active={statusFilter === "En stock"} onClick={() => setStatusFilter("En stock")}>En stock · {statusCounts["En stock"]}</Chip>
-            <Chip active={statusFilter === "Sur commande"} onClick={() => setStatusFilter("Sur commande")}>Sur commande · {statusCounts["Sur commande"]}</Chip>
-            <Chip active={statusFilter === "Rupture"} onClick={() => setStatusFilter("Rupture")} tone="red">Rupture · {statusCounts["Rupture"]}</Chip>
-            <Chip active={staleOnly} onClick={() => setStaleOnly(s => !s)} tone="orange">À actualiser · {staleCount}</Chip>
+            <Chip active={filter === "all"} onClick={() => setFilter("all")}>Tous</Chip>
+            <Chip active={filter === "En stock"} onClick={() => setFilter("En stock")}>En stock · {statusCounts["En stock"]}</Chip>
+            <Chip active={filter === "Sur commande"} onClick={() => setFilter("Sur commande")}>Sur commande · {statusCounts["Sur commande"]}</Chip>
+            <Chip active={filter === "Rupture"} onClick={() => setFilter("Rupture")} tone="red">Rupture · {statusCounts["Rupture"]}</Chip>
+            <Chip active={filter === "stale"} onClick={() => setFilter("stale")} tone="orange">À actualiser · {staleCount}</Chip>
             {categories.length > 0 && (
-              <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}
+              <select value={filter.startsWith("cat:") ? filter.slice(4) : "all"}
+                onChange={e => setFilter(e.target.value === "all" ? "all" : `cat:${e.target.value}`)}
                 className="border border-[rgba(13,34,101,0.18)] bg-white px-3 py-1.5 text-xs text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
                 <option value="all">Toutes catégories</option>
                 {categories.map(c => <option key={c} value={c}>{c}</option>)}
@@ -236,13 +279,20 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                       <span>En rupture · réapprovisionnez au plus vite. Mettez à jour le stock dès que le produit est de nouveau disponible pour rester visible auprès des acheteurs.</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-3 mt-3">
+                  <div className="flex flex-wrap items-center gap-2 mt-3">
                     <button onClick={() => { setExpanded(isOpen ? null : p.id); setEditing(null); }}
                       className="text-xs text-[#0d2265] hover:text-[#C4613A] font-medium cursor-pointer flex items-center gap-1 transition-colors">
                       Détails <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
+                    <button onClick={() => setEditInfo(p)} className="border border-[rgba(13,34,101,0.18)] text-[#0d2265] text-xs px-3 py-1.5 hover:bg-[#f4f5f9] cursor-pointer transition-colors flex items-center gap-1.5">
+                      <Pencil className="w-3.5 h-3.5" /> Modifier la fiche
+                    </button>
                     <button onClick={() => openEdit(p)} className="border border-[rgba(13,34,101,0.18)] text-[#0d2265] text-xs px-3 py-1.5 hover:bg-[#f4f5f9] cursor-pointer transition-colors flex items-center gap-1.5">
-                      <Edit2 className="w-3.5 h-3.5" /> Mettre à jour
+                      <Edit2 className="w-3.5 h-3.5" /> Mettre à jour le stock
+                    </button>
+                    <button onClick={() => archiveProduct(p)} title="Retirer de la vente (récupérable)"
+                      className="border border-red-200 text-red-600 text-xs px-3 py-1.5 hover:bg-red-50 cursor-pointer transition-colors flex items-center gap-1.5 ml-auto">
+                      <Trash2 className="w-3.5 h-3.5" /> Retirer
                     </button>
                   </div>
                 </div>
@@ -345,12 +395,53 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
             );
           })}
         </div>
+
+        {/* Produits retirés (corbeille) · réversible */}
+        {!loading && (
+          <div className="mt-8 pt-6 border-t border-[rgba(13,34,101,0.08)]">
+            <button onClick={() => showArchived ? setShowArchived(false) : openArchived()}
+              className="text-sm text-[#64697d] hover:text-[#0d2265] font-medium cursor-pointer flex items-center gap-1.5 transition-colors">
+              <Trash2 className="w-3.5 h-3.5" />
+              {showArchived ? "Masquer les produits retirés" : "Voir les produits retirés"}
+              {archivedLoaded && ` (${archived.length})`}
+            </button>
+            {showArchived && (
+              <div className="space-y-2 mt-4">
+                {archived.length === 0 && (
+                  <p className="text-sm text-[#64697d] py-6 text-center bg-white border border-[rgba(13,34,101,0.08)]">Aucun produit retiré.</p>
+                )}
+                {[...archived].sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" })).map(p => (
+                  <div key={p.id} className="bg-white border border-[rgba(13,34,101,0.1)] p-3 flex items-center gap-3">
+                    <div className="w-12 h-12 bg-[#eef1f8] overflow-hidden border border-[rgba(13,34,101,0.1)] shrink-0">
+                      <img src={productImg(p.image)} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-[#0a0a0f] truncate">{p.name}</p>
+                      <p className="text-xs text-[#64697d] font-mono">{p.ref}</p>
+                    </div>
+                    <button onClick={() => restoreProduct(p)}
+                      className="border border-[rgba(13,34,101,0.18)] text-[#0d2265] text-xs px-3 py-1.5 hover:bg-[#f4f5f9] cursor-pointer transition-colors flex items-center gap-1.5 shrink-0">
+                      <RotateCcw className="w-3.5 h-3.5" /> Restaurer
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#0d2265] text-white text-sm px-5 py-3 shadow-xl flex items-center gap-2 z-50">
-          <Check className="w-4 h-4" /> {toast}
-        </div>
+      {editInfo && (
+        <SupplierProductEditModal
+          product={editInfo}
+          onClose={() => setEditInfo(null)}
+          onAuthError={logout}
+          onSaved={updated => {
+            setProducts(ps => ps.map(p => p.id === updated.id ? updated : p));
+            setEditInfo(null);
+            toast("Fiche produit mise à jour.");
+          }}
+        />
       )}
     </SupplierShell>
   );

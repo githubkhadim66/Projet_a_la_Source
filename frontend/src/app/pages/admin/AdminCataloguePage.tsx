@@ -8,6 +8,7 @@ import { CAT_CATEGORIES } from "@/lib/constants";
 import { fmtDate, productImg } from "@/lib/format";
 import type { StockStatus } from "@/lib/leads";
 import type { Nav } from "@/lib/routes";
+import { useConfirm, useToast } from "@/app/components/common/feedback";
 import { AdminShell, KpiCard } from "./AdminShell";
 import { useAdminGuard } from "./adminSession";
 import { CatalogueComposition } from "./catalogue/CatalogueComposition";
@@ -17,6 +18,8 @@ import type { ProductFormValues } from "./catalogue/ProductForm";
 
 export function AdminCatalogue({ nav }: { nav: Nav }) {
   const onApiError = useAdminGuard(nav);
+  const toast = useToast();
+  const confirm = useConfirm();
   const [products, setProducts] = useState<ApiAdminProduct[]>([]);
   const [suppliers, setSuppliers] = useState<ApiSupplier[]>([]);
   const [catTab, setCatTab] = useState<"produits"|"stocks"|"pdf"|"demandes"|"archives">("produits");
@@ -49,11 +52,17 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
 
   // Corbeille réversible : archiver retire du site/catalogue sans perdre le produit
   const archiveProduct = async (p: ApiAdminProduct) => {
-    if (!window.confirm(`Mettre « ${p.name} » à la corbeille ?\n\nIl quitte le site et le catalogue, mais reste restaurable depuis l'onglet « Corbeille ».`)) return;
+    const ok = await confirm({
+      title: `Mettre « ${p.name} » à la corbeille ?`,
+      message: "Il quitte le site et le catalogue, mais reste restaurable depuis l'onglet « Corbeille ».",
+      confirmLabel: "Mettre à la corbeille", tone: "danger",
+    });
+    if (!ok) return;
     try {
       const updated = await api.admin.archiveProduct(p.id);
       setProducts(prev => prev.filter(x => x.id !== p.id));
       setArchived(prev => [...prev, updated]);
+      toast("Produit mis à la corbeille.");
     } catch (err) { onApiError(err); }
   };
 
@@ -66,10 +75,16 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   };
 
   const purgeProduct = async (p: ApiAdminProduct) => {
-    if (!window.confirm(`Supprimer DÉFINITIVEMENT « ${p.name} » ?\n\nCette action est irréversible.`)) return;
+    const ok = await confirm({
+      title: `Supprimer définitivement « ${p.name} » ?`,
+      message: "Cette action est irréversible.",
+      confirmLabel: "Supprimer définitivement", tone: "danger",
+    });
+    if (!ok) return;
     try {
       await api.admin.deleteProduct(p.id);
       setArchived(prev => prev.filter(x => x.id !== p.id));
+      toast("Produit supprimé définitivement.");
     } catch (err) { onApiError(err); }
   };
 

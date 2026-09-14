@@ -11,6 +11,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { SCREEN_PATHS, screenFromPath } from "@/lib/routes";
 import type { Nav, Screen } from "@/lib/routes";
+import { FeedbackProvider } from "./components/common/feedback";
 import { LandingPage } from "./pages/landing/LandingPage";
 import { CatalogueConfirm, CatalogueForm } from "./pages/forms/CataloguePage";
 import { DevisForm, FormConfirm } from "./pages/forms/DevisPage";
@@ -48,6 +49,7 @@ export default function App() {
     window.scrollTo(0, 0);
   }, []);
 
+  const view = (() => {
   switch (screen) {
     case "produit": return <ProductPage nav={nav} />;
     case "catalogue": return <CatalogueForm nav={nav} onSuccess={setCatalogueUrl} />;
@@ -73,4 +75,7 @@ export default function App() {
     case "admin-rdv": return <AdminRdv nav={nav} />;
     default: return <LandingPage nav={nav} />;
   }
+  })();
+
+  return <FeedbackProvider>{view}</FeedbackProvider>;
 }

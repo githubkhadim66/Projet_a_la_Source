@@ -84,9 +84,16 @@ def update_my_profile(
 
 
 @router.get("/me/products", response_model=list[ProductOut])
-def my_products(supplier: Supplier = Depends(get_current_supplier), db: Session = Depends(get_db)):
-    """Étanchéité (FRS-04) : uniquement les produits du fournisseur authentifié."""
-    return list(db.scalars(select(Product).where(Product.supplier_id == supplier.id)))
+def my_products(
+    archived: bool = False,
+    supplier: Supplier = Depends(get_current_supplier),
+    db: Session = Depends(get_db),
+):
+    """Étanchéité (FRS-04) : uniquement les produits du fournisseur authentifié.
+    Actifs par défaut ; `archived=true` renvoie les produits retirés (corbeille)."""
+    q = select(Product).where(Product.supplier_id == supplier.id)
+    q = q.where(Product.archived_at.is_not(None)) if archived else q.where(Product.archived_at.is_(None))
+    return list(db.scalars(q))
 
 
 @router.patch("/me/products/{product_id}", response_model=ProductOut)
@@ -120,6 +127,46 @@ def update_my_product(
             f"Signalée le {product.updated_at:%d/%m/%Y à %H:%M} UTC.\n\n"
             "Pensez à informer les acheteurs concernés et à proposer une alternative si besoin.",
         )
+    return product
+
+
+@router.post("/me/products/{product_id}/archive", response_model=ProductOut)
+def archive_my_product(
+    product_id: int,
+    supplier: Supplier = Depends(get_current_supplier),
+    db: Session = Depends(get_db),
+):
+    """Retrait doux (réversible) d'un produit par son fournisseur : il quitte le catalogue
+    et les listes actives mais reste conservé (corbeille). Prévient l'équipe À la Source."""
+    product = db.get(Product, product_id)
+    if product is None or product.supplier_id != supplier.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit introuvable")
+    if product.archived_at is None:
+        product.archived_at = datetime.now(UTC)
+        db.commit()
+        db.refresh(product)
+        emails.notify_internal(
+            f"Produit retiré · {product.name}",
+            f"Le fournisseur {supplier.name} a retiré de la vente le produit "
+            f"{product.name} ({product.ref}).\n"
+            "Il n'apparaît plus au catalogue. Il reste récupérable (corbeille) si besoin.",
+        )
+    return product
+
+
+@router.post("/me/products/{product_id}/restore", response_model=ProductOut)
+def restore_my_product(
+    product_id: int,
+    supplier: Supplier = Depends(get_current_supplier),
+    db: Session = Depends(get_db),
+):
+    """Restaure un produit retiré par le fournisseur."""
+    product = db.get(Product, product_id)
+    if product is None or product.supplier_id != supplier.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit introuvable")
+    product.archived_at = None
+    db.commit()
+    db.refresh(product)
     return product
 
 

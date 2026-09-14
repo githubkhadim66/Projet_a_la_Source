@@ -158,7 +158,7 @@ def create_candidature(data: CandidatureCreate, db: Session = Depends(get_db)):
         payload={
             "city": data.city,
             "product_types": data.product_types,
-            "volumes": data.volumes,
+            "products": data.products,
             "certifications": data.certifications,
         },
     )

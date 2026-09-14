@@ -24,7 +24,7 @@ from app.models import (
     Supplier,
 )
 from app.schemas.auth import AdminLogin, TokenResponse
-from app.schemas.lead import LeadOut, LeadStatusUpdate
+from app.schemas.lead import LeadOut, LeadReply, LeadStatusUpdate
 from app.schemas.rdv import RdvOut, RdvStatusUpdate
 from app.schemas.supplier import (
     AdminProductOut,
@@ -137,6 +137,27 @@ def update_lead_status(
     db.commit()
     db.refresh(lead)
     return lead
+
+
+@router.post("/leads/{lead_id}/reply")
+def reply_to_lead(
+    lead_id: int,
+    data: LeadReply,
+    _: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Envoie une réponse par e-mail au contact d'un lead (devis, sourcing…)."""
+    lead = db.get(Lead, lead_id)
+    if lead is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead introuvable")
+    try:
+        emails.send_direct(lead.email, data.subject, data.message)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="L'e-mail n'a pas pu être envoyé. Vérifiez la configuration SMTP.",
+        ) from exc
+    return {"message": f"E-mail envoyé à {lead.email}."}
 
 
 # ─── Fournisseurs (FRS-01 : création/désactivation par l'admin seul) ─────────
@@ -374,6 +395,14 @@ def decide_proposal(
                 status=StockStatus.SUR_COMMANDE,
                 delay="À confirmer",
             ))
+    # Refus → on informe le fournisseur par e-mail, avec le motif renseigné par l'admin.
+    if was_pending and data.status == ProposalStatus.REFUSE and proposal.supplier:
+        emails.send_template(
+            "proposal_rejected", proposal.supplier.email, "fr",
+            name=proposal.supplier.contact_name or proposal.supplier.name,
+            product=proposal.name,
+            reason=(data.reason or "").strip() or "non précisé",
+        )
     db.commit()
     db.refresh(proposal)
     return _proposal_out(proposal)

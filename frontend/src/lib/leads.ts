@@ -11,7 +11,32 @@ export interface Lead {
   id: number; date: string; company: string; contact: string; country: string;
   status: LeadStatus; product?: string; email: string; phone?: string | null;
   payload?: Record<string, unknown>;
+  createdAt: string; updatedAt: string;
 }
+
+// ─── Suivi des délais (SLA) ──────────────────────────────────────────────────
+/** Délai de première prise en charge d'un nouveau lead (promesse 24-48 h). */
+export const NEW_SLA_HOURS = 48;
+/** Sans réponse après un devis envoyé → relance suggérée. */
+export const FOLLOWUP_DAYS = 5;
+
+const hoursSince = (iso: string) => (Date.now() - new Date(iso).getTime()) / 3_600_000;
+
+export type LeadAlert = { kind: "overdue" | "followup"; label: string };
+
+/** Alerte temporelle d'un lead : « En retard » (nouveau non traité) ou « À relancer » (devis sans réponse). */
+export function leadAlert(l: Lead): LeadAlert | null {
+  if (l.status === "Nouveau" && hoursSince(l.createdAt) >= NEW_SLA_HOURS)
+    return { kind: "overdue", label: "En retard" };
+  if (l.status === "Devis envoyé" && hoursSince(l.updatedAt) >= FOLLOWUP_DAYS * 24)
+    return { kind: "followup", label: "À relancer" };
+  return null;
+}
+
+export const alertPill = (kind: LeadAlert["kind"]) =>
+  kind === "overdue"
+    ? "bg-red-100 text-red-700 border border-red-300"
+    : "bg-amber-100 text-amber-800 border border-amber-300";
 
 export const statusBadge: Record<LeadStatus, string> = {
   "Nouveau": "bg-blue-50 text-blue-700 border border-blue-200",
@@ -60,5 +85,7 @@ export function toUiLead(l: ApiLead): Lead {
     email: l.email,
     phone: l.phone,
     payload: l.payload,
+    createdAt: l.created_at,
+    updatedAt: l.updated_at,
   };
 }

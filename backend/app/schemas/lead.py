@@ -78,10 +78,15 @@ class CandidatureCreate(_AntiSpam):
     country: str = Field(min_length=1, max_length=100)
     city: str | None = None
     product_types: list[str] = []
-    volumes: str | None = None
+    products: list[str] = []
     certifications: list[str] = []
     rgpd_consent: bool
     language: Language = "fr"
+
+
+class LeadReply(BaseModel):
+    subject: str = Field(min_length=1, max_length=255)
+    message: str = Field(min_length=1)
 
 
 class LeadOut(BaseModel):

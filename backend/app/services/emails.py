@@ -47,6 +47,10 @@ TEMPLATES = {
                "been updated for more than {days} days:\n{products}\n\nSign in to your supplier area to "
                "update stock, availability and lead times.\n\nThe À la Source team"),
     },
+    "proposal_rejected": {
+        "fr": ("Votre proposition de produit · À la Source", "Bonjour {name},\n\nMerci pour votre proposition « {product} ». Après examen, nous ne pouvons pas la retenir pour le moment.\n\nMotif : {reason}\n\nVous pouvez nous soumettre une nouvelle proposition ajustée à tout moment depuis votre espace fournisseur.\n\nL'équipe À la Source"),
+        "en": ("Your product proposal · À la Source", "Hello {name},\n\nThank you for your proposal \"{product}\". After review, we are unable to accept it at this time.\n\nReason: {reason}\n\nYou are welcome to submit an adjusted proposal anytime from your supplier area.\n\nThe À la Source team"),
+    },
     "rdv_confirmation": {
         "fr": ("Rendez-vous confirmé — À la Source", "Bonjour {name},\n\nVotre échange du {day} à {slot} "
                "({duration} min) est confirmé. Le lien de visioconférence suivra.\n\nL'équipe À la Source"),
@@ -77,6 +81,12 @@ def send_template(template: str, to: str, language: str = "fr", **kwargs) -> Non
         _send(to, subject, body.format(**kwargs))
     except Exception:  # l'échec d'un e-mail ne doit jamais perdre un lead
         logger.exception("Échec d'envoi e-mail (%s → %s)", template, to)
+
+
+def send_direct(to: str, subject: str, body: str) -> None:
+    """Envoi d'un e-mail libre (réponse de l'équipe À la Source à un lead).
+    Laisse remonter l'erreur : l'admin doit savoir si l'envoi a échoué."""
+    _send(to, subject, body)
 
 
 def notify_internal(subject: str, body: str) -> None:

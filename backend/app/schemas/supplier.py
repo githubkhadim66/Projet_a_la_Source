@@ -174,8 +174,21 @@ class CatalogueReorder(BaseModel):
 
 
 class ProductStockUpdate(BaseModel):
-    """Seuls champs modifiables par le fournisseur (CDC FRS-02)."""
+    """Champs modifiables par le fournisseur sur sa propre fiche (CDC FRS-02) :
+    stock/dispo/délai + informations descriptives et commerciales internes.
+    La curation (visible, vedette, catalogue) et le rattachement restent à l'admin."""
 
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    category: str | None = None
+    origin: str | None = Field(default=None, max_length=100)
+    packaging: str | None = Field(default=None, max_length=100)
+    moq: str | None = Field(default=None, max_length=100)
+    image: str | None = Field(default=None, max_length=500)
+    description: str | None = None
+    benefits: str | None = None
+    price_per_kg: str | None = Field(default=None, max_length=100)
+    bulk_price: str | None = Field(default=None, max_length=100)
+    harvest_period: str | None = Field(default=None, max_length=100)
     stock_kg: int | None = Field(default=None, ge=0)
     status: StockStatus | None = None
     delay: str | None = Field(default=None, max_length=100)
@@ -222,3 +235,4 @@ class ProposalOut(BaseModel):
 
 class ProposalDecision(BaseModel):
     status: ProposalStatus
+    reason: str | None = None  # motif communiqué au fournisseur en cas de refus

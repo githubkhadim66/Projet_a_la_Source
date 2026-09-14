@@ -3,9 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { AlertCircle, Check, Info } from "lucide-react";
 import {
-  CERTS_OPTIONS, composeMoq, composePackaging, EMBALLAGE_PLURIEL, EMBALLAGES,
-  INCOTERM_INFO, INCOTERM_STRATEGIES, INCOTERMS_CHOIX, MESURES, PAYS_MONDE,
+  CERTS_OPTIONS, composeMoq, composePackaging, EMBALLAGE_PLURIEL, EMBALLAGE_UNITE_DEFAUT,
+  EMBALLAGES, EMBALLAGES_AVEC_CONTENANCE, INCOTERM_INFO, INCOTERM_STRATEGIES,
+  INCOTERMS_CHOIX, MESURES, PAYS_MONDE,
 } from "@/lib/constants";
+import { suggestProducts } from "@/lib/productSuggest";
 
 /** Recherche insensible aux accents et à la casse. */
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -214,9 +216,31 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
   const [moqUnit, setMoqUnit] = useState(m0.unit);
 
   const isVrac = packType === "Vrac";
+  const hasSize = EMBALLAGES_AVEC_CONTENANCE.includes(packType); // contenance « de X kg/L »
   const packPlural = EMBALLAGE_PLURIEL[packType] || packType.toLowerCase();
-  const moqUnits = ["kg", "tonnes", "L", ...(!isVrac ? [packPlural] : [])];
+  // Unités MOQ selon le conditionnement (logique normale, sans « tonnes ») :
+  //  · Vrac        → kg / L
+  //  · Sac/Bidon…  → unité du produit (kg ou L) + nombre de colis
+  //  · Palette/Conteneur → nombre de colis (palettes, conteneurs)
+  const moqBaseUnits = isVrac ? ["kg", "L"] : hasSize ? [packUnit, packPlural] : [packPlural];
+  const moqUnits = [...new Set([...moqBaseUnits, moqUnit])];
   const moqIsColis = moqUnit === packPlural && !isVrac;
+
+  // Changer l'emballage fixe l'unité logique (Sac→kg, Bidon→L…) et l'unité de la MOQ.
+  const changePackType = (v: string) => {
+    const u = EMBALLAGE_UNITE_DEFAUT[v] ?? "kg";
+    const withSize = EMBALLAGES_AVEC_CONTENANCE.includes(v);
+    const plural = EMBALLAGE_PLURIEL[v] || v.toLowerCase();
+    setPackType(v);
+    setPackUnit(u);
+    if (!withSize) setPackSize("");
+    setMoqUnit(v === "Vrac" ? "kg" : withSize ? u : plural);
+  };
+  // Changer l'unité du conditionnement aligne aussi l'unité de base de la MOQ.
+  const changePackUnit = (u: string) => {
+    setPackUnit(u);
+    if (moqUnit === "kg" || moqUnit === "L") setMoqUnit(u);
+  };
   const packagingText = composePackaging(packType, packSize, packUnit);
   const moqText = composeMoq(moqValue, moqIsColis ? "colis" : "base", moqUnit, packType, packSize, packUnit);
 
@@ -241,12 +265,12 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
       <div>
         <label className="block text-sm text-[#0a0a0f] mb-1.5">Conditionnement (format de vente)</label>
         <div className="grid grid-cols-3 gap-2">
-          <select value={packType} onChange={e => setPackType(e.target.value)} className={selCls}>
+          <select value={packType} onChange={e => changePackType(e.target.value)} className={selCls}>
             {EMBALLAGES.map(t => <option key={t}>{t}</option>)}
           </select>
-          {!isVrac && <>
+          {hasSize && <>
             <input type="text" inputMode="decimal" placeholder="25" value={packSize} onChange={e => setPackSize(e.target.value)} className={inCls} />
-            <select value={packUnit} onChange={e => setPackUnit(e.target.value)} className={selCls}>
+            <select value={packUnit} onChange={e => changePackUnit(e.target.value)} className={selCls}>
               {MESURES.map(u => <option key={u}>{u}</option>)}
             </select>
           </>}
@@ -263,7 +287,9 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
         </div>
         {moqText
           ? <p className="text-xs text-[#2E6B4F] mt-1.5">→ MOQ : {moqText}</p>
-          : <p className="text-[11px] text-[#64697d] mt-1.5">Choisissez « {packPlural} » pour saisir la MOQ en nombre de colis · l'équivalent en {packUnit} est calculé.</p>}
+          : hasSize
+            ? <p className="text-[11px] text-[#64697d] mt-1.5">Choisissez « {packPlural} » pour saisir la MOQ en nombre de colis · l'équivalent en {packUnit} est calculé.</p>
+            : null}
       </div>
     </div>
   );
@@ -337,17 +363,9 @@ export function TagInput({ tags, setTags, placeholder, suggestions = [] }: {
     setInput(""); setOpen(false); setActive(-1);
   };
 
-  // Suggestions du catalogue correspondant à la saisie (évite les fautes d'orthographe).
-  // On matche sur le début d'un mot du libellé (ex. « gin » → « Gingembre »), pas
-  // n'importe quelle sous-chaîne (« gin » ne doit pas matcher « ori-gin-es »).
-  const q = input.trim().toLowerCase();
-  const matches = q
-    ? suggestions.filter(s => {
-        if (tags.includes(s)) return false;
-        const l = s.toLowerCase();
-        return l.startsWith(q) || l.split(/[\s(«»,·/-]+/).some(w => w.startsWith(q));
-      }).slice(0, 8)
-    : [];
+  // Suggestions du catalogue correspondant à la saisie, tolérantes aux fautes de frappe
+  // (ex. « gingambre » → « Gingembre »). Ne bloque rien : un produit inconnu reste saisissable.
+  const matches = suggestProducts(input, suggestions, 8).filter(s => !tags.includes(s));
   const showList = open && matches.length > 0;
 
   const onKeyDown = (e: React.KeyboardEvent) => {

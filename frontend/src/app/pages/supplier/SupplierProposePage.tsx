@@ -3,10 +3,11 @@
  *  avec calcul automatique de l'équivalent (ex. 20 sacs = 500 kg).
  */
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CheckCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
 import { CAT_CATEGORIES, CERTS_FOURNISSEUR, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
+import { suggestProducts } from "@/lib/productSuggest";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
 import { CountrySelect, FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
@@ -36,6 +37,16 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
   const toggleCert = (c: string) => setCerts(cs => cs.includes(c) ? cs.filter(x => x !== c) : [...cs, c]);
 
   const produitsCategorie = PRODUITS_PAR_CATEGORIE[form.category] ?? [];
+
+  // Suggestions tolérantes aux fautes quand le fournisseur saisit un produit libre.
+  const allKnownProducts = useMemo(() => {
+    const set = new Set<string>();
+    Object.values(PRODUITS_PAR_CATEGORIE).forEach(list => list.forEach(p => set.add(p)));
+    return [...set];
+  }, []);
+  const nameSuggestions = useMemo(
+    () => customProduct ? suggestProducts(form.name, allKnownProducts, 6).filter(p => p !== form.name) : [],
+    [customProduct, form.name, allKnownProducts]);
 
   const changeCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setForm(f => ({ ...f, category: e.target.value, name: "" }));
@@ -134,7 +145,19 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
               <option>{AUTRE}</option>
             </select>
             {customProduct && (
-              <TextInput required className="mt-2" placeholder="Nom du produit" value={form.name} onChange={set("name")} />
+              <>
+                <TextInput required className="mt-2" placeholder="Nom du produit" value={form.name} onChange={set("name")} />
+                {nameSuggestions.length > 0 && (
+                  <div className="border border-[rgba(13,34,101,0.15)] border-t-0 bg-white divide-y divide-[rgba(13,34,101,0.06)]">
+                    {nameSuggestions.map(s => (
+                      <button key={s} type="button" onMouseDown={e => { e.preventDefault(); setForm(f => ({ ...f, name: s })); }}
+                        className="w-full text-left px-3.5 py-2 text-sm text-[#0a0a0f] hover:bg-[#eef1f8] cursor-pointer transition-colors">
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

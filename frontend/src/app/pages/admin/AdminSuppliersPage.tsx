@@ -20,6 +20,8 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
   const [form, setForm] = useState({ name:"", country:"Sénégal", email:"", contact_name:"", categories:[] as string[] });
   const [proposals, setProposals] = useState<ApiProposal[]>([]);
   const [viewProposal, setViewProposal] = useState<ApiProposal | null>(null);
+  const [refusing, setRefusing] = useState<ApiProposal | null>(null);
+  const [refuseReason, setRefuseReason] = useState("");
   const [tempPwd, setTempPwd] = useState<string | null>(null);
 
   useEffect(() => {
@@ -71,17 +73,26 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
     }
   };
 
-  const decideProposal = async (p: ApiProposal, decision: "Approuvé" | "Refusé") => {
+  const decideProposal = async (p: ApiProposal, decision: "Approuvé" | "Refusé", reason?: string) => {
     try {
-      await api.admin.decideProposal(p.id, decision);
+      await api.admin.decideProposal(p.id, decision, reason);
       setProposals(prev => prev.filter(x => x.id !== p.id));
       if (decision === "Approuvé") {
         setBanner(`Proposition « ${p.name} » validée · un produit masqué a été créé, complétez sa fiche dans Catalogue & stocks.`);
         api.admin.suppliers().then(setSuppliers).catch(() => {});
+      } else {
+        setBanner(`Proposition « ${p.name} » refusée · le fournisseur a été informé par e-mail du motif.`);
       }
     } catch (err) {
       onApiError(err);
     }
+  };
+
+  // Refus avec motif : ouvre la fenêtre, puis envoie la décision + l'e-mail au fournisseur.
+  const submitRefuse = () => {
+    if (!refusing) return;
+    decideProposal(refusing, "Refusé", refuseReason.trim() || undefined);
+    setRefusing(null); setRefuseReason(""); setViewProposal(null);
   };
 
   // Modification des informations d'un fournisseur
@@ -165,8 +176,8 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                     className="flex items-center gap-1.5 bg-[#0d2265] text-white text-xs font-semibold px-3 py-2 cursor-pointer hover:bg-[#091a52] transition-colors">
                     <Check className="w-3.5 h-3.5" /> Valider
                   </button>
-                  <button onClick={() => decideProposal(p, "Refusé")}
-                    className="border border-[rgba(13,34,101,0.15)] text-[#64697d] text-xs px-3 py-2 hover:bg-white cursor-pointer transition-colors">
+                  <button onClick={() => { setRefuseReason(""); setRefusing(p); }}
+                    className="border border-red-200 text-red-600 text-xs px-3 py-2 hover:bg-red-50 cursor-pointer transition-colors">
                     Refuser
                   </button>
                 </div>
@@ -250,7 +261,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                   className="flex items-center gap-2 bg-[#0d2265] text-white text-sm font-semibold px-5 py-2.5 cursor-pointer hover:bg-[#091a52] transition-colors">
                   <Check className="w-4 h-4" /> Valider · créer le produit
                 </button>
-                <button onClick={() => { decideProposal(viewProposal, "Refusé"); setViewProposal(null); }}
+                <button onClick={() => { setRefuseReason(""); setRefusing(viewProposal); }}
                   className="border border-red-200 text-red-600 text-sm font-semibold px-4 py-2.5 cursor-pointer hover:bg-red-50 transition-colors">
                   Refuser
                 </button>
@@ -259,6 +270,35 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
             </div>
           </div>
         </>
+      )}
+
+      {/* Fenêtre de refus avec motif (envoyé par e-mail au fournisseur) */}
+      {refusing && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/45" onClick={() => setRefusing(null)}>
+          <div className="bg-white w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="px-5 py-4 border-b border-[rgba(13,34,101,0.08)] flex items-start justify-between">
+              <div className="min-w-0">
+                <p className="font-bold text-sm text-[#0a0a0f]">Refuser la proposition</p>
+                <p className="text-[11px] text-[#64697d] truncate">« {refusing.name} » · {refusing.supplier_name}</p>
+              </div>
+              <button onClick={() => setRefusing(null)} className="text-[#64697d] hover:text-[#0a0a0f] cursor-pointer shrink-0"><X className="w-4 h-4" /></button>
+            </div>
+            <div className="px-5 py-4">
+              <label className="block text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1.5">Motif du refus (envoyé au fournisseur)</label>
+              <textarea value={refuseReason} onChange={e => setRefuseReason(e.target.value)} rows={4} autoFocus
+                placeholder="Ex : photos manquantes, certification à fournir, produit hors périmètre…"
+                className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3 py-2 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] resize-y" />
+              <p className="text-[11px] text-[#64697d] mt-1.5">Le fournisseur recevra ce motif par e-mail · il pourra soumettre une nouvelle proposition ajustée.</p>
+            </div>
+            <div className="px-5 py-3.5 bg-[#faf9f6] border-t border-[rgba(13,34,101,0.08)] flex items-center justify-end gap-2">
+              <button onClick={() => setRefusing(null)} className="text-sm text-[#64697d] hover:text-[#0a0a0f] px-4 py-2 cursor-pointer">Annuler</button>
+              <button onClick={submitRefuse}
+                className="bg-red-600 text-white text-sm font-semibold px-4 py-2 cursor-pointer hover:bg-red-700 transition-colors">
+                Refuser et envoyer le motif
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* KPIs */}
