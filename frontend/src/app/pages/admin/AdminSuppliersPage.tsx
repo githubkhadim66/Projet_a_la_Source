@@ -261,7 +261,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                   className="flex items-center gap-2 bg-[#0d2265] text-white text-sm font-semibold px-5 py-2.5 cursor-pointer hover:bg-[#091a52] transition-colors">
                   <Check className="w-4 h-4" /> Valider · créer le produit
                 </button>
-                <button onClick={() => { setRefuseReason(""); setRefusing(viewProposal); }}
+                <button onClick={() => { setRefuseReason(""); setRefusing(viewProposal); setViewProposal(null); }}
                   className="border border-red-200 text-red-600 text-sm font-semibold px-4 py-2.5 cursor-pointer hover:bg-red-50 transition-colors">
                   Refuser
                 </button>
@@ -274,7 +274,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
 
       {/* Fenêtre de refus avec motif (envoyé par e-mail au fournisseur) */}
       {refusing && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/45" onClick={() => setRefusing(null)}>
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/45" onClick={() => setRefusing(null)}>
           <div className="bg-white w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
             <div className="px-5 py-4 border-b border-[rgba(13,34,101,0.08)] flex items-start justify-between">
               <div className="min-w-0">
