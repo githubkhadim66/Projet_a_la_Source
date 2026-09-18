@@ -170,3 +170,10 @@ export const PRODUITS_PAR_CATEGORIE: Record<string, string[]> = {
     "Aubergine africaine","Patate douce",
   ],
 };
+
+// Critères d'évaluation interne du fournisseur (admin) · clés alignées sur le backend.
+export const RATING_CRITERES: { key: string; label: string }[] = [
+  { key: "credibilite", label: "Crédibilité" },
+  { key: "delais", label: "Respect des délais" },
+  { key: "retours", label: "Retours clients" },
+];

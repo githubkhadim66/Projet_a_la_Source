@@ -1,13 +1,14 @@
 /** Fournisseurs : comptes (création + mot de passe temporaire), activation, propositions. */
 
 import { useEffect, useState } from "react";
-import { AlertCircle, Check, CheckCircle, Clock, Download, Edit2, Eye, EyeOff, Key, Package, Plus, RefreshCw, Users, X } from "lucide-react";
+import { AlertCircle, Check, CheckCircle, Clock, Download, Edit2, Eye, EyeOff, Key, Package, Plus, RefreshCw, Star, Users, X } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiProposal, ApiSupplier } from "@/lib/api";
 import { CAT_CATEGORIES, SUPPLIER_COUNTRIES } from "@/lib/constants";
 import { fmtDate, productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
 import { AdminShell, KpiCard } from "./AdminShell";
+import { SupplierRatingCard } from "./AdminSupplierRating";
 import { useAdminGuard } from "./adminSession";
 
 export function AdminFournisseurs({ nav }: { nav: Nav }) {
@@ -401,7 +402,14 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                 <tr key={s.id} onClick={() => setSelected(s)}
                   className={`border-b border-[rgba(13,34,101,0.06)] cursor-pointer transition-colors ${selected?.id === s.id ? "bg-[#eef1f8]" : "hover:bg-[#f4f5f9]"}`}>
                   <td className="px-4 py-3">
-                    <p className="font-semibold text-[#0a0a0f]">{s.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-[#0a0a0f]">{s.name}</p>
+                      {s.rating_avg !== null && (
+                        <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#0d2265]" title="Évaluation interne">
+                          <Star className="w-3 h-3 fill-[#f5a623] text-[#f5a623]" />{s.rating_avg.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-xs text-[#64697d] font-mono">{s.email}</p>
                   </td>
                   <td className="px-4 py-3 text-[#64697d]">{s.country ?? "·"}</td>
@@ -410,7 +418,14 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                       {s.categories.map(c => <span key={c} className="text-[10px] bg-[#eef1f8] text-[#0d2265] px-1.5 py-0.5">{c}</span>)}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-center text-[#64697d] font-medium">{s.products_count}</td>
+                  <td className="px-4 py-3 text-center">
+                    <span className="text-[#64697d] font-medium">{s.products_count}</span>
+                    {s.detention_rate !== null && (
+                      <span className="block text-[10px] text-[#64697d] mt-0.5" title="Taux de détention (en stock / actifs)">
+                        {s.detention_rate}% en stock
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-[#64697d] text-xs">{s.last_login_at ? fmtDate(s.last_login_at) : "·"}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs font-medium px-2 py-1 ${badgeStatus(s.is_active)}`}>{statusLabel(s)}</span>
@@ -489,6 +504,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                   { label: "Créé le", val: fmtDate(selected.created_at) },
                   { label: "Dernière connexion", val: selected.last_login_at ? fmtDate(selected.last_login_at) : "·" },
                   { label: "Produits référencés", val: String(selected.products_count) },
+                  { label: "Taux de détention", val: selected.detention_rate === null ? "·" : `${selected.detention_rate} % (${selected.products_in_stock} en stock)` },
                 ].map(row => (
                   <div key={row.label} className="flex justify-between gap-3">
                     <span className="text-[#64697d] shrink-0">{row.label}</span>
@@ -501,6 +517,14 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
                     {selected.categories.map(c => <span key={c} className="text-[10px] bg-[#eef1f8] text-[#0d2265] px-2 py-0.5">{c}</span>)}
                   </div>
                 </div>
+                <SupplierRatingCard
+                  supplier={selected}
+                  onApiError={onApiError}
+                  onSaved={updated => {
+                    setSuppliers(prev => prev.map(x => x.id === updated.id ? updated : x));
+                    setSelected(sel => sel?.id === updated.id ? updated : sel);
+                  }}
+                />
                 <div className="pt-3 border-t border-[rgba(13,34,101,0.08)] space-y-2">
                   <button onClick={() => openEditSupplier(selected)}
                     className="w-full text-sm font-semibold py-2.5 cursor-pointer transition-colors flex items-center justify-center gap-2 border border-[rgba(13,34,101,0.2)] text-[#0d2265] hover:bg-[#f4f5f9]">

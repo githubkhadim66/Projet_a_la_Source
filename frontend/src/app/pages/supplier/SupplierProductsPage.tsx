@@ -5,10 +5,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Check, ChevronDown, Edit2, PackageX, Pencil, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, Clock, Edit2, PackageX, Pencil, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiProduct } from "@/lib/api";
 import { fmtDate, productImg } from "@/lib/format";
+import { availabilityBadge } from "@/lib/availability";
 import { baseUnitOf, isStale, packagesFor, STALE_DAYS, staleProducts, stockInPackages } from "@/lib/supplierMetrics";
 import type { StockStatus } from "@/lib/leads";
 import type { Nav } from "@/lib/routes";
@@ -240,6 +241,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
             const isOpen = expanded === p.id;
             const isEdit = editing === p.id;
             const hasCommercial = p.price_per_kg || p.bulk_price || p.harvest_period;
+            const avail = availabilityBadge(p.available_until);
             return (
             <div key={p.id} className={`bg-white border ${stale ? "border-[#C4613A]/40" : "border-[rgba(13,34,101,0.1)]"}`}>
               <div className="p-4 flex items-start gap-4">
@@ -270,6 +272,13 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                     {stale && (
                       <span className="inline-flex items-center gap-1 text-[#C4613A] font-semibold">
                         <AlertTriangle className="w-3 h-3" /> À actualiser
+                      </span>
+                    )}
+                    {avail && (
+                      <span className={`inline-flex items-center gap-1 font-semibold ${
+                        avail.tone === "ok" ? "text-[#0d2265]"
+                        : avail.tone === "warn" ? "text-[#C4613A]" : "text-red-600"}`}>
+                        <Clock className="w-3 h-3" /> {avail.label}
                       </span>
                     )}
                   </div>
@@ -310,6 +319,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                       <Detail label="Quantité minimum (MOQ)" value={p.moq} />
                       <Detail label="Origine" value={p.origin ?? ""} />
                       <Detail label="Catégorie" value={p.category ?? ""} />
+                      {avail && <Detail label="Disponible jusqu'au" value={`${avail.date}${avail.tone === "expired" ? " (expiré)" : ""}`} />}
                     </div>
                   </div>
 

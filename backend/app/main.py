@@ -17,7 +17,13 @@ async def lifespan(app: FastAPI):
     # En dev/test : création directe du schéma. En staging/prod : Alembic (voir entrypoint Docker).
     if settings.ENVIRONMENT == "development":
         Base.metadata.create_all(bind=engine)
-    yield
+    # Tâche de fond : retrait automatique des produits arrivés à échéance de disponibilité.
+    from app.services.scheduler import start_scheduler
+    scheduler_task = start_scheduler()
+    try:
+        yield
+    finally:
+        scheduler_task.cancel()
 
 
 app = FastAPI(

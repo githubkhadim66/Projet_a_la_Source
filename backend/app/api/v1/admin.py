@@ -3,7 +3,7 @@ import io
 import json
 from datetime import UTC, date, datetime, timedelta
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -24,7 +24,7 @@ from app.models import (
     Supplier,
 )
 from app.schemas.auth import AdminLogin, TokenResponse
-from app.schemas.lead import LeadOut, LeadReply, LeadStatusUpdate
+from app.schemas.lead import LeadOut, LeadStatusUpdate
 from app.schemas.rdv import RdvOut, RdvStatusUpdate
 from app.schemas.supplier import (
     AdminProductOut,
@@ -33,8 +33,10 @@ from app.schemas.supplier import (
     ProductCreate,
     ProposalDecision,
     ProposalOut,
+    RATING_CRITERIA,
     SupplierCreate,
     SupplierOut,
+    SupplierRating,
     SupplierUpdate,
     SupplierWithTempPassword,
 )
@@ -139,25 +141,49 @@ def update_lead_status(
     return lead
 
 
+MAX_REPLY_ATTACH_BYTES = 15 * 1024 * 1024  # 15 Mo cumulés de pièces jointes
+
+
 @router.post("/leads/{lead_id}/reply")
-def reply_to_lead(
+async def reply_to_lead(
     lead_id: int,
-    data: LeadReply,
+    subject: str = Form(...),
+    message: str = Form(...),
+    files: list[UploadFile] = File(default=[]),
     _: AdminUser = Depends(get_current_admin),
     db: Session = Depends(get_db),
 ):
-    """Envoie une réponse par e-mail au contact d'un lead (devis, sourcing…)."""
+    """Envoie une réponse par e-mail au contact d'un lead (devis, sourcing…),
+    avec pièces jointes facultatives (multipart)."""
+    if not subject.strip() or not message.strip():
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Objet et message sont requis.")
     lead = db.get(Lead, lead_id)
     if lead is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Lead introuvable")
+
+    attachments: list[tuple[str, str, bytes]] = []
+    total = 0
+    for f in files:
+        content = await f.read()
+        if not content:
+            continue
+        total += len(content)
+        if total > MAX_REPLY_ATTACH_BYTES:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="Pièces jointes trop volumineuses (15 Mo maximum au total).",
+            )
+        attachments.append((f.filename or "piece-jointe", f.content_type or "application/octet-stream", content))
+
     try:
-        emails.send_direct(lead.email, data.subject, data.message)
+        emails.send_direct(lead.email, subject, message, attachments or None)
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="L'e-mail n'a pas pu être envoyé. Vérifiez la configuration SMTP.",
         ) from exc
-    return {"message": f"E-mail envoyé à {lead.email}."}
+    suffix = f" ({len(attachments)} pièce{'s' if len(attachments) > 1 else ''} jointe{'s' if len(attachments) > 1 else ''})" if attachments else ""
+    return {"message": f"E-mail envoyé à {lead.email}.{suffix}"}
 
 
 # ─── Fournisseurs (FRS-01 : création/désactivation par l'admin seul) ─────────
@@ -165,6 +191,15 @@ def reply_to_lead(
 def _supplier_out(s: Supplier) -> SupplierOut:
     out = SupplierOut.model_validate(s)
     out.products_count = len(s.products)
+    # Taux de détention = produits « En stock » / produits actifs (hors corbeille).
+    active = [p for p in s.products if p.archived_at is None]
+    in_stock = sum(1 for p in active if p.status == StockStatus.EN_STOCK)
+    out.products_in_stock = in_stock
+    out.detention_rate = round(in_stock / len(active) * 100) if active else None
+    # Moyenne des critères notés (sur les seuls critères connus et valides).
+    notes = [v for k, v in (s.ratings or {}).items() if k in RATING_CRITERIA and isinstance(v, int) and 1 <= v <= 5]
+    out.ratings = {k: v for k, v in (s.ratings or {}).items() if k in RATING_CRITERIA}
+    out.rating_avg = round(sum(notes) / len(notes), 1) if notes else None
     return out
 
 
@@ -235,6 +270,27 @@ def update_supplier(
     return _supplier_out(supplier)
 
 
+@router.put("/suppliers/{supplier_id}/rating", response_model=SupplierOut)
+def rate_supplier(
+    supplier_id: int,
+    data: SupplierRating,
+    _: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Évaluation interne du fournisseur (jamais exposée au fournisseur ni au public).
+    On ne conserve que les critères connus, avec une note entière entre 1 et 5."""
+    supplier = db.get(Supplier, supplier_id)
+    if supplier is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Fournisseur introuvable")
+    clean = {k: int(v) for k, v in data.ratings.items() if k in RATING_CRITERIA and 1 <= int(v) <= 5}
+    supplier.ratings = clean  # réassignation (et non mutation) pour la détection de changement JSON
+    supplier.rating_note = (data.rating_note or "").strip()
+    supplier.rated_at = datetime.now(UTC) if clean or supplier.rating_note else None
+    db.commit()
+    db.refresh(supplier)
+    return _supplier_out(supplier)
+
+
 # ─── Produits : vue consolidée des stocks + vitrine (REF-02) ─────────────────
 
 @router.get("/products", response_model=list[AdminProductOut])
@@ -287,6 +343,9 @@ def update_product(
             )
     for field, value in updates.items():
         setattr(product, field, value)
+    # Nouvelle date de disponibilité → on réarme l'alerte « 3 jours avant ».
+    if "available_until" in updates:
+        product.expiry_alert_sent_at = None
     db.commit()
     db.refresh(product)
     return _admin_product(product)
@@ -390,6 +449,7 @@ def decide_proposal(
                 price_per_kg=proposal.price_per_kg,
                 bulk_price=proposal.bulk_price,
                 harvest_period=proposal.harvest_period,
+                available_until=proposal.available_until,
                 visible=False,
                 in_catalogue=True,
                 status=StockStatus.SUR_COMMANDE,
@@ -462,6 +522,15 @@ def remind_supplier_stock(
         name=supplier.contact_name or supplier.name, days=STALE_DAYS, products=listing,
     )
     return {"message": f"Relance envoyée à {supplier.email} ({len(stale)} référence(s)).", "count": len(stale)}
+
+
+@router.post("/maintenance/run-expiry")
+def run_expiry_now(_: AdminUser = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Déclenche immédiatement le balayage des dates de disponibilité (alertes 3 j + retrait auto).
+    Utile pour tester ; en temps normal, la tâche quotidienne s'en charge automatiquement."""
+    from app.services.maintenance import run_expiry_maintenance
+    result = run_expiry_maintenance(db)
+    return {"message": f"{result['alerted']} alerte(s) envoyée(s), {result['withdrawn']} produit(s) retiré(s).", **result}
 
 
 # ─── Téléversement des photos produits ───────────────────────────────────────

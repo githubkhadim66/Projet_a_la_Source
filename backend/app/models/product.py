@@ -52,6 +52,13 @@ class Product(Base):
     bulk_price: Mapped[str] = mapped_column(String(50), default="")
     harvest_period: Mapped[str] = mapped_column(String(100), default="")
 
+    # Fenêtre de disponibilité (facultative) : le fournisseur indique jusqu'à quand
+    # son produit est réellement disponible. À l'échéance, le produit se retire du site
+    # (archivé automatiquement). `expiry_alert_sent_at` évite d'envoyer deux fois l'alerte
+    # « 3 jours avant » — distinct du rappel d'actualisation 14 j (FRS-05), qui reste inchangé.
+    available_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    expiry_alert_sent_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
     # Archivage réversible : un produit archivé disparaît du site et du catalogue,
     # mais reste en base (restaurable) — la corbeille ne perd donc jamais un produit.
     archived_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
@@ -92,6 +99,8 @@ class ProductProposal(Base):
     bulk_price: Mapped[str] = mapped_column(String(50), default="")
     harvest_period: Mapped[str] = mapped_column(String(100), default="")
     certifications: Mapped[list] = mapped_column(JSON, default=list)
+    # Fenêtre de disponibilité proposée par le fournisseur, reprise sur le produit à l'approbation.
+    available_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     status: Mapped[ProposalStatus] = mapped_column(Enum(ProposalStatus), default=ProposalStatus.EN_ATTENTE)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 

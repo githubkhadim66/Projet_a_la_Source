@@ -4,11 +4,11 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, ArrowRight, CheckCircle2, ClipboardList, Package, PackageX, PlusCircle, RefreshCw } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, ClipboardList, Package, PackageCheck, PackageX, PlusCircle, RefreshCw } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiProduct, ApiSupplier } from "@/lib/api";
 import { fmtDate } from "@/lib/format";
-import { daysSince, dossierCompleteness, ruptureProducts, STALE_DAYS, staleProducts } from "@/lib/supplierMetrics";
+import { daysSince, detentionRate, dossierCompleteness, inStockProducts, ruptureProducts, STALE_DAYS, staleProducts } from "@/lib/supplierMetrics";
 import type { Nav } from "@/lib/routes";
 import { KpiCard, SupplierShell } from "./SupplierShell";
 
@@ -30,6 +30,8 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
   const stale = staleProducts(products);
   const rupture = ruptureProducts(products);
   const dossier = dossierCompleteness(me, products.length);
+  const detention = detentionRate(products);
+  const inStock = inStockProducts(products).length;
   const firstName = (me?.contact_name || me?.name || "").split(/\s+/)[0] || "";
 
   // Prochaine action prioritaire : premier motif applicable.
@@ -87,8 +89,13 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
         </div>
 
         {/* Indicateurs clés */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
           <KpiCard label="Références actives" value={loading ? "…" : products.length} icon={Package}
+            onClick={() => nav("supplier-products")} />
+          <KpiCard label="Taux de détention" value={loading ? "…" : detention === null ? "—" : `${detention} %`}
+            color={detention === null ? "#64697d" : detention >= 70 ? "#2E6B4F" : detention >= 40 ? "#C4613A" : "#dc2626"}
+            icon={PackageCheck}
+            sub={loading || detention === null ? undefined : `${inStock}/${products.length} en stock`}
             onClick={() => nav("supplier-products")} />
           <KpiCard label={`À actualiser (+${STALE_DAYS} j)`} value={loading ? "…" : stale.length}
             color={stale.length > 0 ? "#C4613A" : "#2E6B4F"} icon={RefreshCw}

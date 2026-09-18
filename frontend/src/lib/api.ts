@@ -131,6 +131,7 @@ export interface ApiProduct {
   price_per_kg: string;
   bulk_price: string;
   harvest_period: string;
+  available_until: string | null;
   updated_at: string;
 }
 
@@ -153,6 +154,12 @@ export interface ApiSupplier {
   last_login_at: string | null;
   created_at: string;
   products_count: number;
+  products_in_stock: number;
+  detention_rate: number | null;
+  ratings: Record<string, number>;
+  rating_note: string;
+  rating_avg: number | null;
+  rated_at: string | null;
 }
 
 export interface ApiProposal {
@@ -171,6 +178,7 @@ export interface ApiProposal {
   bulk_price: string;
   harvest_period: string;
   certifications: string[];
+  available_until: string | null;
   status: "En attente" | "Approuvé" | "Refusé";
   created_at: string;
   supplier_name: string;
@@ -292,6 +300,7 @@ export const supplier = {
     name?: string; category?: string; origin?: string; packaging?: string; moq?: string;
     image?: string; description?: string; benefits?: string;
     price_per_kg?: string; bulk_price?: string; harvest_period?: string;
+    available_until?: string | null;
   }) =>
     request<ApiProduct>(`/suppliers/me/products/${id}`, {
       method: "PATCH", body: JSON.stringify(data), headers: supplierHeaders(),
@@ -300,6 +309,7 @@ export const supplier = {
     name: string; description: string; benefits?: string; origin?: string; category?: string;
     packaging?: string; moq?: string; image?: string; volumes?: string; certifications: string[];
     price_per_kg?: string; bulk_price?: string; harvest_period?: string;
+    available_until?: string | null;
   }) =>
     request<ApiProposal>("/suppliers/me/proposals", {
       method: "POST", body: JSON.stringify(data), headers: supplierHeaders(),
@@ -342,10 +352,21 @@ export const admin = {
     request<ApiLead>(`/admin/leads/${id}`, {
       method: "PATCH", body: JSON.stringify({ status }), headers: adminHeaders(),
     }),
-  replyLead: (id: number, subject: string, message: string) =>
-    request<{ message: string }>(`/admin/leads/${id}/reply`, {
-      method: "POST", body: JSON.stringify({ subject, message }), headers: adminHeaders(),
-    }),
+  replyLead: async (id: number, subject: string, message: string, files: File[] = []) => {
+    const form = new FormData();
+    form.append("subject", subject);
+    form.append("message", message);
+    files.forEach(f => form.append("files", f));
+    const res = await fetch(`${BASE_URL}/admin/leads/${id}/reply`, {
+      method: "POST", body: form, headers: adminHeaders(),
+    });
+    if (!res.ok) {
+      let detail = res.statusText;
+      try { const b = await res.json(); detail = Array.isArray(b.detail) ? "Objet et message sont requis." : (b.detail ?? detail); } catch { /* non-JSON */ }
+      throw new ApiError(res.status, detail);
+    }
+    return (await res.json()) as { message: string };
+  },
   deleteLead: (id: number) =>
     request<void>(`/admin/leads/${id}`, { method: "DELETE", headers: adminHeaders() }),
 
@@ -359,6 +380,10 @@ export const admin = {
   resetSupplierPassword: (id: number) =>
     request<ApiSupplier & { temp_password: string }>(`/admin/suppliers/${id}/reset-password`, {
       method: "POST", headers: adminHeaders(),
+    }),
+  rateSupplier: (id: number, data: { ratings: Record<string, number>; rating_note: string }) =>
+    request<ApiSupplier>(`/admin/suppliers/${id}/rating`, {
+      method: "PUT", body: JSON.stringify(data), headers: adminHeaders(),
     }),
   updateSupplier: (id: number, data: Partial<{
     name: string; contact_name: string; phone: string; country: string; city: string;
@@ -389,6 +414,7 @@ export const admin = {
     visible: boolean; featured: boolean; in_catalogue: boolean;
     stock_kg: number; status: ApiStockStatus; delay: string;
     price_per_kg: string; bulk_price: string; harvest_period: string;
+    available_until: string | null;
   }>) => request<ApiAdminProduct>(`/admin/products/${id}`, {
     method: "PATCH", body: JSON.stringify(data), headers: adminHeaders(),
   }),

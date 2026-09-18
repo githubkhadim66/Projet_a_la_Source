@@ -61,6 +61,11 @@ def _profile_out(supplier: Supplier, db: Session) -> SupplierOut:
     out.products_count = db.scalar(
         select(func.count()).select_from(Product).where(Product.supplier_id == supplier.id)
     ) or 0
+    # Taux de détention = produits « En stock » / produits actifs (hors corbeille).
+    active = [p for p in supplier.products if p.archived_at is None]
+    in_stock = sum(1 for p in active if p.status == StockStatus.EN_STOCK)
+    out.products_in_stock = in_stock
+    out.detention_rate = round(in_stock / len(active) * 100) if active else None
     return out
 
 
@@ -111,6 +116,15 @@ def update_my_product(
     updates = data.model_dump(exclude_unset=True)
     for field, value in updates.items():
         setattr(product, field, value)
+    # Nouvelle fenêtre de disponibilité → on réarme l'alerte « 3 jours avant »
+    # (et on ré-affiche le produit s'il avait été retiré à l'échéance précédente).
+    if "available_until" in updates:
+        product.expiry_alert_sent_at = None
+        au = product.available_until
+        if au is not None and product.archived_at is not None:
+            au_utc = au if au.tzinfo else au.replace(tzinfo=UTC)
+            if au_utc > datetime.now(UTC):
+                product.archived_at = None
     # FRS-05 : tout enregistrement vaut confirmation du stock → on tamponne la date du jour,
     # même si aucune valeur n'a changé (sinon `onupdate` ne se déclenche pas et la fiche
     # resterait « à actualiser » alors que le fournisseur vient de la confirmer).
@@ -205,6 +219,7 @@ def propose_product(
         bulk_price=data.bulk_price,
         harvest_period=data.harvest_period,
         certifications=data.certifications,
+        available_until=data.available_until,
     )
     db.add(proposal)
     db.commit()

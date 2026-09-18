@@ -55,6 +55,14 @@ export const staleProducts = (products: ApiProduct[]): ApiProduct[] => products.
 export const ruptureProducts = (products: ApiProduct[]): ApiProduct[] =>
   products.filter(p => p.status === "Rupture");
 
+/** Produits physiquement disponibles (statut « En stock »). */
+export const inStockProducts = (products: ApiProduct[]): ApiProduct[] =>
+  products.filter(p => p.status === "En stock");
+
+/** Taux de détention = articles en stock / total d'articles référencés (en %, null si aucun produit). */
+export const detentionRate = (products: ApiProduct[]): number | null =>
+  products.length ? Math.round((inStockProducts(products).length / products.length) * 100) : null;
+
 export interface DossierField { key: string; label: string; done: boolean }
 
 /** Champs pris en compte dans la complétude du dossier fournisseur. */

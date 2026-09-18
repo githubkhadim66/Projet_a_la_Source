@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import JSON, Boolean, DateTime, String
+from sqlalchemy import JSON, Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -26,6 +26,12 @@ class Supplier(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
+
+    # Évaluation interne du fournisseur par l'admin (jamais exposée au fournisseur ni au public).
+    # `ratings` : {clé_critère: note 1..5} ; la moyenne est calculée à l'affichage.
+    ratings: Mapped[dict] = mapped_column(JSON, default=dict)
+    rating_note: Mapped[str] = mapped_column(Text, default="")
+    rated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     products = relationship("Product", back_populates="supplier", lazy="selectin")
     proposals = relationship("ProductProposal", back_populates="supplier", lazy="selectin")

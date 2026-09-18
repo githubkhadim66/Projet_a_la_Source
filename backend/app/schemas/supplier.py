@@ -4,6 +4,13 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.product import ProposalStatus, StockStatus
 
+# Critères d'évaluation interne du fournisseur (clé stable → libellé affiché).
+RATING_CRITERIA: dict[str, str] = {
+    "credibilite": "Crédibilité",
+    "delais": "Respect des délais",
+    "retours": "Retours clients",
+}
+
 
 class SupplierLogin(BaseModel):
     email: EmailStr
@@ -45,6 +52,14 @@ class SupplierOut(BaseModel):
     last_login_at: datetime | None
     created_at: datetime
     products_count: int = 0
+    # Taux de détention = articles en stock / total d'articles actifs (en %, null si aucun produit).
+    products_in_stock: int = 0
+    detention_rate: int | None = None
+    # Évaluation interne (admin) : notes par critère, moyenne calculée, commentaire, date.
+    ratings: dict[str, int] = {}
+    rating_note: str = ""
+    rating_avg: float | None = None
+    rated_at: datetime | None = None
 
 
 class SupplierWithTempPassword(SupplierOut):
@@ -97,6 +112,7 @@ class ProductOut(BaseModel):
     price_per_kg: str = ""
     bulk_price: str = ""
     harvest_period: str = ""
+    available_until: datetime | None = None
     updated_at: datetime
 
 
@@ -145,6 +161,7 @@ class ProductCreate(BaseModel):
     price_per_kg: str = ""
     bulk_price: str = ""
     harvest_period: str = ""
+    available_until: datetime | None = None
 
 
 class ProductAdminUpdate(BaseModel):
@@ -165,6 +182,7 @@ class ProductAdminUpdate(BaseModel):
     price_per_kg: str | None = None
     bulk_price: str | None = None
     harvest_period: str | None = None
+    available_until: datetime | None = None
 
 
 class CatalogueReorder(BaseModel):
@@ -192,6 +210,8 @@ class ProductStockUpdate(BaseModel):
     stock_kg: int | None = Field(default=None, ge=0)
     status: StockStatus | None = None
     delay: str | None = Field(default=None, max_length=100)
+    # Fenêtre de disponibilité (facultative) : à l'échéance, le produit se retire du site.
+    available_until: datetime | None = None
 
 
 class ProposalCreate(BaseModel):
@@ -208,6 +228,7 @@ class ProposalCreate(BaseModel):
     bulk_price: str = ""
     harvest_period: str = ""
     certifications: list[str] = []
+    available_until: datetime | None = None
 
 
 class ProposalOut(BaseModel):
@@ -228,6 +249,7 @@ class ProposalOut(BaseModel):
     bulk_price: str = ""
     harvest_period: str = ""
     certifications: list
+    available_until: datetime | None = None
     status: ProposalStatus
     created_at: datetime
     supplier_name: str = ""
@@ -236,3 +258,11 @@ class ProposalOut(BaseModel):
 class ProposalDecision(BaseModel):
     status: ProposalStatus
     reason: str | None = None  # motif communiqué au fournisseur en cas de refus
+
+
+class SupplierRating(BaseModel):
+    """Évaluation par l'admin : une note 1..5 par critère + commentaire interne.
+    Les clés inconnues et les notes hors bornes sont ignorées côté endpoint."""
+
+    ratings: dict[str, int] = {}
+    rating_note: str = ""

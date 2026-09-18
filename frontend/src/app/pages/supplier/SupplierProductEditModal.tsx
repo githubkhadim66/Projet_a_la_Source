@@ -8,6 +8,7 @@ import { Check, ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiProduct } from "@/lib/api";
 import { CAT_CATEGORIES } from "@/lib/constants";
+import { availableUntilToDateInput, dateToAvailableUntil } from "@/lib/availability";
 import { productImg } from "@/lib/format";
 import { CountrySelect, FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
 
@@ -29,6 +30,7 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
     price_per_kg: product.price_per_kg,
     bulk_price: product.bulk_price,
     harvest_period: product.harvest_period,
+    available_until: availableUntilToDateInput(product.available_until),
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +60,10 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
     if (!form.description.trim()) { setError("Une description est requise."); return; }
     setSaving(true); setError(null);
     try {
-      const updated = await api.supplier.updateProduct(product.id, { ...form });
+      const { available_until, ...rest } = form;
+      const updated = await api.supplier.updateProduct(product.id, {
+        ...rest, available_until: dateToAvailableUntil(available_until),
+      });
       onSaved(updated);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { onAuthError(); return; }
@@ -127,6 +132,23 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
             onPackaging={v => setForm(f => ({ ...f, packaging: v }))}
             onMoq={v => setForm(f => ({ ...f, moq: v }))}
           />
+
+          <div>
+            <FieldLabel>Disponible jusqu'au (facultatif)</FieldLabel>
+            <div className="flex items-center gap-2">
+              <input type="date" value={form.available_until} onChange={set("available_until")}
+                min={new Date().toISOString().slice(0, 10)}
+                className="flex-1 border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265]" />
+              {form.available_until && (
+                <button type="button" onClick={() => setForm(f => ({ ...f, available_until: "" }))}
+                  className="text-xs text-[#64697d] hover:text-red-600 px-2 py-2 cursor-pointer whitespace-nowrap">Retirer la limite</button>
+              )}
+            </div>
+            <p className="text-[11px] text-[#64697d] mt-1.5">
+              À cette date, le produit se retire automatiquement du site. Vous et l'équipe À la Source
+              êtes alertés 3 jours avant. Laissez vide s'il est disponible en continu.
+            </p>
+          </div>
 
           <div><FieldLabel required>Description</FieldLabel><TextArea rows={3} value={form.description} onChange={set("description")} placeholder="Caractéristiques, usage, origine exacte…" /></div>
           <div>

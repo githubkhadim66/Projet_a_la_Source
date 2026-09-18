@@ -8,6 +8,7 @@ import { CheckCircle, ImagePlus, Loader2, Trash2 } from "lucide-react";
 import * as api from "@/lib/api";
 import { CAT_CATEGORIES, CERTS_FOURNISSEUR, PRODUITS_PAR_CATEGORIE } from "@/lib/constants";
 import { suggestProducts } from "@/lib/productSuggest";
+import { dateToAvailableUntil } from "@/lib/availability";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
 import { CountrySelect, FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
@@ -20,7 +21,7 @@ const AUTRE = "Autre (préciser)";
 export function SupplierPropose({ nav }: { nav: Nav }) {
   const [form, setForm] = useState({
     name: "", origin: "", category: "Épicerie", packaging: "", moq: "", volumes: "",
-    price_per_kg: "", bulk_price: "", harvest_period: "",
+    price_per_kg: "", bulk_price: "", harvest_period: "", available_until: "",
     description: "", benefits: "", image: "",
   });
   const [productChoice, setProductChoice] = useState("");
@@ -81,7 +82,11 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
     if (!form.description.trim()) { setError("Une description est requise."); return; }
     setSending(true); setError(null);
     try {
-      await api.supplier.proposeProduct({ ...form, certifications: certs });
+      const { available_until, ...rest } = form;
+      await api.supplier.proposeProduct({
+        ...rest, certifications: certs,
+        available_until: dateToAvailableUntil(available_until),
+      });
       nav("supplier-propose-confirm");
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
@@ -176,6 +181,17 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
           <div>
             <FieldLabel>Volume disponible (capacité de production)</FieldLabel>
             <TextInput placeholder="Ex : 2 000 kg / mois" value={form.volumes} onChange={set("volumes")} />
+          </div>
+          <div>
+            <FieldLabel>Disponible jusqu'au (facultatif)</FieldLabel>
+            <input type="date" value={form.available_until} onChange={set("available_until")}
+              min={new Date().toISOString().slice(0, 10)}
+              className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265]" />
+            <p className="text-[11px] text-[#64697d] mt-1.5">
+              Si votre produit n'est disponible qu'un temps limité, indiquez la date de fin.
+              Il se retirera automatiquement du site à cette date. Vous et l'équipe À la Source
+              serez alertés 3 jours avant. Laissez vide s'il est disponible en continu.
+            </p>
           </div>
         </div>
       ),
