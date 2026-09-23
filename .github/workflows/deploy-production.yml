@@ -64,12 +64,19 @@ jobs:
       contents: read
       packages: read
     steps:
+      - name: Décoder la clé SSH (secret en base64, robuste au copier-coller)
+        run: |
+          {
+            echo 'SSH_KEY<<__EOF__'
+            echo "${{ secrets.PROD_SSH_KEY }}" | base64 -d
+            echo '__EOF__'
+          } >> "$GITHUB_ENV"
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.PROD_HOST }}
           username: ${{ secrets.PROD_USER }}
-          key: ${{ secrets.PROD_SSH_KEY }}
+          key: ${{ env.SSH_KEY }}
           script: |
             set -e
             cd ${{ secrets.PROD_APP_DIR }}
