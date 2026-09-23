@@ -21,10 +21,12 @@ services:
   backend:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE}/a-la-source-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
+    # Migrations + création du compte admin (idempotent), puis serveur.
+    command: sh -c "alembic upgrade head && python -m app.initial_data && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2"
     environment:
       ENVIRONMENT: production
       DEBUG: "false"
-      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
       CORS_ORIGINS: ${CORS_ORIGINS}
       FRONTEND_URL: ${FRONTEND_URL}
@@ -36,6 +38,10 @@ services:
       EMAIL_FROM: ${EMAIL_FROM}
       NOTIFY_INTERNAL_EMAIL: ${NOTIFY_INTERNAL_EMAIL}
       CATALOGUE_PDF_PATH: /app/data/catalogue.pdf
+      # Compte admin initial (créé au 1er démarrage) ; pas de données de démo en prod.
+      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL}
+      FIRST_ADMIN_PASSWORD: ${FIRST_ADMIN_PASSWORD}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-0}
     volumes:
       - catalogue_data:/app/data
     depends_on:

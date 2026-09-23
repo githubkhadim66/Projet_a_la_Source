@@ -28,12 +28,15 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nom du dépôt en minuscules (GHCR exige des noms en minuscules)
+        id: repo
+        run: echo "lower=${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
       - name: Backend
         uses: docker/build-push-action@v6
         with:
           context: backend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/a-la-source-backend:staging
+          tags: ${{ env.REGISTRY }}/${{ steps.repo.outputs.lower }}/a-la-source-backend:staging
           cache-from: type=gha,scope=backend
           cache-to: type=gha,scope=backend,mode=max
       - name: Frontend
@@ -41,7 +44,7 @@ jobs:
         with:
           context: frontend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository }}/a-la-source-frontend:staging
+          tags: ${{ env.REGISTRY }}/${{ steps.repo.outputs.lower }}/a-la-source-frontend:staging
           cache-from: type=gha,scope=frontend
           cache-to: type=gha,scope=frontend,mode=max
 
@@ -50,6 +53,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-push
     environment: staging
+    permissions:
+      contents: read
+      packages: read
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1
@@ -60,6 +66,7 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.STAGING_APP_DIR }}
+            git pull --ff-only origin develop || true   # rafraîchit compose/Caddyfile (images via GHCR)
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             docker compose -f docker-compose.staging.yml --env-file .env.staging pull
             docker compose -f docker-compose.staging.yml --env-file .env.staging up -d --remove-orphans

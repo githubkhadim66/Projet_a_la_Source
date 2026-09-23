@@ -21,9 +21,11 @@ services:
   backend:
     image: ${REGISTRY:-ghcr.io}/${IMAGE_NAMESPACE}/a-la-source-backend:staging
     restart: unless-stopped
+    # Migrations + compte admin + données de démo (idempotent), puis serveur (1 worker sur machine partagée).
+    command: sh -c "alembic upgrade head && python -m app.initial_data && uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 1"
     environment:
       ENVIRONMENT: staging
-      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       SECRET_KEY: ${SECRET_KEY}
       CORS_ORIGINS: ${CORS_ORIGINS}
       FRONTEND_URL: ${FRONTEND_URL}
@@ -35,6 +37,10 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       NOTIFY_INTERNAL_EMAIL: ${NOTIFY_INTERNAL_EMAIL:-}
       CATALOGUE_PDF_PATH: /app/data/catalogue.pdf
+      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@alasource.fr}
+      FIRST_ADMIN_PASSWORD: ${FIRST_ADMIN_PASSWORD:-changeme-admin}
+      SEED_SUPPLIER_PASSWORD: ${SEED_SUPPLIER_PASSWORD:-fournisseur123}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-1}
     volumes:
       - catalogue_data:/app/data
     depends_on:
