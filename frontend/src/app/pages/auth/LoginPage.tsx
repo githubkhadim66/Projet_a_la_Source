@@ -74,7 +74,7 @@ export function Login({ nav }: { nav: Nav }) {
           </BtnNavy>
         </form>
         <p className="text-xs text-[#64697d] mt-4">
-          Mot de passe oublié ? Contactez l'équipe À la Source pour le réinitialiser.
+          Mot de passe oublié ? Contactez l'équipe Funti pour le réinitialiser.
         </p>
         <p className="text-xs text-[#64697d] mt-2">
           Pas encore référencé ?{" "}

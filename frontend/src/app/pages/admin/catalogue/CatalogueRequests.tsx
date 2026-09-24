@@ -114,9 +114,9 @@ export function CatalogueRequests({ onApiError }: { onApiError: (err: unknown) =
               {/* En-têtes du message */}
               <div className="px-5 divide-y divide-[rgba(13,34,101,0.07)]">
                 {[
-                  ["De", "contact@alasource.fr"],
+                  ["De", "contact@funti.world"],
                   ["À", `${compose.contact_name} · ${compose.email}`],
-                  ["Objet", "Votre catalogue À la Source"],
+                  ["Objet", "Votre catalogue Funti"],
                 ].map(([label, value]) => (
                   <div key={label} className="flex gap-3 py-2.5 text-sm">
                     <span className="w-14 shrink-0 text-[#64697d]">{label}</span>
@@ -130,8 +130,8 @@ export function CatalogueRequests({ onApiError }: { onApiError: (err: unknown) =
                 <div className="bg-[#f4f5f9] border border-[rgba(13,34,101,0.08)] p-4 text-sm text-[#0a0a0f] leading-relaxed">
                   <p>Bonjour {compose.contact_name},</p>
                   <p className="mt-3">Merci pour votre intérêt. Votre catalogue est disponible via le lien ci-dessous.</p>
-                  <p className="mt-3 text-[#0d2265] underline">Télécharger le catalogue À la Source</p>
-                  <p className="mt-3 text-[#64697d]">L'équipe À la Source</p>
+                  <p className="mt-3 text-[#0d2265] underline">Télécharger le catalogue Funti</p>
+                  <p className="mt-3 text-[#64697d]">L'équipe Funti</p>
                 </div>
                 <p className="flex items-center gap-1.5 text-xs text-[#64697d] mt-3">
                   <Paperclip className="w-3.5 h-3.5" />

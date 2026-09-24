@@ -63,7 +63,7 @@ export function ProductPage({ nav }: { nav: Nav }) {
         <span className="text-white/50 text-sm">·</span>
         <span className="text-white text-sm font-medium">Fiche produit</span>
         <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer font-['Playfair_Display',Georgia,serif]">
-          À la Source
+          Funti
         </button>
       </div>
 
@@ -129,7 +129,7 @@ export function ProductPage({ nav }: { nav: Nav }) {
                     Demander un devis <ArrowRight className="w-4 h-4" />
                   </button>
                 </div>
-                <p className="text-[11px] text-[#64697d] mt-3 leading-relaxed">Fournisseur vérifié · identité protégée. Aucun contact direct : À la Source porte votre devis de bout en bout.</p>
+                <p className="text-[11px] text-[#64697d] mt-3 leading-relaxed">Fournisseur vérifié · identité protégée. Aucun contact direct : Funti porte votre devis de bout en bout.</p>
               </div>
             </div>
 

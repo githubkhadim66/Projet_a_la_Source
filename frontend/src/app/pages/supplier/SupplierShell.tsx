@@ -80,7 +80,7 @@ export function SupplierShell({ nav, active, staleCount = 0, children }: {
           <div className="flex items-start justify-between">
             <button onClick={() => go("landing")} className="flex items-center gap-2.5 cursor-pointer group">
               <div className="w-7 h-7 bg-[#C4613A] flex items-center justify-center text-white font-black text-xs shrink-0">A</div>
-              <span className="text-white font-bold text-sm tracking-tight group-hover:text-white/80 transition-colors">À la Source</span>
+              <span className="text-white font-bold text-sm tracking-tight group-hover:text-white/80 transition-colors">Funti</span>
             </button>
             <button onClick={() => setMenuOpen(false)} className="lg:hidden text-white/50 hover:text-white cursor-pointer" title="Fermer">
               <X className="w-5 h-5" />

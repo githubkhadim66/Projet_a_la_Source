@@ -33,7 +33,7 @@ services:
       CORS_ORIGINS: ${PUBLIC_URL}
       FRONTEND_URL: ${PUBLIC_URL}
       EMAIL_BACKEND: console
-      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@alasource.fr}
+      FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@funti.world}
       FIRST_ADMIN_PASSWORD: ${FIRST_ADMIN_PASSWORD:-changeme-admin}
       SEED_SUPPLIER_PASSWORD: ${SEED_SUPPLIER_PASSWORD:-fournisseur123}
     volumes:

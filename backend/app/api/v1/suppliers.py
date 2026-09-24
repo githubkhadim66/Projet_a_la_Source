@@ -131,7 +131,7 @@ def update_my_product(
     product.updated_at = datetime.now(UTC)
     db.commit()
     db.refresh(product)
-    # Passage en rupture : l'intermédiaire À la Source doit être prévenu pour gérer les acheteurs.
+    # Passage en rupture : l'intermédiaire Funti doit être prévenu pour gérer les acheteurs.
     if product.status == StockStatus.RUPTURE and not was_rupture:
         emails.notify_internal(
             f"Rupture de stock · {product.name}",
@@ -151,7 +151,7 @@ def archive_my_product(
     db: Session = Depends(get_db),
 ):
     """Retrait doux (réversible) d'un produit par son fournisseur : il quitte le catalogue
-    et les listes actives mais reste conservé (corbeille). Prévient l'équipe À la Source."""
+    et les listes actives mais reste conservé (corbeille). Prévient l'équipe Funti."""
     product = db.get(Product, product_id)
     if product is None or product.supplier_id != supplier.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit introuvable")

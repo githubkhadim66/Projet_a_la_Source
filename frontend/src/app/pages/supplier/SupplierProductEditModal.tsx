@@ -145,7 +145,7 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
               )}
             </div>
             <p className="text-[11px] text-[#64697d] mt-1.5">
-              À cette date, le produit se retire automatiquement du site. Vous et l'équipe À la Source
+              À cette date, le produit se retire automatiquement du site. Vous et l'équipe Funti
               êtes alertés 3 jours avant. Laissez vide s'il est disponible en continu.
             </p>
           </div>
@@ -165,7 +165,7 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
               <div><FieldLabel>Prix en vrac</FieldLabel><TextInput value={form.bulk_price} onChange={set("bulk_price")} placeholder="Ex : 950 FCFA/kg dès 1 t" /></div>
             </div>
             <div><FieldLabel>Période de récolte</FieldLabel><TextInput value={form.harvest_period} onChange={set("harvest_period")} placeholder="Ex : novembre à février" /></div>
-            <p className="text-[11px] text-[#64697d]">Visibles uniquement par vous et l'équipe À la Source · jamais affichées publiquement.</p>
+            <p className="text-[11px] text-[#64697d]">Visibles uniquement par vous et l'équipe Funti · jamais affichées publiquement.</p>
           </div>
 
           {error && <p className="text-xs text-red-600">{error}</p>}

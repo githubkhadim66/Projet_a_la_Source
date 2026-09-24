@@ -18,7 +18,7 @@ export function ScreenShell({ children, nav, title, back = "landing", directBack
         {title && <span className="text-white/60 text-sm">·</span>}
         {title && <span className="text-white text-sm font-medium">{title}</span>}
         <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer">
-          À la Source
+          Funti
         </button>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-12">{children}</div>

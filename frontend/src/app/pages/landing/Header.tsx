@@ -15,7 +15,7 @@ export function Header({ nav, open, setOpen, basket, onBasketOpen }: {
       <div className="bg-white border-b border-[rgba(13,34,101,0.08)]">
         <div className="max-w-7xl mx-auto px-6 h-[60px] flex items-center gap-8">
           <button onClick={() => nav("landing")} className="font-bold text-[17px] text-[#0d2265] tracking-tight cursor-pointer shrink-0 font-['Playfair_Display',Georgia,serif]">
-            À la Source
+            Funti
           </button>
           <nav className="hidden lg:flex items-center gap-7 text-[13px]">
             {[

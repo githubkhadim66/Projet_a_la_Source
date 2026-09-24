@@ -1,10 +1,10 @@
-"""Référentiel produits transmis par À la Source (liste d'Oumou Soumano).
+"""Référentiel produits transmis par Funti (liste d'Oumou Soumano).
 
 Chaque entrée : (référence, nom, catégorie, origine, conditionnement, description, bienfaits)
 
 Les descriptions et bienfaits renseignés ci-dessous portent sur des caractéristiques
 nutritionnelles communément établies. Les entrées laissées vides sont à compléter
-par À la Source : ce sont des produits dont la définition exacte doit être validée
+par Funti : ce sont des produits dont la définition exacte doit être validée
 en interne avant publication commerciale.
 
 Les photos d'attente sont assignées séparément par `scripts/fetch_product_images.py`
@@ -141,22 +141,22 @@ PRODUITS_REELS: list[tuple[str, str, str, str, str, str, str]] = [
     ),
     (
         "ALS-SOL-019", "Solom", "Fruits & légumes", "Sénégal", "10 kg",
-        "",  # définition à valider par À la Source
+        "",  # définition à valider par Funti
         "",
     ),
     (
         "ALS-OUL-020", "Oule", "Épicerie", "Sénégal", "10 kg",
-        "",  # définition à valider par À la Source
+        "",  # définition à valider par Funti
         "",
     ),
     (
         "ALS-SID-021", "Sidem Mali", "Fruits & légumes", "Mali", "10 kg",
-        "",  # définition à valider par À la Source
+        "",  # définition à valider par Funti
         "",
     ),
     (
         "ALS-MBU-022", "Mburake", "Épicerie", "Sénégal", "10 kg",
-        "",  # définition à valider par À la Source
+        "",  # définition à valider par Funti
         "",
     ),
     (

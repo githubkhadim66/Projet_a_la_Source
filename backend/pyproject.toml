@@ -1,7 +1,7 @@
 [project]
 name = "a-la-source-backend"
 version = "0.1.0"
-description = "API FastAPI — À la Source : leads, catalogue, espace fournisseurs, RDV expert"
+description = "API FastAPI — Funti : leads, catalogue, espace fournisseurs, RDV expert"
 requires-python = ">=3.12"
 
 [tool.ruff]

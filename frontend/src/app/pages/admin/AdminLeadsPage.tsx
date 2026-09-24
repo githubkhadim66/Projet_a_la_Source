@@ -34,17 +34,17 @@ const REPLY_LABEL: Record<LeadTab, string> = {
 function replyDefaults(lead: Lead, tab: LeadTab): { subject: string; body: string } {
   const first = lead.contact.split(/[\s·—-]+/).filter(Boolean)[0] || lead.contact;
   const prod = typeof lead.product === "string" && lead.product ? ` concernant ${lead.product}` : "";
-  const subject = tab === "devis" ? "Votre demande de cotation · À la Source"
-    : tab === "sourcing" ? "Votre demande de sourcing · À la Source"
-    : tab === "candidatures" ? "Votre candidature fournisseur · À la Source"
-    : "Votre demande · À la Source";
+  const subject = tab === "devis" ? "Votre demande de cotation · Funti"
+    : tab === "sourcing" ? "Votre demande de sourcing · Funti"
+    : tab === "candidatures" ? "Votre candidature fournisseur · Funti"
+    : "Votre demande · Funti";
   const intro = tab === "devis" ? `Merci pour votre demande de cotation${prod}.`
     : tab === "sourcing" ? `Merci pour votre demande de sourcing${prod}.`
     : tab === "candidatures" ? "Merci pour votre candidature."
     : "Merci pour votre demande.";
   const middle = tab === "devis" ? "[Détaillez ici votre proposition · produits, prix, logistique, incoterm.]"
     : "[Détaillez ici votre réponse.]";
-  const body = `Bonjour ${first},\n\n${intro}\n\n${middle}\n\nBien cordialement,\nL'équipe À la Source`;
+  const body = `Bonjour ${first},\n\n${intro}\n\n${middle}\n\nBien cordialement,\nL'équipe Funti`;
   return { subject, body };
 }
 

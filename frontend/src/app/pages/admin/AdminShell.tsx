@@ -48,7 +48,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
         <div className="px-5 pt-5 pb-4 border-b border-white/[0.07]">
           <button onClick={() => nav("landing")} className="flex items-center gap-2.5 cursor-pointer group">
             <div className="w-7 h-7 bg-[#C4613A] flex items-center justify-center text-white font-black text-xs shrink-0">A</div>
-            <span className="text-white font-bold text-sm tracking-tight group-hover:text-white/80 transition-colors">À la Source</span>
+            <span className="text-white font-bold text-sm tracking-tight group-hover:text-white/80 transition-colors">Funti</span>
           </button>
           <p className="text-white/25 text-[10px] font-medium tracking-widest uppercase mt-2 ml-[38px]">Admin</p>
         </div>

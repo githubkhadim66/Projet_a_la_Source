@@ -1,4 +1,4 @@
-"""Insère le référentiel produits transmis par À la Source.
+"""Insère le référentiel produits transmis par Funti.
 
 Usage : python -m app.seed_catalogue
 Idempotent : une référence déjà présente est complétée, jamais dupliquée.
@@ -51,11 +51,11 @@ def seed_catalogue() -> None:
                 completes += 1
 
         db.commit()
-        logger.info("Catalogue À la Source : %d produits créés, %d déjà présents", crees, completes)
+        logger.info("Catalogue Funti : %d produits créés, %d déjà présents", crees, completes)
 
         sans_fiche = [p[1] for p in PRODUITS_REELS if not p[5]]
         if sans_fiche:
-            logger.warning("Description à compléter par À la Source : %s", ", ".join(sans_fiche))
+            logger.warning("Description à compléter par Funti : %s", ", ".join(sans_fiche))
     finally:
         db.close()
 

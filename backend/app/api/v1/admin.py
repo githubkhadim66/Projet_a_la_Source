@@ -590,7 +590,7 @@ def catalogue_preview(_: AdminUser = Depends(get_current_admin), db: Session = D
             detail="Aucun produit dans le catalogue · ajoutez-en au moins un.",
         )
     pdf = build_catalogue_pdf(products)
-    filename = f"catalogue-a-la-source-{date.today():%Y-%m}.pdf"
+    filename = f"catalogue-funti-{date.today():%Y-%m}.pdf"
     return StreamingResponse(
         iter([pdf]),
         media_type="application/pdf",

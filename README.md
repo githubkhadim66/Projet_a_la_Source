@@ -1,4 +1,4 @@
-# À la Source — Plateforme MVP
+# Funti — Plateforme MVP
 
 Sourcing & export de produits d'origine africaine. Landing page bilingue de génération de leads, catalogue PDF gated, espace fournisseurs étanche et back-office admin — conformément au **CDC MVP v1.0** et au document **Parcours utilisateurs v1.0**.
 
@@ -39,7 +39,7 @@ docker compose up --build
 - API + docs Swagger : http://localhost:8000/api/docs
 - Postgres : localhost:5432 (`alasource`/`alasource`)
 
-Le seed crée automatiquement l'admin (`admin@alasource.example` / `changeme-admin`) et un fournisseur de démo avec 4 produits.
+Le seed crée automatiquement l'admin (`admin@funti.example` / `changeme-admin`) et un fournisseur de démo avec 4 produits.
 
 ### Option 2 — sans Docker
 

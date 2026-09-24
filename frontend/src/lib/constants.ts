@@ -52,7 +52,7 @@ export const INCOTERM_INFO: Record<string, string> = {
 
 // Incoterms où l'ACHETEUR organise le transport principal (le vendeur ne s'en charge pas)
 export const INCOTERMS_ACHETEUR = ["EXW", "FCA", "FAS", "FOB"];
-// Incoterms où le VENDEUR (À la Source) organise l'acheminement jusqu'à destination
+// Incoterms où le VENDEUR (Funti) organise l'acheminement jusqu'à destination
 export const INCOTERMS_VENDEUR = ["CFR", "CIF", "CPT", "CIP", "DPU", "DAP", "DDP"];
 
 /** true = l'acheteur organise le transport ; false = le vendeur l'organise ; null = à déterminer. */

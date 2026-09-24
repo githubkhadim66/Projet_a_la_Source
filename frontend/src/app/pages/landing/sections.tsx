@@ -425,9 +425,9 @@ export function SupplierSection({ nav }: { nav: Nav }) {
 // ─── Preuve sociale ──────────────────────────────────────────────────────────
 
 const TESTIMONIALS = [
-  { quote: "Nous cherchions du beurre de karité en volumes réguliers, avec certification Bio. À la Source a livré une première commande conforme en six semaines · sans aucun écart sur le cahier des charges.", name: "Sophie M.", role: "Responsable achats", company: "Cosmétiques Naturels Pro", country: "France" },
+  { quote: "Nous cherchions du beurre de karité en volumes réguliers, avec certification Bio. Funti a livré une première commande conforme en six semaines · sans aucun écart sur le cahier des charges.", name: "Sophie M.", role: "Responsable achats", company: "Cosmétiques Naturels Pro", country: "France" },
   { quote: "Ce que j'apprécie, c'est la transparence totale sur les délais et les incoterms. Le devis était clair, la logistique pilotée sans accroc. Je recommande sans hésitation.", name: "Klaus H.", role: "Directeur des opérations", company: "BioImport GmbH", country: "Allemagne" },
-  { quote: "En tant qu'épicerie fine, nous avons besoin de cohérence qualitative lot après lot. À la Source est le seul interlocuteur qui nous a garanti cette constance, dès la première livraison.", name: "Pauline R.", role: "Co-fondatrice", company: "Épicerie Léontine", country: "Belgique" },
+  { quote: "En tant qu'épicerie fine, nous avons besoin de cohérence qualitative lot après lot. Funti est le seul interlocuteur qui nous a garanti cette constance, dès la première livraison.", name: "Pauline R.", role: "Co-fondatrice", company: "Épicerie Léontine", country: "Belgique" },
 ];
 
 const ENGAGEMENTS = [

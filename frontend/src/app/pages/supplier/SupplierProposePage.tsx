@@ -189,7 +189,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
               className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265]" />
             <p className="text-[11px] text-[#64697d] mt-1.5">
               Si votre produit n'est disponible qu'un temps limité, indiquez la date de fin.
-              Il se retirera automatiquement du site à cette date. Vous et l'équipe À la Source
+              Il se retirera automatiquement du site à cette date. Vous et l'équipe Funti
               serez alertés 3 jours avant. Laissez vide s'il est disponible en continu.
             </p>
           </div>
@@ -208,7 +208,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
               <div><FieldLabel>Prix en vrac</FieldLabel><TextInput placeholder="Ex : 950 FCFA/kg dès 1 t" value={form.bulk_price} onChange={set("bulk_price")} /></div>
             </div>
             <div><FieldLabel>Période de récolte</FieldLabel><TextInput placeholder="Ex : novembre à février" value={form.harvest_period} onChange={set("harvest_period")} /></div>
-            <p className="text-[11px] text-[#64697d]">Ces informations restent internes à À la Source et ne sont jamais affichées publiquement.</p>
+            <p className="text-[11px] text-[#64697d]">Ces informations restent internes à Funti et ne sont jamais affichées publiquement.</p>
           </div>
         </div>
       ),
@@ -244,13 +244,13 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
         nav={nav}
         embedded
         title="Proposer un produit"
-        intro="Soumettez une fiche complète. Aucun produit n'est publié automatiquement : l'équipe À la Source examine chaque proposition."
+        intro="Soumettez une fiche complète. Aucun produit n'est publié automatiquement : l'équipe Funti examine chaque proposition."
         steps={steps}
         onSubmit={submit}
         submitting={sending}
         submitLabel="Soumettre à validation"
         error={error}
-        footNote="Aucune publication automatique · validation par l'équipe À la Source."
+        footNote="Aucune publication automatique · validation par l'équipe Funti."
       />
     </SupplierShell>
   );
@@ -263,7 +263,7 @@ export function SupplierProposeConfirm({ nav }: { nav: Nav }) {
         <Confirm
           icon={<CheckCircle className="w-8 h-8 text-[#0d2265]" />}
           title="Proposition transmise"
-          subtitle="Votre proposition a été transmise à l'équipe À la Source pour validation. Vous serez informé par e-mail de la décision. Aucune publication automatique."
+          subtitle="Votre proposition a été transmise à l'équipe Funti pour validation. Vous serez informé par e-mail de la décision. Aucune publication automatique."
           nav={nav}
           back="supplier-products"
           backLabel="Retour à mes produits"

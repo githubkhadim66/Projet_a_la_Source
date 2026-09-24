@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     # Général
-    APP_NAME: str = "À la Source API"
+    APP_NAME: str = "Funti API"
     ENVIRONMENT: str = "development"  # development | staging | production
     DEBUG: bool = True
     API_V1_PREFIX: str = "/api/v1"
@@ -44,8 +44,8 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    EMAIL_FROM: str = "contact@alasource.example"
-    NOTIFY_INTERNAL_EMAIL: str = "equipe@alasource.example"
+    EMAIL_FROM: str = "contact@funti.example"
+    NOTIFY_INTERNAL_EMAIL: str = "equipe@funti.example"
 
     # Front (utilisé dans les liens des e-mails)
     FRONTEND_URL: str = "http://localhost:5173"

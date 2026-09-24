@@ -66,7 +66,7 @@ def download_catalogue(token: str, db: Session = Depends(get_db)):
         iter([pdf]),
         media_type="application/pdf",
         headers={
-            "Content-Disposition": 'attachment; filename="catalogue-a-la-source.pdf"',
+            "Content-Disposition": 'attachment; filename="catalogue-funti.pdf"',
             # Un lien déjà envoyé doit toujours servir la dernière édition (CATA-04)
             "Cache-Control": "no-store, no-cache, must-revalidate",
         },

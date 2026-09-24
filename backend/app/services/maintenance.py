@@ -3,7 +3,7 @@
 Distinct du rappel d'actualisation 14 j (FRS-05), qui reste manuel et inchangé.
 
 Deux opérations, exécutées chaque jour :
-  1. Alerte « 3 jours avant » : prévient le fournisseur ET l'équipe À la Source qu'un
+  1. Alerte « 3 jours avant » : prévient le fournisseur ET l'équipe Funti qu'un
      produit va se retirer du site.
   2. Retrait automatique : à l'échéance, le produit est archivé (corbeille) — il disparaît
      du site et du catalogue, comme un retrait manuel.

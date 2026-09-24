@@ -101,7 +101,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
       const done = await api.supplier.archiveProduct(p.id);
       setProducts(ps => ps.filter(x => x.id !== p.id));
       setArchived(a => [done, ...a.filter(x => x.id !== p.id)]);
-      toast("Produit retiré · l'équipe À la Source a été prévenue.");
+      toast("Produit retiré · l'équipe Funti a été prévenue.");
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
       toast("Échec du retrait · réessayez.", "error");
@@ -344,7 +344,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                         <Detail label="Prix en vrac" value={p.bulk_price} />
                         <Detail label="Période de récolte" value={p.harvest_period} />
                       </div>
-                      <p className="text-[11px] text-[#64697d] mt-3">Visibles uniquement par vous et l'équipe À la Source · jamais affichées publiquement.</p>
+                      <p className="text-[11px] text-[#64697d] mt-3">Visibles uniquement par vous et l'équipe Funti · jamais affichées publiquement.</p>
                     </div>
                   )}
                 </div>

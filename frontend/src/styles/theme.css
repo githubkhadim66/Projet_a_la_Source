@@ -1,7 +1,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* ─── À la Source brand tokens ─────────────────────────────────────────── */
+  /* ─── Funti brand tokens ─────────────────────────────────────────── */
   --als-navy:       #0d2265;   /* Bleu marine primaire */
   --als-navy-deep:  #080f2e;   /* Marine foncé (footer, top bar) */
   --als-terra:      #C4613A;   /* Terracotta — accent officiel charte */

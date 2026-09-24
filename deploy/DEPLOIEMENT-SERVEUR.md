@@ -1,4 +1,4 @@
-# Déploiement sur le VPS Contabo — À la Source
+# Déploiement sur le VPS Contabo — Funti
 
 Site accessible à : **http://158.220.87.172** (aucun domaine, aucun HTTPS — environnement de test partagé).
 

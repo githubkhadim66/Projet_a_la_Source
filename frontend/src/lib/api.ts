@@ -1,5 +1,5 @@
 /**
- * Client API · À la Source
+ * Client API · Funti
  * ------------------------
  * Client HTTP typé pour le backend FastAPI.
  * En dev, Vite proxifie `/api` vers http://localhost:8000 (voir vite.config.ts).
@@ -461,7 +461,7 @@ export const admin = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "catalogue-a-la-source.pdf";
+    a.download = "catalogue-funti.pdf";
     a.click();
     URL.revokeObjectURL(url);
   },

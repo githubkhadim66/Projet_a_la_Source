@@ -80,13 +80,13 @@ def seed() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
-        admin_email = os.environ.get("FIRST_ADMIN_EMAIL", "admin@alasource.example")
+        admin_email = os.environ.get("FIRST_ADMIN_EMAIL", "admin@funti.example")
         admin_password = os.environ.get("FIRST_ADMIN_PASSWORD", "changeme-admin")
         if not db.scalar(select(AdminUser).where(AdminUser.email == admin_email)):
             db.add(AdminUser(
                 email=admin_email,
                 hashed_password=hash_password(admin_password),
-                full_name="Administrateur À la Source",
+                full_name="Administrateur Funti",
             ))
             logger.info("Compte admin créé : %s", admin_email)
 

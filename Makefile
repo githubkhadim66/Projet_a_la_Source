@@ -1,4 +1,4 @@
-# ── À la Source — commandes de développement ─────────────────────────────────
+# ── Funti — commandes de développement ─────────────────────────────────
 .PHONY: help dev dev-front dev-back test lint build up down seed migrate
 
 help:

@@ -9,7 +9,7 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid lg:grid-cols-3 gap-12 pb-12 border-b border-white/10">
           <div>
-            <p className="font-bold text-xl tracking-tight mb-3">À la Source</p>
+            <p className="font-bold text-xl tracking-tight mb-3">Funti</p>
             <p className="text-white/40 text-sm leading-relaxed">
               Intermédiation experte · sourcing de matières premières africaines pour l'Europe.
             </p>
@@ -40,8 +40,8 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
           <div>
             <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Contact</p>
             <div className="space-y-2.5 text-sm text-white/50">
-              <a href="mailto:contact@alasource.fr" className="flex items-center gap-2 hover:text-white transition-colors">
-                <Mail className="w-4 h-4 shrink-0" /> contact@alasource.fr
+              <a href="mailto:contact@funti.world" className="flex items-center gap-2 hover:text-white transition-colors">
+                <Mail className="w-4 h-4 shrink-0" /> contact@funti.world
               </a>
               <a href="tel:+33100000000" className="flex items-center gap-2 hover:text-white transition-colors">
                 <Phone className="w-4 h-4 shrink-0" /> +33 1 00 00 00 00
@@ -55,7 +55,7 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
 
         <div className="pt-6 flex flex-wrap items-center justify-between gap-4">
           <p className="text-white/25 text-xs">
-            © 2026 · Mentions légales · RGPD
+            © 2026 Funti World · Mentions légales · RGPD
             <button onClick={() => nav("admin-dashboard")} className="ml-4 opacity-20 hover:opacity-60 cursor-pointer transition-opacity text-white underline">Admin</button>
           </p>
           <div className="flex items-center gap-1 text-xs text-white/30">

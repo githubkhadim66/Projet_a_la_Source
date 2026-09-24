@@ -55,7 +55,7 @@ export function RGPD({ id = "rgpd" }: { id?: string }) {
     <div className="flex gap-3 items-start">
       <input type="checkbox" id={id} required className="mt-0.5 h-4 w-4 accent-[#0d2265] cursor-pointer shrink-0" />
       <label htmlFor={id} className="text-xs text-[#64697d] leading-relaxed cursor-pointer">
-        J'accepte que mes coordonnées soient utilisées par À la Source pour me transmettre le catalogue et me recontacter au sujet de ma demande.{" "}
+        J'accepte que mes coordonnées soient utilisées par Funti pour me transmettre le catalogue et me recontacter au sujet de ma demande.{" "}
         <span className="underline text-[#0d2265]">Politique de confidentialité.</span>
       </label>
     </div>

@@ -1,4 +1,4 @@
-"""Génération du catalogue PDF — mise en page professionnelle à la charte À la Source.
+"""Génération du catalogue PDF — mise en page professionnelle à la charte Funti.
 
 Le document est produit à la volée depuis le référentiel : couverture, page de garde,
 fiches produits ordonnées par l'administrateur, puis page de contact.
@@ -130,7 +130,7 @@ def _cover(c: canvas.Canvas, edition: str, total: int) -> None:
 
     c.setFillColor(WHITE)
     c.setFont(SERIF, 46)
-    c.drawString(MARGIN, PAGE_H - 168, "À la Source")
+    c.drawString(MARGIN, PAGE_H - 168, "Funti")
 
     c.setFillColor(HexColor("#8f98b8"))
     c.setFont(SANS, 11.5)
@@ -168,7 +168,7 @@ def _cover(c: canvas.Canvas, edition: str, total: int) -> None:
     c.setFillColor(HexColor("#8f98b8"))
     c.setFont(SANS, 9)
     c.drawString(MARGIN, y - 100, "Prix communiqués sur devis sous 24 à 48 h ouvrées.")
-    c.drawString(MARGIN, y - 122, "contact@alasource.fr")
+    c.drawString(MARGIN, y - 122, "contact@funti.world")
 
     c.showPage()
 
@@ -185,7 +185,7 @@ def _intro(c: canvas.Canvas, edition: str, by_category: dict[str, int]) -> None:
     c.setFillColor(GREY)
     c.setFont(SANS, 10)
     for line in _wrap(
-        "À la Source sélectionne, audite et référence des producteurs africains pour les acheteurs "
+        "Funti sélectionne, audite et référence des producteurs africains pour les acheteurs "
         "professionnels européens. Chaque fournisseur est évalué sur place avant tout référencement : "
         "normes sanitaires, traçabilité, certifications et capacité à tenir des volumes réguliers.",
         SANS, 10, CONTENT_W, max_lines=4,
@@ -262,7 +262,7 @@ def _intro(c: canvas.Canvas, edition: str, by_category: dict[str, int]) -> None:
 def _header(c: canvas.Canvas, edition: str) -> None:
     c.setFillColor(NAVY)
     c.setFont(SERIF, 15)
-    c.drawString(MARGIN, PAGE_H - 52, "À la Source")
+    c.drawString(MARGIN, PAGE_H - 52, "Funti")
     c.setFillColor(GREY)
     c.setFont(SANS, 8)
     c.drawRightString(PAGE_W - MARGIN, PAGE_H - 52, edition)
@@ -277,7 +277,7 @@ def _footer(c: canvas.Canvas, edition: str, page_no: int | None = None) -> None:
     c.line(MARGIN, 58, PAGE_W - MARGIN, 58)
     c.setFillColor(GREY)
     c.setFont(SANS, 7.5)
-    c.drawString(MARGIN, 44, "Prix sur devis · contact@alasource.fr · alasource.fr")
+    c.drawString(MARGIN, 44, "Prix sur devis · contact@funti.world · funti.world")
     if page_no is not None:
         c.drawRightString(PAGE_W - MARGIN, 44, str(page_no))
 
@@ -470,10 +470,10 @@ def _back_cover(c: canvas.Canvas, edition: str) -> None:
     c.rect(0, 0, PAGE_W, 150, stroke=0, fill=1)
     c.setFillColor(WHITE)
     c.setFont(SERIF, 20)
-    c.drawString(MARGIN, 104, "À la Source")
+    c.drawString(MARGIN, 104, "Funti")
     c.setFillColor(HexColor("#8f98b8"))
     c.setFont(SANS, 9)
-    c.drawString(MARGIN, 80, "contact@alasource.fr  ·  +33 1 00 00 00 00  ·  alasource.fr")
+    c.drawString(MARGIN, 80, "contact@funti.world  ·  +33 1 00 00 00 00  ·  funti.world")
     c.drawString(MARGIN, 62, edition)
     c.setFont(SANS, 7.5)
     c.drawString(MARGIN, 38, "Document non contractuel. Prix, disponibilités et délais communiqués sur devis.")
@@ -488,8 +488,8 @@ def build_catalogue_pdf(products: list, edition: str | None = None) -> bytes:
     edition = edition or edition_label()
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
-    c.setTitle(f"Catalogue À la Source · {edition}")
-    c.setAuthor("À la Source")
+    c.setTitle(f"Catalogue Funti · {edition}")
+    c.setAuthor("Funti World")
     c.setSubject("Catalogue produits · sourcing & export de produits d'origine africaine")
 
     by_category: dict[str, int] = {}

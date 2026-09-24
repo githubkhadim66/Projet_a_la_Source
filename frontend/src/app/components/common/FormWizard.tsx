@@ -138,7 +138,7 @@ export function FormWizard({
         <span className="text-white/50 text-sm">·</span>
         <span className="text-white text-sm font-medium">{title}</span>
         <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer font-['Playfair_Display',Georgia,serif]">
-          À la Source
+          Funti
         </button>
       </div>
       {body}

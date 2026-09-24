@@ -47,7 +47,7 @@ class Product(Base):
     delay: Mapped[str] = mapped_column(String(100), default="")
 
     # Informations commerciales INTERNES (jamais exposées au public : « Prix sur devis »).
-    # Saisies par le fournisseur / l'admin — prix du fournisseur vers À la Source.
+    # Saisies par le fournisseur / l'admin — prix du fournisseur vers Funti.
     price_per_kg: Mapped[str] = mapped_column(String(50), default="")
     bulk_price: Mapped[str] = mapped_column(String(50), default="")
     harvest_period: Mapped[str] = mapped_column(String(100), default="")

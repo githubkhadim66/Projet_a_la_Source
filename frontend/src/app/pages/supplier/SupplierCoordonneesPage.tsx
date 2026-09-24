@@ -57,7 +57,7 @@ export function SupplierCoordonnees({ nav }: { nav: Nav }) {
       <div className="max-w-2xl mx-auto">
         <h1 className="text-xl font-bold text-[#0a0a0f]">Mon dossier</h1>
         <p className="text-sm text-[#64697d] mt-0.5 mb-6">
-          Tenez à jour les informations de votre société. Votre e-mail de connexion et vos catégories sont gérés par l'équipe À la Source.
+          Tenez à jour les informations de votre société. Votre e-mail de connexion et vos catégories sont gérés par l'équipe Funti.
         </p>
 
         <div className="bg-white border border-[rgba(13,34,101,0.1)] p-6">
@@ -68,7 +68,7 @@ export function SupplierCoordonnees({ nav }: { nav: Nav }) {
               <div>
                 <FieldLabel>E-mail de connexion</FieldLabel>
                 <TextInput value={email} disabled className="bg-[#f4f5f9] text-[#64697d] cursor-not-allowed" />
-                <p className="text-[11px] text-[#64697d] mt-1">Pour changer d'e-mail, contactez l'équipe À la Source.</p>
+                <p className="text-[11px] text-[#64697d] mt-1">Pour changer d'e-mail, contactez l'équipe Funti.</p>
               </div>
               <div><FieldLabel required>Nom de la société</FieldLabel><TextInput required value={form.name} onChange={set("name")} placeholder="Coopérative Kaydara" /></div>
               <div><FieldLabel>Nom du contact</FieldLabel><TextInput value={form.contact_name} onChange={set("contact_name")} placeholder="Amadou Diallo" /></div>
