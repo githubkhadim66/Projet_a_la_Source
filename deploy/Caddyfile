@@ -1,4 +1,6 @@
-# Reverse proxy TLS de production — Let's Encrypt automatique
+# Reverse proxy TLS — Let's Encrypt automatique (prod + staging sur la même machine)
+
+# Production : DOMAIN="funtiworld.com, www.funtiworld.com" (ou ":80" en accès HTTP par IP)
 {$DOMAIN} {
 	encode gzip
 
@@ -9,5 +11,19 @@
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+# Staging : STAGING_DOMAIN="staging.funtiworld.com". Le staging tourne dans un autre
+# projet compose, exposé sur le port 8080 de l'hôte : Caddy le joint via l'hôte.
+{$STAGING_DOMAIN} {
+	encode gzip
+
+	reverse_proxy host.docker.internal:8080
+
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Robots-Tag "noindex, nofollow"
 	}
 }

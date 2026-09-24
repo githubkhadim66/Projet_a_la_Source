@@ -114,7 +114,7 @@ export function CatalogueRequests({ onApiError }: { onApiError: (err: unknown) =
               {/* En-têtes du message */}
               <div className="px-5 divide-y divide-[rgba(13,34,101,0.07)]">
                 {[
-                  ["De", "contact@funti.world"],
+                  ["De", "contact@funtiworld.com"],
                   ["À", `${compose.contact_name} · ${compose.email}`],
                   ["Objet", "Votre catalogue Funti"],
                 ].map(([label, value]) => (

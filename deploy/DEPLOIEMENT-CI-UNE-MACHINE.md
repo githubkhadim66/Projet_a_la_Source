@@ -146,18 +146,27 @@ Les dumps horodatés (prod + staging) atterrissent dans `/opt/alasource-backups`
 
 ---
 
-## 7. Passer au domaine + HTTPS (plus tard)
+## 7. Domaine funtiworld.com + HTTPS
 
-Quand le domaine est acheté et pointe (enregistrement **A**) vers `158.220.87.172` :
-1. Dans `/opt/alasource-prod/.env.prod`, remplacer :
+Prod : `funtiworld.com` (+ `www`) · Staging : `staging.funtiworld.com`. Un seul Caddy (celui de la prod)
+sert les deux et obtient les certificats Let's Encrypt **automatiquement**.
+
+1. DNS (OVH › Domaines › funtiworld.com › Zone DNS) : enregistrements **A** vers `158.220.87.172`
+   pour `funtiworld.com`, `www.funtiworld.com` et `staging.funtiworld.com` (supprimer les A/AAAA d'OVH existants).
+2. Dans `/opt/alasource-prod/.env.prod` :
    ```
-   DOMAIN=alasource.tondomaine.com
-   CORS_ORIGINS=https://alasource.tondomaine.com
-   FRONTEND_URL=https://alasource.tondomaine.com
+   DOMAIN=funtiworld.com, www.funtiworld.com
+   STAGING_DOMAIN=staging.funtiworld.com
+   CORS_ORIGINS=https://funtiworld.com,https://www.funtiworld.com
+   FRONTEND_URL=https://funtiworld.com
    ```
-2. Pour le staging, un sous-domaine `staging.tondomaine.com` (enregistrement A) + on ajoutera un bloc Caddy.
-3. Relancer : `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d`.
-Caddy obtient le certificat Let's Encrypt **automatiquement**. (On adaptera ensemble le Caddyfile pour router prod + staging par sous-domaine.)
+3. Dans `/opt/alasource-staging/.env.staging` :
+   ```
+   CORS_ORIGINS=https://staging.funtiworld.com,http://158.220.87.172:8080
+   FRONTEND_URL=https://staging.funtiworld.com
+   ```
+4. Relancer les deux (`up -d`), puis mettre à jour les secrets GitHub `PROD_URL=https://funtiworld.com`
+   et `STAGING_URL=https://staging.funtiworld.com`.
 
 ---
 

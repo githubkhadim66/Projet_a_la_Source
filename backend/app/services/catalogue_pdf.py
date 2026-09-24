@@ -168,7 +168,7 @@ def _cover(c: canvas.Canvas, edition: str, total: int) -> None:
     c.setFillColor(HexColor("#8f98b8"))
     c.setFont(SANS, 9)
     c.drawString(MARGIN, y - 100, "Prix communiqués sur devis sous 24 à 48 h ouvrées.")
-    c.drawString(MARGIN, y - 122, "contact@funti.world")
+    c.drawString(MARGIN, y - 122, "contact@funtiworld.com")
 
     c.showPage()
 
@@ -277,7 +277,7 @@ def _footer(c: canvas.Canvas, edition: str, page_no: int | None = None) -> None:
     c.line(MARGIN, 58, PAGE_W - MARGIN, 58)
     c.setFillColor(GREY)
     c.setFont(SANS, 7.5)
-    c.drawString(MARGIN, 44, "Prix sur devis · contact@funti.world · funti.world")
+    c.drawString(MARGIN, 44, "Prix sur devis · contact@funtiworld.com · funtiworld.com")
     if page_no is not None:
         c.drawRightString(PAGE_W - MARGIN, 44, str(page_no))
 
@@ -473,7 +473,7 @@ def _back_cover(c: canvas.Canvas, edition: str) -> None:
     c.drawString(MARGIN, 104, "Funti")
     c.setFillColor(HexColor("#8f98b8"))
     c.setFont(SANS, 9)
-    c.drawString(MARGIN, 80, "contact@funti.world  ·  +33 1 00 00 00 00  ·  funti.world")
+    c.drawString(MARGIN, 80, "contact@funtiworld.com  ·  +33 1 00 00 00 00  ·  funtiworld.com")
     c.drawString(MARGIN, 62, edition)
     c.setFont(SANS, 7.5)
     c.drawString(MARGIN, 38, "Document non contractuel. Prix, disponibilités et délais communiqués sur devis.")

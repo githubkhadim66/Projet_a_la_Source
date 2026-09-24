@@ -40,8 +40,8 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
           <div>
             <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Contact</p>
             <div className="space-y-2.5 text-sm text-white/50">
-              <a href="mailto:contact@funti.world" className="flex items-center gap-2 hover:text-white transition-colors">
-                <Mail className="w-4 h-4 shrink-0" /> contact@funti.world
+              <a href="mailto:contact@funtiworld.com" className="flex items-center gap-2 hover:text-white transition-colors">
+                <Mail className="w-4 h-4 shrink-0" /> contact@funtiworld.com
               </a>
               <a href="tel:+33100000000" className="flex items-center gap-2 hover:text-white transition-colors">
                 <Phone className="w-4 h-4 shrink-0" /> +33 1 00 00 00 00
