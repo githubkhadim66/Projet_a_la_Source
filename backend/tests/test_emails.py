@@ -30,7 +30,7 @@ def _smtp_settings(monkeypatch, allowlist: str) -> list[str]:
     monkeypatch.setattr(settings, "EMAIL_BACKEND", "smtp")
     monkeypatch.setattr(settings, "SMTP_HOST", "smtp.test")
     monkeypatch.setattr(settings, "EMAIL_ALLOWLIST", allowlist)
-    monkeypatch.setattr(settings, "EMAIL_SUBJECT_PREFIX", "[STAGING] ")
+    monkeypatch.setattr(settings, "EMAIL_SUBJECT_PREFIX", "[STAGING]")
     return sent
 
 

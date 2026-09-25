@@ -106,7 +106,9 @@ def _is_allowed(to: str) -> bool:
 
 
 def _send(to: str, subject: str, body: str, attachments: list[Attachment] | None = None) -> None:
-    subject = f"{settings.EMAIL_SUBJECT_PREFIX}{subject}"
+    # Le .env peut perdre l'espace final du préfixe : on le garantit ici.
+    prefix = settings.EMAIL_SUBJECT_PREFIX.strip()
+    subject = f"{prefix} {subject}" if prefix else subject
     if settings.EMAIL_BACKEND == "smtp" and settings.SMTP_HOST and not _is_allowed(to):
         logger.info("EMAIL [bloqué hors liste autorisée] to=%s subject=%r", to, subject)
         return
@@ -129,6 +131,7 @@ def _send(to: str, subject: str, body: str, attachments: list[Attachment] | None
             if settings.SMTP_USER:
                 server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
             server.send_message(msg)
+        logger.info("EMAIL [smtp] envoyé to=%s subject=%r", to, subject)
     else:
         extra = ""
         if attachments:
