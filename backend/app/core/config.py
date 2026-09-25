@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: str = ""
     EMAIL_FROM: str = "contact@funti.example"
     NOTIFY_INTERNAL_EMAIL: str = "equipe@funti.example"
+    # Garde-fou du staging : si renseigné, seuls ces destinataires reçoivent un vrai e-mail
+    # (adresses complètes ou domaines « @exemple.com », séparés par des virgules) ; les autres
+    # sont seulement journalisés. Vide = aucun filtre (production).
+    EMAIL_ALLOWLIST: str = ""
+    EMAIL_SUBJECT_PREFIX: str = ""  # ex. "[STAGING] " pour distinguer les e-mails de test
 
     # Front (utilisé dans les liens des e-mails)
     FRONTEND_URL: str = "http://localhost:5173"

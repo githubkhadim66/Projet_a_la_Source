@@ -27,13 +27,13 @@ from app.schemas.auth import AdminLogin, TokenResponse
 from app.schemas.lead import LeadOut, LeadStatusUpdate
 from app.schemas.rdv import RdvOut, RdvStatusUpdate
 from app.schemas.supplier import (
+    RATING_CRITERIA,
     AdminProductOut,
     CatalogueReorder,
     ProductAdminUpdate,
     ProductCreate,
     ProposalDecision,
     ProposalOut,
-    RATING_CRITERIA,
     SupplierCreate,
     SupplierOut,
     SupplierRating,
@@ -182,7 +182,8 @@ async def reply_to_lead(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="L'e-mail n'a pas pu être envoyé. Vérifiez la configuration SMTP.",
         ) from exc
-    suffix = f" ({len(attachments)} pièce{'s' if len(attachments) > 1 else ''} jointe{'s' if len(attachments) > 1 else ''})" if attachments else ""
+    plural = "s" if len(attachments) > 1 else ""
+    suffix = f" ({len(attachments)} pièce{plural} jointe{plural})" if attachments else ""
     return {"message": f"E-mail envoyé à {lead.email}.{suffix}"}
 
 
@@ -530,7 +531,8 @@ def run_expiry_now(_: AdminUser = Depends(get_current_admin), db: Session = Depe
     Utile pour tester ; en temps normal, la tâche quotidienne s'en charge automatiquement."""
     from app.services.maintenance import run_expiry_maintenance
     result = run_expiry_maintenance(db)
-    return {"message": f"{result['alerted']} alerte(s) envoyée(s), {result['withdrawn']} produit(s) retiré(s).", **result}
+    message = f"{result['alerted']} alerte(s) envoyée(s), {result['withdrawn']} produit(s) retiré(s)."
+    return {"message": message, **result}
 
 
 # ─── Téléversement des photos produits ───────────────────────────────────────

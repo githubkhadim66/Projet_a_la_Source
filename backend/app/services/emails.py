@@ -1,6 +1,7 @@
 """E-mails transactionnels E1/E2/E3 et notifications internes (CDC CATA-02, FOR-05).
 
 Backend « console » par défaut (logs) ; SMTP en staging/production via variables d'env.
+En staging, EMAIL_ALLOWLIST limite les vrais envois aux adresses de test.
 """
 
 import logging
@@ -53,8 +54,14 @@ TEMPLATES = {
                "update stock, availability and lead times.\n\nThe Funti team"),
     },
     "proposal_rejected": {
-        "fr": ("Votre proposition de produit · Funti", "Bonjour {name},\n\nMerci pour votre proposition « {product} ». Après examen, nous ne pouvons pas la retenir pour le moment.\n\nMotif : {reason}\n\nVous pouvez nous soumettre une nouvelle proposition ajustée à tout moment depuis votre espace fournisseur.\n\nL'équipe Funti"),
-        "en": ("Your product proposal · Funti", "Hello {name},\n\nThank you for your proposal \"{product}\". After review, we are unable to accept it at this time.\n\nReason: {reason}\n\nYou are welcome to submit an adjusted proposal anytime from your supplier area.\n\nThe Funti team"),
+        "fr": ("Votre proposition de produit · Funti", "Bonjour {name},\n\nMerci pour votre proposition "
+               "« {product} ». Après examen, nous ne pouvons pas la retenir pour le moment.\n\n"
+               "Motif : {reason}\n\nVous pouvez nous soumettre une nouvelle proposition ajustée à tout "
+               "moment depuis votre espace fournisseur.\n\nL'équipe Funti"),
+        "en": ("Your product proposal · Funti", "Hello {name},\n\nThank you for your proposal "
+               "\"{product}\". After review, we are unable to accept it at this time.\n\n"
+               "Reason: {reason}\n\nYou are welcome to submit an adjusted proposal anytime from your "
+               "supplier area.\n\nThe Funti team"),
     },
     "product_expiring": {
         "fr": ("Votre produit se retire bientôt du site · Funti", "Bonjour {name},\n\n"
@@ -89,7 +96,20 @@ TEMPLATES = {
 }
 
 
+def _is_allowed(to: str) -> bool:
+    """Applique EMAIL_ALLOWLIST (staging) : adresse exacte ou domaine « @domaine »."""
+    entries = [e.strip().lower() for e in settings.EMAIL_ALLOWLIST.split(",") if e.strip()]
+    if not entries:
+        return True
+    addr = to.strip().lower()
+    return any(addr == e or (e.startswith("@") and addr.endswith(e)) for e in entries)
+
+
 def _send(to: str, subject: str, body: str, attachments: list[Attachment] | None = None) -> None:
+    subject = f"{settings.EMAIL_SUBJECT_PREFIX}{subject}"
+    if settings.EMAIL_BACKEND == "smtp" and settings.SMTP_HOST and not _is_allowed(to):
+        logger.info("EMAIL [bloqué hors liste autorisée] to=%s subject=%r", to, subject)
+        return
     if settings.EMAIL_BACKEND == "smtp" and settings.SMTP_HOST:
         if attachments:
             msg = MIMEMultipart()

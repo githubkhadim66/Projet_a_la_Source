@@ -36,6 +36,10 @@ services:
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
       NOTIFY_INTERNAL_EMAIL: ${NOTIFY_INTERNAL_EMAIL:-}
+      # Garde-fou : en SMTP, seuls ces destinataires reçoivent de vrais e-mails (les
+      # fournisseurs de démo ne sont jamais contactés).
+      EMAIL_ALLOWLIST: ${EMAIL_ALLOWLIST:-@funtiworld.com}
+      EMAIL_SUBJECT_PREFIX: ${EMAIL_SUBJECT_PREFIX:-[STAGING] }
       CATALOGUE_PDF_PATH: /app/data/catalogue.pdf
       FIRST_ADMIN_EMAIL: ${FIRST_ADMIN_EMAIL:-admin@funtiworld.com}
       FIRST_ADMIN_PASSWORD: ${FIRST_ADMIN_PASSWORD:-changeme-admin}
