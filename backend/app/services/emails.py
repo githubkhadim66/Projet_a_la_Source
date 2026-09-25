@@ -9,6 +9,7 @@ import smtplib
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate, make_msgid, parseaddr
 
 from app.core.config import settings
 
@@ -126,6 +127,10 @@ def _send(to: str, subject: str, body: str, attachments: list[Attachment] | None
         msg["Subject"] = subject
         msg["From"] = settings.EMAIL_FROM
         msg["To"] = to
+        # Gmail rejette les messages sans Message-ID ; Date est exigée par la RFC 5322.
+        msg["Date"] = formatdate(localtime=True)
+        sender_domain = parseaddr(settings.EMAIL_FROM)[1].rpartition("@")[2] or None
+        msg["Message-ID"] = make_msgid(domain=sender_domain)
         with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
             server.starttls()
             if settings.SMTP_USER:
