@@ -79,7 +79,7 @@ export function AdminFournisseurs({ nav }: { nav: Nav }) {
       await api.admin.decideProposal(p.id, decision, reason);
       setProposals(prev => prev.filter(x => x.id !== p.id));
       if (decision === "Approuvé") {
-        setBanner(`Proposition « ${p.name} » validée · un produit masqué a été créé, complétez sa fiche dans Catalogue & stocks.`);
+        setBanner(`Proposition « ${p.name} » validée · le fournisseur a été informé par e-mail. Un produit masqué a été créé, complétez sa fiche dans Catalogue & stocks.`);
         api.admin.suppliers().then(setSuppliers).catch(() => {});
       } else {
         setBanner(`Proposition « ${p.name} » refusée · le fournisseur a été informé par e-mail du motif.`);

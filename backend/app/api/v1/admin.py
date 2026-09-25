@@ -466,6 +466,14 @@ def decide_proposal(
         )
     db.commit()
     db.refresh(proposal)
+    # Acceptation → on prévient le fournisseur une fois le produit bien enregistré.
+    if was_pending and data.status == ProposalStatus.APPROUVE and proposal.supplier:
+        emails.send_template(
+            "proposal_accepted", proposal.supplier.email, "fr",
+            name=proposal.supplier.contact_name or proposal.supplier.name,
+            product=proposal.name,
+            ref=f"ALS-PR-{proposal.id:03d}",
+        )
     return _proposal_out(proposal)
 
 

@@ -54,6 +54,17 @@ TEMPLATES = {
                "been updated for more than {days} days:\n{products}\n\nSign in to your supplier area to "
                "update stock, availability and lead times.\n\nThe Funti team"),
     },
+    "proposal_accepted": {
+        "fr": ("Votre produit est accepté · Funti", "Bonjour {name},\n\nBonne nouvelle : votre proposition "
+               "« {product} » a été acceptée et référencée sous la référence {ref}.\n\n"
+               "Notre équipe finalise sa fiche avant de la publier sur le site. Vous pouvez dès à présent "
+               "suivre ce produit et mettre à jour son stock depuis votre espace fournisseur.\n\n"
+               "L'équipe Funti"),
+        "en": ("Your product has been accepted · Funti", "Hello {name},\n\nGood news: your proposal "
+               "\"{product}\" has been accepted and listed under reference {ref}.\n\n"
+               "Our team is finalising its product sheet before publishing it on the site. You can already "
+               "follow this product and update its stock from your supplier area.\n\nThe Funti team"),
+    },
     "proposal_rejected": {
         "fr": ("Votre proposition de produit · Funti", "Bonjour {name},\n\nMerci pour votre proposition "
                "« {product} ». Après examen, nous ne pouvons pas la retenir pour le moment.\n\n"

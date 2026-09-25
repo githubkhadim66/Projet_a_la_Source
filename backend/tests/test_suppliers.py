@@ -121,3 +121,34 @@ def test_admin_creates_supplier_with_temp_password_and_reset(seeded):
         "/api/v1/suppliers/auth/login", json={"email": "c@test.sn", "password": temp}
     ).status_code == 401
     assert supplier_token(client, "c@test.sn", new_temp)
+
+
+def _propose(client, token: str, name: str) -> int:
+    res = client.post(
+        "/api/v1/suppliers/me/proposals",
+        json={"name": name, "description": f"{name} du Sénégal"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    return res.json()["id"]
+
+
+def test_accepted_proposal_notifies_supplier(seeded, monkeypatch):
+    """Acceptation → le fournisseur reçoit un e-mail avec la référence attribuée (une seule fois)."""
+    from app.services import emails
+
+    sent = []
+    monkeypatch.setattr(emails, "_send", lambda to, subject, body, attachments=None: sent.append((to, subject, body)))
+    client = seeded["client"]
+    proposal_id = _propose(client, supplier_token(client, "a@test.sn", "mdp-coop-a"), "Fonio bio")
+    headers = {"Authorization": f"Bearer {admin_token(client)}"}
+
+    res = client.patch(f"/api/v1/admin/proposals/{proposal_id}", json={"status": "Approuvé"}, headers=headers)
+    assert res.status_code == 200
+    accepted = [s for s in sent if s[0] == "a@test.sn"]
+    assert len(accepted) == 1
+    assert "accepté" in accepted[0][1]
+    assert f"ALS-PR-{proposal_id:03d}" in accepted[0][2]
+
+    # Une seconde décision ne renvoie pas l'e-mail (la proposition n'est plus en attente).
+    client.patch(f"/api/v1/admin/proposals/{proposal_id}", json={"status": "Approuvé"}, headers=headers)
+    assert len([s for s in sent if s[0] == "a@test.sn"]) == 1
