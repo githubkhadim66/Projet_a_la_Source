@@ -8,6 +8,8 @@ import {
   INCOTERMS_CHOIX, MESURES, PAYS_MONDE,
 } from "@/lib/constants";
 import { suggestProducts } from "@/lib/productSuggest";
+import { useLang } from "@/lib/i18n";
+import { INCOTERM_INFO_EN, INCOTERM_STRATEGIES_EN, useFormsText, useOptionLabel } from "@/lib/formsText";
 
 /** Recherche insensible aux accents et à la casse. */
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -51,12 +53,13 @@ export function SelectInput({ children, ...props }: React.SelectHTMLAttributes<H
 }
 
 export function RGPD({ id = "rgpd" }: { id?: string }) {
+  const t = useFormsText().common;
   return (
     <div className="flex gap-3 items-start">
       <input type="checkbox" id={id} required className="mt-0.5 h-4 w-4 accent-[#0d2265] cursor-pointer shrink-0" />
       <label htmlFor={id} className="text-xs text-[#64697d] leading-relaxed cursor-pointer">
-        J'accepte que mes coordonnées soient utilisées par Funti pour me transmettre le catalogue et me recontacter au sujet de ma demande.{" "}
-        <span className="underline text-[#0d2265]">Politique de confidentialité.</span>
+        {t.rgpd}{" "}
+        <span className="underline text-[#0d2265]">{t.privacy}</span>
       </label>
     </div>
   );
@@ -100,17 +103,24 @@ export function FormSelect({ label, required, children, ...props }: { label: str
   );
 }
 
-/** Sélecteur de pays avec recherche (liste mondiale, insensible aux accents). */
-export function CountrySelect({ label, required, value, onChange, options = PAYS_MONDE, placeholder = "Rechercher un pays…" }: {
+/** Sélecteur de pays avec recherche (liste mondiale, insensible aux accents).
+ *  En anglais, les noms s'affichent et se recherchent en anglais ; la valeur enregistrée
+ *  reste le nom français. */
+export function CountrySelect({ label, required, value, onChange, options = PAYS_MONDE, placeholder }: {
   label: string; required?: boolean; value: string; onChange: (v: string) => void; options?: string[]; placeholder?: string;
 }) {
+  const t = useFormsText().common;
+  const tr = useOptionLabel();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const q = normalize(query.trim());
-  const matches = (query.trim() ? options.filter(c => normalize(c).includes(q)) : options).slice(0, 8);
+  const matches = (query.trim()
+    ? options.filter(c => normalize(c).includes(q) || normalize(tr(c)).includes(q))
+    : options
+  ).slice(0, 8);
 
-  const pick = (c: string) => { onChange(c); setQuery(c); setOpen(false); setActive(-1); };
+  const pick = (c: string) => { onChange(c); setQuery(tr(c)); setOpen(false); setActive(-1); };
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (open && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
       e.preventDefault(); const n = matches.length;
@@ -123,12 +133,12 @@ export function CountrySelect({ label, required, value, onChange, options = PAYS
     <div className="relative">
       <label className="block text-sm text-[#0a0a0f] mb-1.5">{label}{required && <span className="text-[#C4613A] ml-0.5">*</span>}</label>
       <input
-        value={open ? query : value}
-        onFocus={() => { setQuery(value); setOpen(true); setActive(-1); }}
+        value={open ? query : (value ? tr(value) : "")}
+        onFocus={() => { setQuery(value ? tr(value) : ""); setOpen(true); setActive(-1); }}
         onChange={e => { setQuery(e.target.value); setOpen(true); setActive(-1); }}
         onKeyDown={onKeyDown}
         onBlur={() => setTimeout(() => setOpen(false), 120)}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t.countrySearch}
         className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors" />
       {open && matches.length > 0 && (
         <ul className="absolute z-20 left-0 right-0 mt-1 bg-white border border-[rgba(13,34,101,0.15)] shadow-[0_10px_30px_-12px_rgba(13,34,101,0.35)] max-h-56 overflow-auto">
@@ -136,7 +146,7 @@ export function CountrySelect({ label, required, value, onChange, options = PAYS
             <li key={c}>
               <button type="button" onMouseDown={e => { e.preventDefault(); pick(c); }}
                 className={`w-full text-left px-3 py-2 text-sm cursor-pointer transition-colors ${i === active ? "bg-[#f4f5f9] text-[#0d2265]" : "text-[#0a0a0f] hover:bg-[#f4f5f9]"}`}>
-                {c}
+                {tr(c)}
               </button>
             </li>
           ))}
@@ -147,9 +157,11 @@ export function CountrySelect({ label, required, value, onChange, options = PAYS
 }
 
 /** Liste déroulante dont l'option « Autre » ouvre un champ de saisie libre. */
-export function SelectOther({ label, required, options, value, onChange, otherLabel = "Autre", placeholder = "Préciser…" }: {
+export function SelectOther({ label, required, options, value, onChange, otherLabel = "Autre", placeholder }: {
   label: string; required?: boolean; options: string[]; value: string; onChange: (v: string) => void; otherLabel?: string; placeholder?: string;
 }) {
+  const t = useFormsText().common;
+  const tr = useOptionLabel();
   const opts = options.filter(o => o !== otherLabel && o !== "Autre / à définir");
   const [isOther, setIsOther] = useState(value !== "" && !opts.includes(value));
   const selCls = "w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors appearance-none";
@@ -161,12 +173,12 @@ export function SelectOther({ label, required, options, value, onChange, otherLa
         if (v === otherLabel) { setIsOther(true); onChange(""); }
         else { setIsOther(false); onChange(v); }
       }} className={selCls}>
-        <option value="">Sélectionner</option>
-        {opts.map(o => <option key={o}>{o}</option>)}
-        <option>{otherLabel}</option>
+        <option value="">{t.select}</option>
+        {opts.map(o => <option key={o} value={o}>{tr(o)}</option>)}
+        <option value={otherLabel}>{tr(otherLabel)}</option>
       </select>
       {isOther && (
-        <input type="text" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)}
+        <input type="text" placeholder={placeholder ?? t.specify} value={value} onChange={e => onChange(e.target.value)}
           className="mt-2 w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors" />
       )}
     </div>
@@ -296,30 +308,35 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
 }
 
 /** Sélecteur d'incoterm avec explication en langage clair + panneau « comprendre ». */
-export function IncotermField({ value, onChange, label = "Incoterm souhaité" }: {
+export function IncotermField({ value, onChange, label }: {
   value: string; onChange: (v: string) => void; label?: string;
 }) {
+  const t = useFormsText().incoterm;
+  const tr = useOptionLabel();
+  const en = useLang() === "en";
+  const info = en ? INCOTERM_INFO_EN : INCOTERM_INFO;
+  const strategies = en ? INCOTERM_STRATEGIES_EN : INCOTERM_STRATEGIES;
   const [open, setOpen] = useState(false);
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <label className="text-sm text-[#0a0a0f]">{label}</label>
+        <label className="text-sm text-[#0a0a0f]">{label ?? t.label}</label>
         <button type="button" onClick={() => setOpen(o => !o)}
           className="text-xs font-semibold text-[#0d2265] hover:text-[#C4613A] cursor-pointer inline-flex items-center gap-1 transition-colors">
-          <Info className="w-3.5 h-3.5" /> Comprendre les incoterms
+          <Info className="w-3.5 h-3.5" /> {t.understand}
         </button>
       </div>
       <select value={value} onChange={e => onChange(e.target.value)}
         className="w-full border border-[rgba(13,34,101,0.15)] px-3 py-2.5 text-sm bg-white focus:outline-none focus:border-[#0d2265] transition-colors appearance-none">
-        {INCOTERMS_CHOIX.map(i => <option key={i}>{i}</option>)}
+        {INCOTERMS_CHOIX.map(i => <option key={i} value={i}>{tr(i)}</option>)}
       </select>
-      {INCOTERM_INFO[value] && (
-        <p className="text-xs text-[#64697d] mt-1.5 leading-relaxed">{INCOTERM_INFO[value]}</p>
+      {info[value] && (
+        <p className="text-xs text-[#64697d] mt-1.5 leading-relaxed">{info[value]}</p>
       )}
       {open && (
         <div className="mt-2 bg-[#f4f5f9] border border-[rgba(13,34,101,0.1)] p-3 space-y-2.5">
-          <p className="text-[11px] font-bold text-[#C4613A] uppercase tracking-wide">Choisir selon votre confort</p>
-          {INCOTERM_STRATEGIES.map(s => (
+          <p className="text-[11px] font-bold text-[#C4613A] uppercase tracking-wide">{t.byComfort}</p>
+          {strategies.map(s => (
             <div key={s.title}>
               <p className="text-xs font-semibold text-[#0d2265]">{s.emoji} {s.title}</p>
               <p className="text-xs text-[#64697d] leading-relaxed">{s.text}</p>
@@ -335,6 +352,7 @@ export function IncotermField({ value, onChange, label = "Incoterm souhaité" }:
 export function ChoiceToggle({ label, options, value, onChange }: {
   label: string; options: string[]; value: string; onChange: (v: string) => void;
 }) {
+  const tr = useOptionLabel();
   return (
     <div>
       <label className="block text-sm text-[#0a0a0f] mb-1.5">{label}</label>
@@ -342,7 +360,7 @@ export function ChoiceToggle({ label, options, value, onChange }: {
         {options.map(o => (
           <button key={o} type="button" onClick={() => onChange(o)}
             className={`px-4 py-2 text-xs font-semibold border cursor-pointer transition-colors ${value === o ? "border-[#0d2265] bg-[#0d2265] text-white" : "border-[rgba(13,34,101,0.2)] text-[#0d2265] hover:border-[#0d2265]"}`}>
-            {o}
+            {tr(o)}
           </button>
         ))}
       </div>
@@ -353,6 +371,7 @@ export function ChoiceToggle({ label, options, value, onChange }: {
 export function TagInput({ tags, setTags, placeholder, suggestions = [] }: {
   tags: string[]; setTags: (t: string[]) => void; placeholder?: string; suggestions?: string[];
 }) {
+  const t = useFormsText().common;
   const [input, setInput] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
@@ -397,7 +416,7 @@ export function TagInput({ tags, setTags, placeholder, suggestions = [] }: {
           onKeyDown={onKeyDown}
           onFocus={() => setOpen(true)}
           onBlur={() => { add(input); }}
-          placeholder={placeholder || "+ ajouter…"}
+          placeholder={placeholder || t.addTag}
           className="text-sm text-[#0a0a0f] outline-none flex-1 min-w-[90px] placeholder:text-[#9ca3af]" />
       </div>
       {showList && (
@@ -418,13 +437,14 @@ export function TagInput({ tags, setTags, placeholder, suggestions = [] }: {
 }
 
 export function CertToggle({ certs, setCerts }: { certs: string[]; setCerts: (c: string[]) => void }) {
+  const tr = useOptionLabel();
   const toggle = (c: string) => setCerts(certs.includes(c) ? certs.filter(x => x !== c) : [...certs, c]);
   return (
     <div className="flex flex-wrap gap-2">
       {CERTS_OPTIONS.map(c => (
         <button key={c} type="button" onClick={() => toggle(c)}
           className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border cursor-pointer transition-colors ${certs.includes(c) ? "border-[#0d2265] bg-[#0d2265] text-white" : "border-[rgba(13,34,101,0.2)] text-[#0d2265] hover:border-[#0d2265]"}`}>
-          {certs.includes(c) && <Check className="w-3 h-3" />} {c}
+          {certs.includes(c) && <Check className="w-3 h-3" />} {tr(c)}
         </button>
       ))}
     </div>

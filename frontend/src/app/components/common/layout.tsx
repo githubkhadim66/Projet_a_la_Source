@@ -2,6 +2,8 @@
 
 import type { Nav, Screen } from "@/lib/routes";
 import { goBack } from "@/lib/nav";
+import { LangSwitch } from "@/lib/i18n";
+import { useFormsText } from "@/lib/formsText";
 
 export function ScreenShell({ children, nav, title, back = "landing", directBack = false }: { children: React.ReactNode; nav: Nav; title?: string; back?: Screen; directBack?: boolean }) {
   // Retour métier explicite (ex. « supplier-products ») ou `directBack` → écran ciblé.
@@ -9,17 +11,21 @@ export function ScreenShell({ children, nav, title, back = "landing", directBack
   // `directBack` est utilisé pour les écrans d'authentification, où l'historique
   // contient des pages protégées après une connexion/déconnexion (évite la boucle).
   const onBack = () => (!directBack && back === "landing" ? goBack(nav, "landing") : nav(back));
+  const t = useFormsText().common;
   return (
     <div className="min-h-screen bg-[#f4f5f9] font-['Inter',sans-serif]">
       <div className="bg-[#0d2265] px-6 py-4 flex items-center gap-4">
         <button onClick={onBack} className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 cursor-pointer transition-colors">
-          ← Retour
+          ← {t.back}
         </button>
         {title && <span className="text-white/60 text-sm">·</span>}
         {title && <span className="text-white text-sm font-medium">{title}</span>}
-        <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer">
-          Funti
-        </button>
+        <div className="ml-auto flex items-center gap-4">
+          <LangSwitch />
+          <button onClick={() => nav("landing")} className="font-bold text-lg tracking-tight text-white cursor-pointer">
+            Funti
+          </button>
+        </div>
       </div>
       <div className="max-w-2xl mx-auto px-6 py-12">{children}</div>
     </div>
@@ -38,10 +44,11 @@ export function FormCard({ children, title, subtitle }: { children: React.ReactN
 }
 
 export function StepBar({ step, total }: { step: number; total: number }) {
+  const t = useFormsText().common;
   return (
     <div className="mb-8">
       <div className="flex justify-between text-xs text-[#64697d] mb-2">
-        <span className="font-medium">Étape {step} / {total}</span>
+        <span className="font-medium">{t.step(step, total)}</span>
         <span>{Math.round((step / total) * 100)} %</span>
       </div>
       <div className="flex gap-1">
@@ -53,9 +60,10 @@ export function StepBar({ step, total }: { step: number; total: number }) {
   );
 }
 
-export function Confirm({ icon, title, subtitle, children, nav, back = "landing" as Screen, backLabel = "Retour à l'accueil" }: {
+export function Confirm({ icon, title, subtitle, children, nav, back = "landing" as Screen, backLabel }: {
   icon: React.ReactNode; title: string; subtitle: string; children?: React.ReactNode; nav: Nav; back?: Screen; backLabel?: string;
 }) {
+  const t = useFormsText().common;
   return (
     <div className="text-center py-4">
       <div className="w-16 h-16 bg-[rgba(13,34,101,0.07)] flex items-center justify-center mx-auto mb-6">{icon}</div>
@@ -63,7 +71,7 @@ export function Confirm({ icon, title, subtitle, children, nav, back = "landing"
       <p className="text-[#64697d] text-sm leading-relaxed mb-8 max-w-md mx-auto">{subtitle}</p>
       {children}
       <button onClick={() => nav(back)} className="mt-6 text-sm text-[#0d2265] underline cursor-pointer block mx-auto">
-        {backLabel}
+        {backLabel ?? t.backHome}
       </button>
     </div>
   );

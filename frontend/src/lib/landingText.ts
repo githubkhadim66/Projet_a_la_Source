@@ -1,23 +1,12 @@
-/** Contenu bilingue de la landing page (FR/EN) + contexte de langue.
- *  Chaque section lit `useLandingText()` pour obtenir les textes de la langue courante.
+/** Contenu bilingue de la landing page (FR/EN).
+ *  Chaque section lit `useLandingText()` pour obtenir les textes de la langue courante
+ *  (langue globale du site : voir lib/i18n).
  *  Le dictionnaire `fr` et `en` DOIVENT avoir exactement la même forme.
  */
 
-import { createContext, useContext } from "react";
+import { useLang, type Lang } from "@/lib/i18n";
 
-export type Lang = "fr" | "en";
-
-export const LangContext = createContext<Lang>("fr");
-export const useLang = () => useContext(LangContext);
-
-// Langue choisie par le visiteur, retenue d'une visite à l'autre (stockage indisponible → français).
-const LANG_KEY = "als-lang";
-export const getStoredLang = (): Lang => {
-  try { return localStorage.getItem(LANG_KEY) === "en" ? "en" : "fr"; } catch { return "fr"; }
-};
-export const storeLang = (lang: Lang) => {
-  try { localStorage.setItem(LANG_KEY, lang); } catch { /* navigation privée : sans effet */ }
-};
+export { useLang, type Lang };
 
 const fr = {
   nav: { services: "Services", catalogue: "Catalogue", expertise: "Expertise", contact: "Contact" },

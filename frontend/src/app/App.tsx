@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { SCREEN_PATHS, screenFromPath } from "@/lib/routes";
 import type { Nav, Screen } from "@/lib/routes";
 import { FeedbackProvider } from "./components/common/feedback";
+import { FixedLang, LangProvider } from "@/lib/i18n";
 import { LandingPage } from "./pages/landing/LandingPage";
 import { CatalogueConfirm, CatalogueForm } from "./pages/forms/CataloguePage";
 import { DevisForm, FormConfirm } from "./pages/forms/DevisPage";
@@ -77,5 +78,12 @@ export default function App() {
   }
   })();
 
-  return <FeedbackProvider>{view}</FeedbackProvider>;
+  // Parcours client : langue choisie par le visiteur. Connexion, espaces fournisseur
+  // et admin : toujours en français.
+  const backOffice = screen === "login" || screen.startsWith("supplier-") || screen.startsWith("admin-");
+  return (
+    <LangProvider>
+      <FeedbackProvider>{backOffice ? <FixedLang lang="fr">{view}</FixedLang> : view}</FeedbackProvider>
+    </LangProvider>
+  );
 }

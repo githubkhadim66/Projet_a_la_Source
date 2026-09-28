@@ -4,12 +4,17 @@ import { useState } from "react";
 import { Calendar, CheckCircle, Download } from "lucide-react";
 import * as api from "@/lib/api";
 import { CALENDLY_URL } from "@/lib/constants";
+import { useLang } from "@/lib/i18n";
+import { useFormsText } from "@/lib/formsText";
 import type { Nav } from "@/lib/routes";
 import { BtnNavy, BtnOutlineNavy } from "@/app/components/common/buttons";
 import { CountrySelect, FieldLabel, FormError, RGPD, TextInput } from "@/app/components/common/fields";
 import { Confirm, FormCard, ScreenShell } from "@/app/components/common/layout";
 
 export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: string) => void }) {
+  const lang = useLang();
+  const tx = useFormsText();
+  const t = tx.catalogue;
   const [form, setForm] = useState({ first_name: "", last_name: "", company: "", email: "", country: "", role: "", phone: "" });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -21,38 +26,36 @@ export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: s
     setSending(true);
     setError(null);
     try {
-      const res = await api.leads.catalogue({ ...form, rgpd_consent: true });
+      // La langue part avec la demande : l'e-mail du catalogue est envoyé dans cette langue.
+      const res = await api.leads.catalogue({ ...form, rgpd_consent: true, language: lang });
       onSuccess(res.download_url);
       nav("catalogue-confirm");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Une erreur est survenue. Réessayez.");
+      setError(err instanceof Error ? err.message : tx.common.genericError);
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <ScreenShell nav={nav} title="Télécharger le catalogue">
-      <FormCard
-        title="Recevez notre catalogue à jour"
-        subtitle="Épicerie, boissons, fruits & légumes, matières premières : parcourez nos références d'origine africaine, dans leur dernière édition. Les prix sont communiqués sur devis, sous 24 à 48 h ouvrées."
-      >
+    <ScreenShell nav={nav} title={t.screen}>
+      <FormCard title={t.title} subtitle={t.subtitle}>
         <form onSubmit={submit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><FieldLabel required>Prénom</FieldLabel><TextInput placeholder="Marie" required value={form.first_name} onChange={set("first_name")} /></div>
-            <div><FieldLabel required>Nom</FieldLabel><TextInput placeholder="Dupont" required value={form.last_name} onChange={set("last_name")} /></div>
+            <div><FieldLabel required>{t.firstName}</FieldLabel><TextInput placeholder="Marie" required value={form.first_name} onChange={set("first_name")} /></div>
+            <div><FieldLabel required>{t.lastName}</FieldLabel><TextInput placeholder="Dupont" required value={form.last_name} onChange={set("last_name")} /></div>
           </div>
-          <div><FieldLabel required>Société</FieldLabel><TextInput placeholder="Épicerie du Marché SAS" required value={form.company} onChange={set("company")} /></div>
-          <div><FieldLabel required>E-mail professionnel</FieldLabel><TextInput type="email" placeholder="m.dupont@epicerie.fr" required value={form.email} onChange={set("email")} /></div>
+          <div><FieldLabel required>{t.company}</FieldLabel><TextInput placeholder={t.companyPlaceholder} required value={form.company} onChange={set("company")} /></div>
+          <div><FieldLabel required>{t.email}</FieldLabel><TextInput type="email" placeholder={t.emailPlaceholder} required value={form.email} onChange={set("email")} /></div>
           <div className="grid grid-cols-2 gap-4">
-            <CountrySelect label="Pays" required value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
-            <div><FieldLabel>Fonction</FieldLabel><TextInput placeholder="Directeur des achats" value={form.role} onChange={set("role")} /></div>
+            <CountrySelect label={t.country} required value={form.country} onChange={v => setForm(f => ({ ...f, country: v }))} />
+            <div><FieldLabel>{t.role}</FieldLabel><TextInput placeholder={t.rolePlaceholder} value={form.role} onChange={set("role")} /></div>
           </div>
-          <div><FieldLabel>Téléphone</FieldLabel><TextInput type="tel" placeholder="+33 6 00 00 00 00" value={form.phone} onChange={set("phone")} /></div>
+          <div><FieldLabel>{t.phone}</FieldLabel><TextInput type="tel" placeholder="+33 6 00 00 00 00" value={form.phone} onChange={set("phone")} /></div>
           <RGPD />
           <FormError error={error} />
           <BtnNavy type="submit" className="w-full justify-center">
-            <Download className="w-4 h-4" /> {sending ? "Envoi en cours…" : "Recevoir le catalogue"}
+            <Download className="w-4 h-4" /> {sending ? tx.common.sendingLong : t.submit}
           </BtnNavy>
         </form>
       </FormCard>
@@ -61,23 +64,25 @@ export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: s
 }
 
 export function CatalogueConfirm({ nav, downloadUrl }: { nav: Nav; downloadUrl: string | null }) {
+  const tx = useFormsText();
+  const t = tx.catalogue;
   return (
-    <ScreenShell nav={nav} title="Confirmation">
+    <ScreenShell nav={nav} title={tx.common.confirmation}>
       <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10">
         <Confirm
           icon={<CheckCircle className="w-8 h-8 text-[#0d2265]" />}
-          title="Merci !"
-          subtitle="Votre catalogue est en route · vous le recevrez par e-mail dans quelques instants."
+          title={t.thanks}
+          subtitle={t.onItsWay}
           nav={nav}
         >
           <div className="space-y-4">
             <BtnNavy className="mx-auto" onClick={() => downloadUrl && window.open(downloadUrl, "_blank")}>
-              <Download className="w-4 h-4" /> Télécharger le catalogue (PDF)
+              <Download className="w-4 h-4" /> {t.download}
             </BtnNavy>
             <div className="pt-4 border-t border-[rgba(13,34,101,0.08)]">
-              <p className="text-sm text-[#64697d] mb-3">Besoin d'une réponse immédiate ?</p>
+              <p className="text-sm text-[#64697d] mb-3">{t.immediate}</p>
               <BtnOutlineNavy onClick={() => window.open(CALENDLY_URL, '_blank')} className="mx-auto">
-                <Calendar className="w-4 h-4" /> Réserver un échange de 30 min avec l'experte
+                <Calendar className="w-4 h-4" /> {t.book30}
               </BtnOutlineNavy>
             </div>
           </div>

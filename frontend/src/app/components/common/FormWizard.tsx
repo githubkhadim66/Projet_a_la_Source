@@ -12,6 +12,8 @@ import { useState, type ReactNode } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, Check } from "lucide-react";
 import type { Nav } from "@/lib/routes";
 import { goBack } from "@/lib/nav";
+import { LangSwitch } from "@/lib/i18n";
+import { useFormsText } from "@/lib/formsText";
 
 export interface WizardStep {
   label: string;
@@ -22,7 +24,7 @@ export interface WizardStep {
 
 export function FormWizard({
   nav, title, intro, steps, onSubmit, submitting = false,
-  submitLabel = "Envoyer", error, footNote, embedded = false,
+  submitLabel, error, footNote, embedded = false,
 }: {
   nav: Nav;
   title: string;
@@ -37,6 +39,7 @@ export function FormWizard({
    *  supprime le fond plein écran et la barre supérieure propres au wizard. */
   embedded?: boolean;
 }) {
+  const t = useFormsText().common;
   const [current, setCurrent] = useState(0);
   const [stepError, setStepError] = useState<string | null>(null);
   const isLast = current === steps.length - 1;
@@ -93,7 +96,7 @@ export function FormWizard({
         <div className="bg-white border border-[rgba(13,34,101,0.1)] rounded-lg overflow-hidden shadow-[0_10px_40px_-24px_rgba(13,34,101,0.35)]">
           <div className="p-6 sm:p-8">
             <div className="flex items-baseline gap-2 mb-6">
-              <span className="text-[11px] font-bold text-[#C4613A] tracking-[0.2em] uppercase">Étape {current + 1} / {steps.length}</span>
+              <span className="text-[11px] font-bold text-[#C4613A] tracking-[0.2em] uppercase">{t.step(current + 1, steps.length)}</span>
               <span className="text-[#c9c6bf]">·</span>
               <span className="text-sm font-semibold text-[#0d2265]">{steps[current].label}</span>
             </div>
@@ -113,13 +116,13 @@ export function FormWizard({
           <div className="flex items-center justify-between gap-3 px-6 sm:px-8 py-4 border-t border-[rgba(13,34,101,0.08)] bg-[#faf9f6]">
             <button type="button" onClick={goPrev} disabled={current === 0}
               className={`text-sm font-semibold px-3 py-2.5 inline-flex items-center gap-1.5 transition-colors ${current === 0 ? "text-[#c9c6bf] cursor-not-allowed" : "text-[#0d2265] hover:text-[#C4613A] cursor-pointer"}`}>
-              <ArrowLeft className="w-4 h-4" /> Précédent
+              <ArrowLeft className="w-4 h-4" /> {t.prev}
             </button>
             <div className="flex items-center gap-3">
               {footNote && isLast && <span className="hidden sm:block text-[11px] text-[#64697d] max-w-[210px] leading-snug text-right">{footNote}</span>}
               <button type="button" onClick={goNext} disabled={submitting}
                 className="als-cta bg-[#C4613A] text-white text-sm font-semibold px-6 py-3 inline-flex items-center gap-2 hover:bg-[#A84E2D] transition-colors cursor-pointer disabled:opacity-60">
-                {isLast ? (submitting ? "Envoi…" : submitLabel) : "Suivant"} <ArrowRight className="w-4 h-4" />
+                {isLast ? (submitting ? t.sending : submitLabel ?? t.send) : t.next} <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -133,13 +136,16 @@ export function FormWizard({
       {/* ── Barre supérieure ── */}
       <div className="bg-[#0d2265] px-6 py-4 flex items-center gap-4">
         <button onClick={() => goBack(nav, "landing")} className="text-white/60 hover:text-white text-sm flex items-center gap-1.5 cursor-pointer transition-colors">
-          <ArrowLeft className="w-4 h-4" /> Retour
+          <ArrowLeft className="w-4 h-4" /> {t.back}
         </button>
         <span className="text-white/50 text-sm">·</span>
         <span className="text-white text-sm font-medium">{title}</span>
-        <button onClick={() => nav("landing")} className="ml-auto font-bold text-lg tracking-tight text-white cursor-pointer font-['Playfair_Display',Georgia,serif]">
-          Funti
-        </button>
+        <div className="ml-auto flex items-center gap-4">
+          <LangSwitch />
+          <button onClick={() => nav("landing")} className="font-bold text-lg tracking-tight text-white cursor-pointer font-['Playfair_Display',Georgia,serif]">
+            Funti
+          </button>
+        </div>
       </div>
       {body}
     </div>
