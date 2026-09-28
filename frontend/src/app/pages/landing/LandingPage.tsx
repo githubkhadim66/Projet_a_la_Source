@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import type { Nav } from "@/lib/routes";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
-import { BasketPanel, CookieBanner } from "./overlays";
+import { BasketPanel, CookieBanner, SupplierHint } from "./overlays";
 import { Reveal } from "@/app/components/common/Reveal";
 import {
   CatalogueTeaser, Expertise, FAQSection, FinalCTA, Hero, HowItWorks,
@@ -21,6 +21,10 @@ export function LandingPage({ nav }: { nav: Nav }) {
   const [cookieDismissed, setCookieDismissed] = useState(() =>
     localStorage.getItem("als-cookie") === "1"
   );
+  // Indication « première visite » vers l'espace fournisseurs / la candidature (une seule fois).
+  const [supplierHintSeen, setSupplierHintSeen] = useState(() =>
+    localStorage.getItem("als-supplier-hint") === "1"
+  );
 
   useEffect(() => {
     localStorage.setItem("als-basket", JSON.stringify(basket));
@@ -36,6 +40,7 @@ export function LandingPage({ nav }: { nav: Nav }) {
         nav={nav}
         open={menuOpen} setOpen={setMenuOpen}
         basket={basket} onBasketOpen={() => setBasketOpen(true)}
+        lang={lang} setLang={setLang}
       />
       {basketOpen && (
         <BasketPanel basket={basket} setBasket={setBasket} nav={nav} onClose={() => setBasketOpen(false)} />
@@ -58,6 +63,13 @@ export function LandingPage({ nav }: { nav: Nav }) {
         <Footer nav={nav} lang={lang} setLang={setLang} />
       </main>
       {!cookieDismissed && <CookieBanner onDismiss={() => setCookieDismissed(true)} />}
+      {/* Après les cookies, un rappel discret (1re visite) pour orienter les fournisseurs. */}
+      {cookieDismissed && !supplierHintSeen && (
+        <SupplierHint
+          nav={nav}
+          onClose={() => { setSupplierHintSeen(true); try { localStorage.setItem("als-supplier-hint", "1"); } catch { /* stockage indispo */ } }}
+        />
+      )}
     </div>
   );
 }

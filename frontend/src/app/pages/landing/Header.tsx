@@ -5,10 +5,11 @@ import { CALENDLY_URL } from "@/lib/constants";
 import type { Nav, Screen } from "@/lib/routes";
 import { BtnNavy } from "@/app/components/common/buttons";
 
-export function Header({ nav, open, setOpen, basket, onBasketOpen }: {
+export function Header({ nav, open, setOpen, basket, onBasketOpen, lang, setLang }: {
   nav: Nav;
   open: boolean; setOpen: (v: boolean) => void;
   basket: string[]; onBasketOpen: () => void;
+  lang: string; setLang: (l: "fr" | "en") => void;
 }) {
   return (
     <header className="fixed top-0 left-0 right-0 z-50">
@@ -32,6 +33,14 @@ export function Header({ nav, open, setOpen, basket, onBasketOpen }: {
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-3">
+            {/* Sélecteur de langue — accessible en haut, sans avoir à descendre en bas */}
+            <div className="flex items-center gap-1 text-[12px] text-[#64697d]">
+              <button onClick={() => setLang("fr")}
+                className={`cursor-pointer px-1 transition-colors ${lang === "fr" ? "text-[#0d2265] font-bold" : "hover:text-[#0d2265]"}`}>FR</button>
+              <span className="text-[#c3c9dd]">│</span>
+              <button onClick={() => setLang("en")}
+                className={`cursor-pointer px-1 transition-colors ${lang === "en" ? "text-[#0d2265] font-bold" : "hover:text-[#0d2265]"}`}>EN</button>
+            </div>
             {basket.length > 0 && (
               <button onClick={onBasketOpen} className="hidden sm:flex items-center gap-2 text-[13px] font-semibold text-[#0d2265] border border-[rgba(13,34,101,0.2)] px-3 py-2 hover:bg-[#f4f5f9] cursor-pointer transition-colors">
                 <Package className="w-3.5 h-3.5" />
@@ -69,6 +78,14 @@ export function Header({ nav, open, setOpen, basket, onBasketOpen }: {
             <BtnNavy onClick={() => { setOpen(false); window.open(CALENDLY_URL, '_blank'); }} className="w-full justify-center mt-2">
               Échanger
             </BtnNavy>
+            <div className="flex items-center gap-1 text-[13px] text-[#64697d] pt-3 mt-1 border-t border-[rgba(13,34,101,0.06)]">
+              <span className="mr-1">Langue :</span>
+              <button onClick={() => setLang("fr")}
+                className={`cursor-pointer px-1.5 py-1 transition-colors ${lang === "fr" ? "text-[#0d2265] font-bold" : "hover:text-[#0d2265]"}`}>FR</button>
+              <span className="text-[#c3c9dd]">│</span>
+              <button onClick={() => setLang("en")}
+                className={`cursor-pointer px-1.5 py-1 transition-colors ${lang === "en" ? "text-[#0d2265] font-bold" : "hover:text-[#0d2265]"}`}>EN</button>
+            </div>
           </div>
         )}
       </div>

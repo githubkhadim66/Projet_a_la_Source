@@ -1,8 +1,41 @@
 /** Superpositions de la landing : bandeau cookies (RGPD) et panneau « Ma demande ». */
 
-import { ArrowRight, FileText, X } from "lucide-react";
+import { ArrowRight, FileText, Sprout, X } from "lucide-react";
 import type { Nav } from "@/lib/routes";
 import { BtnNavy } from "@/app/components/common/buttons";
+
+/** Indication discrète, à la première visite : oriente les producteurs/fournisseurs
+ *  vers la candidature. Volontairement compact et peu bavard. */
+export function SupplierHint({ nav, onClose }: { nav: Nav; onClose: () => void }) {
+  return (
+    <div style={{ animation: "funtiHintIn .35s ease-out" }}
+      className="fixed bottom-5 right-5 z-[150] w-[min(320px,calc(100vw-2.5rem))] bg-white border border-[rgba(13,34,101,0.15)] shadow-2xl">
+      <style>{`@keyframes funtiHintIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}`}</style>
+      <div className="p-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 bg-[#eef1f8] flex items-center justify-center shrink-0">
+            <Sprout className="w-4 h-4 text-[#0d2265]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold text-[#0a0a0f]">Vous êtes producteur ou fournisseur ?</p>
+            <p className="text-xs text-[#64697d] leading-relaxed mt-1">
+              Rejoignez le réseau Funti et proposez vos produits aux acheteurs européens.
+            </p>
+          </div>
+          <button onClick={onClose} aria-label="Fermer"
+            className="text-[#9ca3af] hover:text-[#0a0a0f] cursor-pointer shrink-0 -mt-1 -mr-1"><X className="w-4 h-4" /></button>
+        </div>
+        <div className="flex items-center gap-2 mt-3">
+          <button onClick={() => { onClose(); nav("candidature"); }}
+            className="flex-1 bg-[#0d2265] text-white text-xs font-semibold px-3 py-2 hover:bg-[#091a52] cursor-pointer transition-colors flex items-center justify-center gap-1.5">
+            Candidater <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+          <button onClick={onClose} className="text-xs text-[#64697d] hover:text-[#0d2265] px-2 py-2 cursor-pointer">Plus tard</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function CookieBanner({ onDismiss }: { onDismiss: () => void }) {
   return (

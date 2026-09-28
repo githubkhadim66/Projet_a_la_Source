@@ -18,15 +18,17 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
             <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Navigation</p>
             <div className="space-y-2">
               {[
-                { l: "Nos services" },
+                { l: "Nos services", anchor: "#services" },
                 { l: "Catalogue", s: "catalogue" as Screen },
-                { l: "Notre expertise" },
-                { l: "FAQ" },
-                { l: "Contact" },
+                { l: "Notre expertise", anchor: "#expertise" },
+                { l: "FAQ", anchor: "#faq" },
+                { l: "Contact", anchor: "#contact" },
               ].map((item, i) => (
                 <button
                   key={i}
-                  onClick={() => item.s ? nav(item.s) : undefined}
+                  onClick={() => item.s
+                    ? nav(item.s)
+                    : item.anchor ? document.querySelector(item.anchor)?.scrollIntoView({ behavior: "smooth" }) : undefined}
                   className="block text-sm text-white/50 hover:text-white cursor-pointer transition-colors"
                 >
                   {item.l}
