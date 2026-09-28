@@ -3,6 +3,7 @@ from app.models.appointment import Appointment
 from app.models.lead import Lead, LeadQueue, LeadStatus
 from app.models.product import Product, ProductProposal, ProposalStatus, StockStatus
 from app.models.supplier import Supplier
+from app.models.translation import Translation
 
 __all__ = [
     "AdminUser",
@@ -15,4 +16,5 @@ __all__ = [
     "ProposalStatus",
     "StockStatus",
     "Supplier",
+    "Translation",
 ]

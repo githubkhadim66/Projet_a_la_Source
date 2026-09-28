@@ -107,6 +107,8 @@ export interface ApiPublicProduct {
   description: string;
   benefits: string;
   featured: boolean;
+  /** Nom d'origine non traduit : clé stable du panier / formulaire de devis. */
+  source_name: string;
 }
 
 export interface ApiProduct {
@@ -227,8 +229,14 @@ export const auth = {
 // ─── Catalogue public (vitrine) ──────────────────────────────────────────────
 
 export const catalogue = {
-  products: (featured?: boolean) =>
-    request<ApiPublicProduct[]>(`/catalogue/produits${featured !== undefined ? `?featured=${featured}` : ""}`),
+  /** `lang` = "en" : contenu traduit automatiquement côté serveur (DeepL, mis en cache). */
+  products: (featured?: boolean, lang?: "fr" | "en") => {
+    const params = new URLSearchParams();
+    if (featured !== undefined) params.set("featured", String(featured));
+    if (lang && lang !== "fr") params.set("lang", lang);
+    const qs = params.toString();
+    return request<ApiPublicProduct[]>(`/catalogue/produits${qs ? `?${qs}` : ""}`);
+  },
 };
 
 // ─── Leads (4 files) ─────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import {
 import * as api from "@/lib/api";
 import { CALENDLY_URL, IMG_HERO } from "@/lib/constants";
 import { productImg } from "@/lib/format";
+import { useLang, useLandingText } from "@/lib/landingText";
 import type { Nav } from "@/lib/routes";
 import { BtnAccent, BtnNavy, BtnOutlineWhite, BtnWhite } from "@/app/components/common/buttons";
 import { CountUp } from "@/app/components/common/CountUp";
@@ -15,33 +16,34 @@ import { CountUp } from "@/app/components/common/CountUp";
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
 export function Hero({ nav }: { nav: Nav }) {
+  const t = useLandingText().hero;
   return (
     <section className="relative flex items-center overflow-hidden" style={{ minHeight: "clamp(420px,62vh,680px)" }}>
       <div className="absolute inset-0">
-        <img src={IMG_HERO} alt="Épices et produits du terroir africain" className="w-full h-full object-cover object-center als-kenburns" />
+        <img src={IMG_HERO} alt={t.imgAlt} className="w-full h-full object-cover object-center als-kenburns" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#080f2e]/98 via-[#0d2265]/80 to-transparent" />
       </div>
       <div className="relative z-10 max-w-7xl mx-auto px-6 w-full" style={{ paddingTop: "clamp(3rem,8vh,5rem)", paddingBottom: "clamp(3rem,8vh,5rem)" }}>
         <div className="max-w-[620px]">
           <div className="flex items-center gap-3 mb-6 als-hero-in" style={{ ["--hero-delay" as string]: "60ms" }}>
             {/* <div className="w-6 h-[1.5px] bg-white/40" /> */}
-            <p className="text-[10px] font-bold text-white/50 tracking-[0.22em] uppercase">Sourcing · Export · Afrique · Europe</p>
+            <p className="text-[10px] font-bold text-white/50 tracking-[0.22em] uppercase">{t.kicker}</p>
           </div>
           <h1
             className="font-['Playfair_Display',Georgia,serif] font-bold text-white leading-[1.06] mb-5 als-hero-in"
             style={{ fontSize: "clamp(2.6rem,5vw,4rem)", ["--hero-delay" as string]: "160ms" }}
           >
-            Matières premières et produits finis africains : de la source à votre entrepôt.
+            {t.title}
           </h1>
           <p className="text-white/55 leading-relaxed mb-9 als-hero-in" style={{ fontSize: "15px", ["--hero-delay" as string]: "280ms" }}>
-            Un seul interlocuteur entre vos exigences et un réseau de fournisseurs audités.
+            {t.subtitle}
           </p>
           <div className="flex flex-wrap items-center gap-5 als-hero-in als-arrow-parent" style={{ ["--hero-delay" as string]: "400ms" }}>
             <BtnAccent onClick={() => window.open(CALENDLY_URL, '_blank')} className="als-cta">
-              Échanger avec un expert
+              {t.ctaExpert}
             </BtnAccent>
             <button onClick={() => nav("devis")} className="inline-flex items-center gap-1.5 text-white/60 text-sm font-medium cursor-pointer hover:text-white transition-colors">
-              Demander une cotation <span className="als-arrow">→</span>
+              {t.ctaQuote} <span className="als-arrow">→</span>
             </button>
           </div>
         </div>
@@ -54,13 +56,7 @@ export function Hero({ nav }: { nav: Nav }) {
 // ─── Chiffres clés ───────────────────────────────────────────────────────────
 
 export function KeyFigures() {
-  const stats = [
-    { n: "24 ans", tag: "Expertise cumulée" },
-    { n: "14 ans", tag: "En grande distribution" },
-    { n: "200+", tag: "Organisations accompagnées" },
-    { n: "Bio UE", tag: "Export certifié" },
-    { n: "2", tag: "Continents" },
-  ];
+  const stats = useLandingText().figures;
   return (
     <section className="bg-white border-t-2 border-[#C4613A]">
       {/* Aligné sur le conteneur du site (header, hero…) pour un rendu régulier sur grand écran */}
@@ -85,23 +81,12 @@ export function KeyFigures() {
 // ─── Services (S3+S4 fusionnées) ─────────────────────────────────────────────
 
 export function ServicesSection({ nav }: { nav: Nav }) {
+  const tx = useLandingText().services;
   const pillars = [
-    {
-      icon: <Shield className="w-8 h-8" />, tag: "Fournisseurs", title: "Audités sur place",
-      line: "Chaque fournisseur est évalué en personne avant tout référencement.",
-      action: () => nav("catalogue"), cta: "Voir le catalogue", num: "01",
-    },
-    {
-      icon: <CheckCircle className="w-8 h-8" />, tag: "Conformité", title: "Normes UE garanties",
-      line: "HACCP, Bio, Halal · conformité européenne vérifiée pour chaque produit.",
-      action: () => window.open(CALENDLY_URL, '_blank'), cta: "Discuter de vos besoins", num: "02",
-    },
-    {
-      icon: <Truck className="w-8 h-8" />, tag: "Logistique", title: "Supply chain clé en main",
-      line: "Un seul devis, un seul interlocuteur, de la source à votre entrepôt.",
-      action: () => nav("devis"), cta: "Demander un devis", num: "03",
-    },
-  ];
+    { icon: <Shield className="w-8 h-8" />, action: () => nav("catalogue"), num: "01" },
+    { icon: <CheckCircle className="w-8 h-8" />, action: () => window.open(CALENDLY_URL, '_blank'), num: "02" },
+    { icon: <Truck className="w-8 h-8" />, action: () => nav("devis"), num: "03" },
+  ].map((p, i) => ({ ...p, ...tx.pillars[i] }));
 
   return (
     <section id="services" className="py-20 bg-white">
@@ -110,7 +95,7 @@ export function ServicesSection({ nav }: { nav: Nav }) {
           className="font-['Playfair_Display',Georgia,serif] font-bold text-[#0a0a0f] leading-[0.92] mb-12"
           style={{ fontSize: "clamp(2.6rem,4.5vw,4.5rem)" }}
         >
-          Trois barrières.<br />Zéro compromis.
+          {tx.title[0]}<br />{tx.title[1]}
         </h2>
         <div className="grid lg:grid-cols-3 gap-px bg-[rgba(13,34,101,0.1)]">
           {pillars.map((p, i) => (
@@ -140,11 +125,14 @@ export function ServicesSection({ nav }: { nav: Nav }) {
 // ─── Vitrine catalogue (produits en vedette · dynamique) ─────────────────────
 
 export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: string[]; setBasket: (b: string[]) => void }) {
+  const tx = useLandingText().catalogue;
+  const lang = useLang();
   const [products, setProducts] = useState<api.ApiPublicProduct[]>([]);
 
+  // Rechargé à chaque changement de langue : le serveur renvoie le contenu traduit (EN).
   useEffect(() => {
-    api.catalogue.products(true).then(ps => setProducts(ps.slice(0, 6))).catch(() => setProducts([]));
-  }, []);
+    api.catalogue.products(true, lang).then(ps => setProducts(ps.slice(0, 6))).catch(() => setProducts([]));
+  }, [lang]);
 
   const toggle = (name: string) => {
     setBasket(basket.includes(name) ? basket.filter(n => n !== name) : [...basket, name]);
@@ -160,15 +148,17 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex items-end justify-between mb-10">
           <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f]">
-            50+ références
+            {tx.title}
           </h2>
           <BtnAccent onClick={() => nav("catalogue")} className="als-cta als-arrow-parent">
-            Catalogue complet <ArrowRight className="w-4 h-4 als-arrow" />
+            {tx.full} <ArrowRight className="w-4 h-4 als-arrow" />
           </BtnAccent>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-px bg-[rgba(13,34,101,0.1)]">
           {products.map((p, i) => {
-            const inBasket = basket.includes(p.name);
+            // Le panier garde le nom d'origine (français) : le formulaire de devis le reconnaît.
+            const basketName = p.source_name || p.name;
+            const inBasket = basket.includes(basketName);
             return (
               <div key={p.ref} className="bg-white group als-lift stagger-item relative z-0 hover:z-10" style={{ ["--i-delay" as string]: `${i * 90}ms` }}>
                 <button type="button" onClick={() => openProduct(p.ref)} className="block w-full text-left cursor-pointer">
@@ -179,7 +169,7 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
                       className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700"
                     />
                     <span className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#0a0a0f]/70 to-transparent text-white text-[11px] font-semibold px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      Voir la fiche <ArrowRight className="w-3 h-3" />
+                      {tx.view} <ArrowRight className="w-3 h-3" />
                     </span>
                   </div>
                   <div className="px-5 pt-5">
@@ -195,14 +185,14 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
                 </button>
                 <div className="px-5 pb-5">
                   <button
-                    onClick={() => toggle(p.name)}
+                    onClick={() => toggle(basketName)}
                     className={`w-full py-2 text-xs font-semibold transition-colors duration-300 cursor-pointer border flex items-center justify-center gap-1.5 ${
                       inBasket
                         ? "bg-[#0d2265] text-white border-[#0d2265]"
                         : "border-[rgba(13,34,101,0.18)] text-[#0d2265] hover:bg-[#0d2265] hover:text-white hover:border-[#0d2265]"
                     }`}
                   >
-                    {inBasket ? <><Check className="w-3 h-3" /> Ajouté</> : <>+ Ma demande</>}
+                    {inBasket ? <><Check className="w-3 h-3" /> {tx.added}</> : <>{tx.add}</>}
                   </button>
                 </div>
               </div>
@@ -217,22 +207,19 @@ export function CatalogueTeaser({ nav, basket, setBasket }: { nav: Nav; basket: 
 // ─── Comment ça marche ───────────────────────────────────────────────────────
 
 export function HowItWorks({ nav }: { nav: Nav }) {
-  const steps = [
-    { n: "01", icon: <FileText className="w-6 h-6" />, title: "Transmettez votre besoin" },
-    { n: "02", icon: <Search className="w-6 h-6" />, title: "Nous sélectionnons & vérifions" },
-    { n: "03", icon: <Package className="w-6 h-6" />, title: "Devis unique sous 48 h" },
-    { n: "04", icon: <Truck className="w-6 h-6" />, title: "Livraison de bout en bout" },
-  ];
+  const tx = useLandingText().how;
+  const icons = [<FileText className="w-6 h-6" />, <Search className="w-6 h-6" />, <Package className="w-6 h-6" />, <Truck className="w-6 h-6" />];
+  const steps = tx.steps.map((title, i) => ({ n: `0${i + 1}`, icon: icons[i], title }));
   return (
     <section className="py-16 bg-white border-t border-[rgba(13,34,101,0.06)]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-start gap-12">
           <div className="lg:w-64 shrink-0">
             <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f] leading-[1.1] mb-6">
-              De votre besoin à la livraison.
+              {tx.title}
             </h2>
             <button onClick={() => nav("devis")} className="flex items-center gap-2 text-sm font-semibold text-[#0d2265] hover:gap-3 transition-all cursor-pointer">
-              Démarrer <ArrowRight className="w-4 h-4" />
+              {tx.start} <ArrowRight className="w-4 h-4" />
             </button>
           </div>
           <div className="flex-1 grid grid-cols-2 gap-px bg-[rgba(13,34,101,0.1)]">
@@ -253,25 +240,12 @@ export function HowItWorks({ nav }: { nav: Nav }) {
 // ─── Bloc devis / sourcing ───────────────────────────────────────────────────
 
 export function QuoteSection({ nav }: { nav: Nav }) {
+  const tx = useLandingText().quote;
   const [tab, setTab] = useState<"devis" | "sourcing">("devis");
 
   const panels = {
-    devis: {
-      label: "Devis catalogue",
-      desc: "Vous avez repéré un produit dans notre catalogue. Recevez un devis sous 24 à 48 h ouvrées.",
-      cta: "Accéder au formulaire",
-      icon: <FileText className="w-4 h-4" />,
-      action: () => nav("devis"),
-      bullets: ["Sélection depuis le catalogue", "Volume & conditionnement", "Incoterm au choix", "Réponse sous 48 h"],
-    },
-    sourcing: {
-      label: "Sourcing sur mesure",
-      desc: "Un besoin spécifique absent du catalogue ? Décrivez-le et notre équipe sourcing s'en charge.",
-      cta: "Décrire mon besoin",
-      icon: <Search className="w-4 h-4" />,
-      action: () => nav("sourcing"),
-      bullets: ["Produit introuvable ailleurs", "Origine & certifications sur mesure", "Accompagnement dédié", "Réponse sous 48 h"],
-    },
+    devis: { label: tx.devis.label, cta: tx.devis.cta, bullets: tx.devis.bullets, icon: <FileText className="w-4 h-4" />, action: () => nav("devis") },
+    sourcing: { label: tx.sourcing.label, cta: tx.sourcing.cta, bullets: tx.sourcing.bullets, icon: <Search className="w-4 h-4" />, action: () => nav("sourcing") },
   };
 
   const p = panels[tab];
@@ -283,10 +257,10 @@ export function QuoteSection({ nav }: { nav: Nav }) {
           {/* Left */}
           <div className="py-16 pr-14 flex flex-col justify-between border-r border-white/10">
             <h2 className="font-['Playfair_Display',Georgia,serif] text-[2.6rem] font-bold text-white leading-[1.05]">
-              Dites-nous ce qu&apos;il vous faut.
+              {tx.title}
             </h2>
             <p className="text-base text-white/70 leading-relaxed mt-10 max-w-md">
-              Une réponse sous 48 h, sans aucun engagement, avec un seul interlocuteur du début à la fin.
+              {tx.subtitle}
             </p>
           </div>
           {/* Right */}
@@ -320,45 +294,28 @@ export function QuoteSection({ nav }: { nav: Nav }) {
 // ─── Expertise (fondateurs) ──────────────────────────────────────────────────
 
 export function Expertise({ nav: _nav }: { nav: Nav }) {
+  const tx = useLandingText().expertise;
   const founders = [
-    {
-      initials: "OB", name: "Ousmane BA", role: "Cofondateur · Filières et Sourcing",
-      bio: "10+ ans à structurer des chaînes de valeur agricoles entre l'Afrique de l'Ouest et l'Europe. Export bio certifié UE et lien direct avec les coopératives et groupements de producteurs. Fondateur d'ENDAM Agri.",
-      highlight: "",
-      line: "",
-      tags: ["Filières bio UE", "Coopératives", "Traçabilité"],
-      label: "AMONT",
-    },
-    {
-      initials: "OS", name: "Oumou Soumano", role: "Cofondatrice · Supply chain & Retail",
-      bio: "14 ans en supply chain et grande distribution, entre l'Europe et l'Afrique. Ex-responsable supply chain Carrefour Sénégal, 200+ organisations accompagnées, stratégies d'import et pilotage de la performance logistique.",
-      highlight: "",
-      line: "",
-      tags: ["Logistique", "Import", "Export"],
-      label: "AVAL",
-    },
-  ];
+    { initials: "OB", name: "Ousmane BA", highlight: "", line: "" },
+    { initials: "OS", name: "Oumou Soumano", highlight: "", line: "" },
+  ].map((f, i) => ({ ...f, ...tx.founders[i] }));
 
   return (
     <section id="expertise" className="py-16 bg-white">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="font-['Playfair_Display',Georgia,serif] text-4xl font-bold text-[#0a0a0f] leading-[1.1] mb-10">
-          Deux expertises,<br />une chaîne maîtrisée.
+          {tx.title[0]}<br />{tx.title[1]}
         </h2>
         {/* Pullquotes */}
         <div className="grid md:grid-cols-2 gap-6 mb-10">
-          <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A] stagger-item" style={{ ["--i-delay" as string]: "0ms" }}>
-            <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
-              « De la parcelle jusqu&apos;au conteneur ; nous connaissons les producteurs par leur nom. »
-            </p>
-            <p className="text-xs text-[#64697d]">Ousmane BA · Cofondateur</p>
-          </div>
-          <div className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A] stagger-item" style={{ ["--i-delay" as string]: "120ms" }}>
-            <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
-              « Un sourcing avec le meilleur rapport qualité prix afin de vous démarquer de la concurrence. »
-            </p>
-            <p className="text-xs text-[#64697d]">Oumou Soumano · Cofondatrice</p>
-          </div>
+          {tx.quotes.map((q, i) => (
+            <div key={i} className="bg-[#f4f5f9] px-8 py-7 border-l-[3px] border-[#C4613A] stagger-item" style={{ ["--i-delay" as string]: `${i * 120}ms` }}>
+              <p className="font-['Playfair_Display',Georgia,serif] text-lg italic text-[#0d2265] leading-relaxed mb-2">
+                {q.text}
+              </p>
+              <p className="text-xs text-[#64697d]">{q.by}</p>
+            </div>
+          ))}
         </div>
         {/* Founder cards */}
         <div className="grid lg:grid-cols-2 gap-6 mb-10">
@@ -391,7 +348,7 @@ export function Expertise({ nav: _nav }: { nav: Nav }) {
           ))}
         </div>
         <BtnNavy onClick={() => window.open(CALENDLY_URL, '_blank')}>
-          <Calendar className="w-4 h-4" /> Échanger avec un expert
+          <Calendar className="w-4 h-4" /> {tx.cta}
         </BtnNavy>
       </div>
     </section>
@@ -401,20 +358,21 @@ export function Expertise({ nav: _nav }: { nav: Nav }) {
 // ─── Section fournisseurs (S9) ───────────────────────────────────────────────
 
 export function SupplierSection({ nav }: { nav: Nav }) {
+  const tx = useLandingText().suppliers;
   return (
     <section id="fournisseurs" className="py-16 bg-[#080f2e]">
       <div className="max-w-7xl mx-auto px-6">
         <h2 className="font-['Playfair_Display',Georgia,serif] text-4xl font-bold text-white leading-[1.1] mb-8">
-          Vous produisez en Afrique ?<br />Accédez au marché européen.
+          {tx.title[0]}<br />{tx.title[1]}
         </h2>
         <div className="grid lg:grid-cols-2 gap-px bg-white/[0.06]">
           <div className="bg-transparent border border-white/10 p-8 hover:bg-white/[0.04] transition-colors duration-300 stagger-item from-left">
-            <h3 className="font-bold text-white text-xl mb-6">Devenir fournisseur référencé</h3>
-            <BtnWhite onClick={() => nav("candidature")} className="als-arrow-parent">Candidater <ArrowRight className="w-4 h-4 als-arrow" /></BtnWhite>
+            <h3 className="font-bold text-white text-xl mb-6">{tx.becomeTitle}</h3>
+            <BtnWhite onClick={() => nav("candidature")} className="als-arrow-parent">{tx.apply} <ArrowRight className="w-4 h-4 als-arrow" /></BtnWhite>
           </div>
           <div className="bg-transparent border border-white/10 p-8 hover:bg-white/[0.04] transition-colors duration-300 stagger-item from-right" style={{ ["--i-delay" as string]: "120ms" }}>
-            <h3 className="font-bold text-white text-xl mb-6">Déjà référencé ?</h3>
-            <BtnOutlineWhite onClick={() => nav("login")}>Espace fournisseurs <ArrowRight className="w-4 h-4" /></BtnOutlineWhite>
+            <h3 className="font-bold text-white text-xl mb-6">{tx.alreadyTitle}</h3>
+            <BtnOutlineWhite onClick={() => nav("login")}>{tx.space} <ArrowRight className="w-4 h-4" /></BtnOutlineWhite>
           </div>
         </div>
       </div>
@@ -430,14 +388,8 @@ const TESTIMONIALS = [
   { quote: "En tant qu'épicerie fine, nous avons besoin de cohérence qualitative lot après lot. Funti est le seul interlocuteur qui nous a garanti cette constance, dès la première livraison.", name: "Pauline R.", role: "Co-fondatrice", company: "Épicerie Léontine", country: "Belgique" },
 ];
 
-const ENGAGEMENTS = [
-  "Fournisseurs audités sur place avant référencement",
-  "Réponse à toute demande sous 24 à 48 h ouvrées",
-  "Un devis unique : produits + logistique + incoterm",
-  "Catalogue actualisé régulièrement",
-];
-
 export function SocialProof() {
+  const ENGAGEMENTS = useLandingText().engagements;
   return (
     <section className="py-16 bg-[#f4f5f9]">
       <div className="max-w-7xl mx-auto px-6">
@@ -474,23 +426,15 @@ export function SocialProof() {
 
 // ─── FAQ ─────────────────────────────────────────────────────────────────────
 
-const FAQS = [
-  { q: "Quels types de produits proposez-vous ?", a: "Notre catalogue couvre quatre familles : épicerie (épices, condiments, farines…), boissons (jus, infusions, sirops…), fruits & légumes (frais, séchés, transformés) et matières premières (huiles végétales, beurres, gommes…). Près de 50 références sont disponibles, et nous acceptons les demandes de sourcing sur mesure pour tout produit absent du catalogue." },
-  { q: "Comment garantissez-vous la conformité aux normes européennes ?", a: "Chaque fournisseur est audité sur place par notre équipe avant d'être référencé. Pour chaque produit, nous évaluons les normes sanitaires (HACCP), la traçabilité, l'étiquetage et les certifications requises (Bio, Halal, ISO). Si un produit nécessite une mise à niveau, nous accompagnons le fournisseur dans ce processus avant toute commande." },
-  { q: "Quels sont vos délais de réponse et de livraison ?", a: "Nous répondons à toute demande de devis sous 24 à 48 h ouvrées. Les délais de livraison varient selon le produit, le mode de transport et la destination · ils sont précisés dans chaque devis. Le fret maritime vers l'Europe occidentale prend en général 12 à 25 jours selon le port d'origine." },
-  { q: "Quelles quantités minimum commandez-vous (MOQ) ?", a: "Les quantités minimum (MOQ) varient selon les produits et les fournisseurs. Elles sont indiquées dans le catalogue pour chaque référence, et précisées à la demande de devis. Pour les premières commandes ou les commandes tests, nous étudions chaque situation au cas par cas." },
-  { q: "Quels incoterms proposez-vous ? Gérez-vous les formalités douanières ?", a: "Nous travaillons sur les principaux incoterms : EXW, FOB, CIF, CFR, DAP, DDP. Le plus adapté est proposé dans chaque devis. Nous prenons en charge les formalités d'export côté africain et, sur demande, accompagnons jusqu'à la livraison en entrepôt européen." },
-  { q: "Est-il possible de commander des échantillons ou de visiter les fournisseurs ?", a: "L'envoi d'échantillons est possible pour la plupart de nos références · ils sont facturés au coût réel. Les visites fournisseurs sont organisées dans le cadre de partenariats établis : notre experte coordonne chaque visite pour garantir des échanges productifs et en phase avec vos exigences qualité." },
-];
-
 export function FAQSection() {
+  const faq = useLandingText().faq;
   const [open, setOpen] = useState<number | null>(null);
   return (
     <section id="faq" className="py-16 bg-white">
       <div className="max-w-3xl mx-auto px-6">
-        <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f] mb-8 text-left">Questions fréquentes</h2>
+        <h2 className="font-['Playfair_Display',Georgia,serif] text-3xl font-bold text-[#0a0a0f] mb-8 text-left">{faq.title}</h2>
         <div>
-          {FAQS.map((f, i) => (
+          {faq.items.map((f, i) => (
             <div key={i} className="py-6 border-b border-[rgba(13,34,101,0.08)] stagger-item" style={{ ["--i-delay" as string]: `${i * 70}ms` }}>
               <button onClick={() => setOpen(open === i ? null : i)}
                 className="w-full flex items-center justify-between text-left cursor-pointer group">
@@ -517,6 +461,7 @@ export function FAQSection() {
 // ─── CTA final ───────────────────────────────────────────────────────────────
 
 export function FinalCTA({ nav }: { nav: Nav }) {
+  const tx = useLandingText().finalCta;
   return (
     <section className="py-16 bg-[#0d2265] relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none opacity-[0.025]"
@@ -529,18 +474,18 @@ export function FinalCTA({ nav }: { nav: Nav }) {
               className="font-['Playfair_Display',Georgia,serif] font-bold text-white leading-[1.0] stagger-item"
               style={{ fontSize: "clamp(3rem,5vw,5rem)" }}
             >
-              Votre prochain<br />approvisionnement<br />commence ici.
+              {tx.title[0]}<br />{tx.title[1]}<br />{tx.title[2]}
             </h2>
           </div>
           <div className="flex flex-col gap-3 shrink-0 min-w-[240px]">
             <BtnAccent onClick={() => nav("catalogue")} className="als-cta stagger-item from-right" style={{ ["--i-delay" as string]: "120ms" }}>
-              <Download className="w-4 h-4" /> Accéder au catalogue
+              <Download className="w-4 h-4" /> {tx.catalogue}
             </BtnAccent>
             <BtnOutlineWhite onClick={() => nav("devis")} className="als-cta stagger-item from-right" style={{ ["--i-delay" as string]: "200ms" }}>
-              <FileText className="w-4 h-4" /> Demander un devis
+              <FileText className="w-4 h-4" /> {tx.quote}
             </BtnOutlineWhite>
             <BtnOutlineWhite onClick={() => window.open(CALENDLY_URL, '_blank')} className="stagger-item from-right" style={{ ["--i-delay" as string]: "280ms" }}>
-              <Calendar className="w-4 h-4" /> Échanger avec l'experte
+              <Calendar className="w-4 h-4" /> {tx.expert}
             </BtnOutlineWhite>
           </div>
         </div>

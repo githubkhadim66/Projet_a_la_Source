@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { Nav } from "@/lib/routes";
+import { LangContext, getStoredLang, storeLang, type Lang } from "@/lib/landingText";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { BasketPanel, CookieBanner, SupplierHint } from "./overlays";
@@ -12,7 +13,7 @@ import {
 } from "./sections";
 
 export function LandingPage({ nav }: { nav: Nav }) {
-  const [lang, setLang] = useState<"fr" | "en">("fr");
+  const [lang, setLang] = useState<Lang>(getStoredLang);
   const [menuOpen, setMenuOpen] = useState(false);
   const [basket, setBasket] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("als-basket") || "[]"); } catch { return []; }
@@ -30,11 +31,14 @@ export function LandingPage({ nav }: { nav: Nav }) {
     localStorage.setItem("als-basket", JSON.stringify(basket));
   }, [basket]);
 
+  useEffect(() => storeLang(lang), [lang]);
+
   useEffect(() => {
     if (cookieDismissed) localStorage.setItem("als-cookie", "1");
   }, [cookieDismissed]);
 
   return (
+    <LangContext.Provider value={lang}>
     <div className="min-h-screen bg-white font-['Inter',sans-serif]">
       <Header
         nav={nav}
@@ -71,5 +75,6 @@ export function LandingPage({ nav }: { nav: Nav }) {
         />
       )}
     </div>
+    </LangContext.Provider>
   );
 }

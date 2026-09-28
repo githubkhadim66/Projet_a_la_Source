@@ -2,8 +2,17 @@
 
 import { Globe, Mail, Phone } from "lucide-react";
 import type { Nav, Screen } from "@/lib/routes";
+import { useLandingText } from "@/lib/landingText";
 
 export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang: (l: "fr" | "en") => void }) {
+  const t = useLandingText();
+  const links: { l: string; s?: Screen; anchor?: string }[] = [
+    { l: t.footer.links[0], anchor: "#services" },
+    { l: t.footer.links[1], s: "catalogue" },
+    { l: t.footer.links[2], anchor: "#expertise" },
+    { l: t.footer.links[3], anchor: "#faq" },
+    { l: t.footer.links[4], anchor: "#contact" },
+  ];
   return (
     <footer id="contact" className="bg-[#080f2e] text-white pt-10 pb-8">
       <div className="max-w-7xl mx-auto px-6">
@@ -11,19 +20,13 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
           <div>
             <p className="font-bold text-xl tracking-tight mb-3">Funti</p>
             <p className="text-white/40 text-sm leading-relaxed">
-              Intermédiation experte · sourcing de matières premières africaines pour l'Europe.
+              {t.footer.tagline}
             </p>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Navigation</p>
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">{t.footer.navTitle}</p>
             <div className="space-y-2">
-              {[
-                { l: "Nos services", anchor: "#services" },
-                { l: "Catalogue", s: "catalogue" as Screen },
-                { l: "Notre expertise", anchor: "#expertise" },
-                { l: "FAQ", anchor: "#faq" },
-                { l: "Contact", anchor: "#contact" },
-              ].map((item, i) => (
+              {links.map((item, i) => (
                 <button
                   key={i}
                   onClick={() => item.s
@@ -35,12 +38,12 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
                 </button>
               ))}
               <button onClick={() => nav("login")} className="block text-sm text-white/25 hover:text-white/60 cursor-pointer transition-colors mt-1">
-                Espace fournisseurs
+                {t.footer.supplierArea}
               </button>
             </div>
           </div>
           <div>
-            <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">Contact</p>
+            <p className="text-[10px] font-bold text-white/30 uppercase tracking-[0.2em] mb-5">{t.footer.contactTitle}</p>
             <div className="space-y-2.5 text-sm text-white/50">
               <a href="mailto:contact@funtiworld.com" className="flex items-center gap-2 hover:text-white transition-colors">
                 <Mail className="w-4 h-4 shrink-0" /> contact@funtiworld.com
@@ -57,7 +60,7 @@ export function Footer({ nav, lang, setLang }: { nav: Nav; lang: string; setLang
 
         <div className="pt-6 flex flex-wrap items-center justify-between gap-4">
           <p className="text-white/25 text-xs">
-            © 2026 Funti World · Mentions légales · RGPD
+            {t.footer.legal}
             <button onClick={() => nav("admin-dashboard")} className="ml-4 opacity-20 hover:opacity-60 cursor-pointer transition-opacity text-white underline">Admin</button>
           </p>
           <div className="flex items-center gap-1 text-xs text-white/30">

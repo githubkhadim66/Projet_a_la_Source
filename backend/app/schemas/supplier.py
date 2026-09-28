@@ -139,6 +139,8 @@ class PublicProductOut(BaseModel):
     description: str
     benefits: str
     featured: bool
+    # Nom d'origine (non traduit) : clé stable pour le panier et le formulaire de devis.
+    source_name: str = ""
 
 
 class ProductCreate(BaseModel):

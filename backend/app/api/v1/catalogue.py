@@ -11,13 +11,22 @@ from app.db.session import get_db
 from app.models import Lead, LeadQueue, LeadStatus, Product
 from app.schemas.supplier import PublicProductOut
 from app.services.catalogue_pdf import build_catalogue_pdf
+from app.services.translate import translate_batch
 
 router = APIRouter()
 
+# Champs texte traduits automatiquement quand un client demande une autre langue.
+_TRANSLATABLE = ("name", "category", "origin", "packaging", "moq", "description", "benefits")
+# Langues proposées sur le site (hors français, langue d'origine du contenu).
+_SUPPORTED_LANGS = {"en"}
+
 
 @router.get("/produits", response_model=list[PublicProductOut])
-def public_products(featured: bool | None = None, db: Session = Depends(get_db)):
-    """Vitrine publique : produits visibles uniquement — aucun fournisseur, stock ni prix (LP-05)."""
+def public_products(featured: bool | None = None, lang: str | None = None, db: Session = Depends(get_db)):
+    """Vitrine publique : produits visibles uniquement — aucun fournisseur, stock ni prix (LP-05).
+
+    `lang` (ex. « en ») traduit automatiquement les champs texte via DeepL (avec cache).
+    """
     query = (
         select(Product)
         .where(Product.visible, Product.archived_at.is_(None))
@@ -25,7 +34,20 @@ def public_products(featured: bool | None = None, db: Session = Depends(get_db))
     )
     if featured is not None:
         query = query.where(Product.featured == featured)
-    return list(db.scalars(query))
+    products = list(db.scalars(query))
+
+    out = [PublicProductOut.model_validate(p) for p in products]
+    for o in out:
+        o.source_name = o.name
+    if lang and lang.lower() in _SUPPORTED_LANGS:
+        texts = [getattr(o, f) or "" for o in out for f in _TRANSLATABLE]
+        tmap = translate_batch(db, texts, lang)
+        for o in out:
+            for f in _TRANSLATABLE:
+                original = getattr(o, f)
+                if original:
+                    setattr(o, f, tmap.get(original, original))
+    return out
 
 
 @router.get("/download")

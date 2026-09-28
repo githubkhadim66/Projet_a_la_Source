@@ -55,6 +55,11 @@ class Settings(BaseSettings):
     # Front (utilisé dans les liens des e-mails)
     FRONTEND_URL: str = "http://localhost:5173"
 
+    # Traduction automatique du contenu (DeepL) — vide = désactivé (le site reste en français).
+    # Compte gratuit : endpoint api-free ; compte Pro : https://api.deepl.com/v2/translate
+    DEEPL_API_KEY: str = ""
+    DEEPL_API_URL: str = "https://api-free.deepl.com/v2/translate"
+
     @property
     def cors_origins_list(self) -> list[str]:
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
