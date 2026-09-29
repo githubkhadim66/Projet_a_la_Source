@@ -5,6 +5,9 @@
 
 import type { ApiProduct, ApiSupplier } from "@/lib/api";
 import { EMBALLAGE_PLURIEL } from "@/lib/constants";
+import { optionLabelEn } from "@/lib/formsText";
+import type { Lang } from "@/lib/i18n";
+import { SUPPLIER_TEXT } from "@/lib/supplierText";
 
 /** Seuil FRS-05 : au delà, le stock est considéré comme non actualisé. */
 export const STALE_DAYS = 14;
@@ -33,22 +36,25 @@ export const parsePackagingLabel = (packaging: string): { type: string; size: nu
   return { type: m[1].trim(), size, unit: m[3].toLowerCase() === "l" ? "L" : "kg" };
 };
 
-const packagePlural = (type: string) => EMBALLAGE_PLURIEL[type] || `${type.toLowerCase()}s`;
+const packagePlural = (type: string, lang: Lang) => {
+  const fr = EMBALLAGE_PLURIEL[type] || `${type.toLowerCase()}s`;
+  return lang === "en" ? optionLabelEn(fr) : fr;
+};
 
 /** Équivalent d'une quantité en nombre de colis, ex. 800 L → « 40 bidons » (null si non calculable). */
-export const packagesFor = (packaging: string, baseUnit: "kg" | "L", quantity: number): string | null => {
+export const packagesFor = (packaging: string, baseUnit: "kg" | "L", quantity: number, lang: Lang = "fr"): string | null => {
   const info = parsePackagingLabel(packaging);
   if (!info || info.unit !== baseUnit || info.size <= 0 || quantity <= 0) return null;
   const n = quantity / info.size;
   const rounded = Math.round(n);
   if (rounded < 1) return null;
   const prefix = Number.isInteger(n) ? "" : "≈ ";
-  return `${prefix}${rounded.toLocaleString("fr-FR")} ${packagePlural(info.type)}`;
+  return `${prefix}${rounded.toLocaleString(lang === "en" ? "en-GB" : "fr-FR")} ${packagePlural(info.type, lang)}`;
 };
 
 /** Équivalent en colis du stock d'un produit (ex. « 40 bidons »). */
-export const stockInPackages = (p: Pick<ApiProduct, "moq" | "packaging" | "stock_kg">): string | null =>
-  packagesFor(p.packaging, baseUnitOf(p), p.stock_kg);
+export const stockInPackages = (p: Pick<ApiProduct, "moq" | "packaging" | "stock_kg">, lang: Lang = "fr"): string | null =>
+  packagesFor(p.packaging, baseUnitOf(p), p.stock_kg, lang);
 
 export const staleProducts = (products: ApiProduct[]): ApiProduct[] => products.filter(isStale);
 
@@ -66,14 +72,17 @@ export const detentionRate = (products: ApiProduct[]): number | null =>
 export interface DossierField { key: string; label: string; done: boolean }
 
 /** Champs pris en compte dans la complétude du dossier fournisseur. */
-export const dossierFields = (me: ApiSupplier | null, productsCount: number): DossierField[] => [
-  { key: "name",         label: "Nom de la société",           done: !!me?.name?.trim() },
-  { key: "contact_name", label: "Nom du contact",              done: !!me?.contact_name?.trim() },
-  { key: "phone",        label: "Téléphone",                   done: !!me?.phone?.trim() },
-  { key: "country",      label: "Pays",                        done: !!me?.country?.trim() },
-  { key: "city",         label: "Ville",                       done: !!me?.city?.trim() },
-  { key: "products",     label: "Au moins un produit référencé", done: productsCount > 0 },
-];
+export const dossierFields = (me: ApiSupplier | null, productsCount: number, lang: Lang = "fr"): DossierField[] => {
+  const t = SUPPLIER_TEXT[lang].dossier;
+  return [
+    { key: "name",         label: t.name,     done: !!me?.name?.trim() },
+    { key: "contact_name", label: t.contact,  done: !!me?.contact_name?.trim() },
+    { key: "phone",        label: t.phone,    done: !!me?.phone?.trim() },
+    { key: "country",      label: t.country,  done: !!me?.country?.trim() },
+    { key: "city",         label: t.city,     done: !!me?.city?.trim() },
+    { key: "products",     label: t.products, done: productsCount > 0 },
+  ];
+};
 
 export interface DossierCompleteness {
   fields: DossierField[];
@@ -82,8 +91,8 @@ export interface DossierCompleteness {
   pct: number;
 }
 
-export const dossierCompleteness = (me: ApiSupplier | null, productsCount: number): DossierCompleteness => {
-  const fields = dossierFields(me, productsCount);
+export const dossierCompleteness = (me: ApiSupplier | null, productsCount: number, lang: Lang = "fr"): DossierCompleteness => {
+  const fields = dossierFields(me, productsCount, lang);
   const done = fields.filter(f => f.done).length;
   return { fields, done, total: fields.length, pct: Math.round((done / fields.length) * 100) };
 };

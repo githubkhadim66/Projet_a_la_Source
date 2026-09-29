@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Eye, EyeOff, Lock } from "lucide-react";
 import * as api from "@/lib/api";
 import type { Nav } from "@/lib/routes";
+import { useSupplierText } from "@/lib/supplierText";
 import { BtnNavy } from "@/app/components/common/buttons";
 import { FieldLabel, FormError, TextInput } from "@/app/components/common/fields";
 import { ScreenShell } from "@/app/components/common/layout";
 
 export function Login({ nav }: { nav: Nav }) {
+  const t = useSupplierText().login;
+  const common = useSupplierText().common;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,29 +40,27 @@ export function Login({ nav }: { nav: Nav }) {
         nav(res.must_change_password ? "supplier-password" : "supplier-dashboard");
       }
     } catch (err) {
-      setError(err instanceof api.ApiError && err.status === 401
-        ? "Identifiants invalides. Vérifiez votre e-mail et votre mot de passe."
-        : "Une erreur est survenue. Réessayez.");
+      setError(err instanceof api.ApiError && err.status === 401 ? t.invalid : common.genericError);
     } finally {
       setSending(false);
     }
   };
 
   return (
-    <ScreenShell nav={nav} title="Connexion" directBack>
+    <ScreenShell nav={nav} title={t.screen} directBack>
       <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10 text-center">
         <div className="w-14 h-14 bg-[rgba(13,34,101,0.06)] flex items-center justify-center mx-auto mb-6">
           <Lock className="w-7 h-7 text-[#0d2265]" />
         </div>
-        <h2 className="text-xl font-bold text-[#0a0a0f] mb-1">Connexion</h2>
-        <p className="text-sm text-[#64697d] mb-8">Espace fournisseurs et administration.</p>
+        <h2 className="text-xl font-bold text-[#0a0a0f] mb-1">{t.title}</h2>
+        <p className="text-sm text-[#64697d] mb-8">{t.subtitle}</p>
         <form onSubmit={submit} className="text-left space-y-4">
           <div>
-            <FieldLabel required>Adresse e-mail</FieldLabel>
-            <TextInput type="email" required placeholder="vous@entreprise.com" value={email} onChange={e => setEmail(e.target.value)} />
+            <FieldLabel required>{t.email}</FieldLabel>
+            <TextInput type="email" required placeholder={t.emailPlaceholder} value={email} onChange={e => setEmail(e.target.value)} />
           </div>
           <div>
-            <FieldLabel required>Mot de passe</FieldLabel>
+            <FieldLabel required>{t.password}</FieldLabel>
             <div className="relative">
               <TextInput type={showPassword ? "text" : "password"} required placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="pr-10" />
               <button type="button" onClick={() => setShowPassword(s => !s)}
@@ -70,15 +71,15 @@ export function Login({ nav }: { nav: Nav }) {
           </div>
           <FormError error={error} />
           <BtnNavy type="submit" className="w-full justify-center">
-            {sending ? "Connexion…" : "Se connecter"} <ArrowRight className="w-4 h-4" />
+            {sending ? t.submitting : t.submit} <ArrowRight className="w-4 h-4" />
           </BtnNavy>
         </form>
         <p className="text-xs text-[#64697d] mt-4">
-          Mot de passe oublié ? Contactez l'équipe Funti pour le réinitialiser.
+          {t.forgot}
         </p>
         <p className="text-xs text-[#64697d] mt-2">
-          Pas encore référencé ?{" "}
-          <button onClick={() => nav("candidature")} className="text-[#0d2265] underline cursor-pointer">Candidatez ici</button>
+          {t.notListed}{" "}
+          <button onClick={() => nav("candidature")} className="text-[#0d2265] underline cursor-pointer">{t.apply}</button>
         </p>
       </div>
     </ScreenShell>

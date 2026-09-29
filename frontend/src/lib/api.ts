@@ -153,6 +153,7 @@ export interface ApiSupplier {
   city: string | null;
   categories: string[];
   is_active: boolean;
+  language: "fr" | "en";
   last_login_at: string | null;
   created_at: string;
   products_count: number;
@@ -289,7 +290,7 @@ export const supplier = {
       method: "POST", body: JSON.stringify({ email, password }),
     }),
   me: () => request<ApiSupplier>("/suppliers/me", { headers: supplierHeaders() }),
-  updateProfile: (data: Partial<{ name: string; contact_name: string; phone: string; country: string; city: string }>) =>
+  updateProfile: (data: Partial<{ name: string; contact_name: string; phone: string; country: string; city: string; language: "fr" | "en" }>) =>
     request<ApiSupplier>("/suppliers/me", {
       method: "PATCH", body: JSON.stringify(data), headers: supplierHeaders(),
     }),
@@ -381,7 +382,7 @@ export const admin = {
   suppliers: () => request<ApiSupplier[]>("/admin/suppliers", { headers: adminHeaders() }),
   createSupplier: (data: {
     name: string; contact_name?: string; email: string; phone?: string;
-    country?: string; city?: string; categories?: string[];
+    country?: string; city?: string; categories?: string[]; language?: "fr" | "en";
   }) => request<ApiSupplier & { temp_password: string }>("/admin/suppliers", {
     method: "POST", body: JSON.stringify(data), headers: adminHeaders(),
   }),

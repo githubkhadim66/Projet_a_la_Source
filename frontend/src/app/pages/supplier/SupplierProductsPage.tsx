@@ -14,6 +14,9 @@ import { baseUnitOf, isStale, packagesFor, STALE_DAYS, staleProducts, stockInPac
 import type { StockStatus } from "@/lib/leads";
 import type { Nav } from "@/lib/routes";
 import { DELAIS_PRODUIT } from "@/lib/constants";
+import { useLang } from "@/lib/i18n";
+import { useOptionLabel } from "@/lib/formsText";
+import { useSupplierText } from "@/lib/supplierText";
 import { BtnNavy } from "@/app/components/common/buttons";
 import { FieldLabel, SelectInput, TextInput } from "@/app/components/common/fields";
 import { useConfirm, useToast } from "@/app/components/common/feedback";
@@ -31,6 +34,9 @@ const STATUS_BADGE: Record<StockStatus, string> = {
 const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 
 export function SupplierProducts({ nav }: { nav: Nav }) {
+  const lang = useLang();
+  const { products: t, fields: f, common } = useSupplierText();
+  const tr = useOptionLabel();
   const toast = useToast();
   const confirm = useConfirm();
   const [products, setProducts] = useState<ApiProduct[]>([]);
@@ -70,7 +76,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
   const save = async (id: number) => {
     const qty = Number(editData.stock);
     if (editData.status === "En stock" && (!editData.stock || qty <= 0)) {
-      toast("Un produit « En stock » doit avoir une quantité supérieure à 0 · choisissez « Sur commande » ou « Rupture ».", "error");
+      toast(t.inStockNeedsQty, "error");
       return;
     }
     try {
@@ -80,31 +86,29 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
       const wasRupture = products.find(p => p.id === id)?.status === "Rupture";
       setProducts(ps => ps.map(p => p.id === id ? updated : p));
       setEditing(null);
-      toast(updated.status === "Rupture" && !wasRupture
-        ? "Rupture enregistrée · pensez à réapprovisionner au plus vite."
-        : `Mise à jour enregistrée le ${fmtDate(updated.updated_at)}`);
+      toast(updated.status === "Rupture" && !wasRupture ? t.ruptureSaved : t.updateSaved(fmtDate(updated.updated_at)));
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
-      toast("Échec de l'enregistrement · réessayez.", "error");
+      toast(t.saveFailed, "error");
     }
   };
 
   // Retrait doux (réversible) d'un produit · confirmation puis passage en corbeille.
   const archiveProduct = async (p: ApiProduct) => {
     const ok = await confirm({
-      title: `Retirer « ${p.name} » de la vente ?`,
-      message: "Il quittera le catalogue mais restera récupérable dans « Produits retirés ».",
-      confirmLabel: "Retirer", tone: "danger",
+      title: t.confirmRemoveTitle(p.name),
+      message: t.confirmRemoveMessage,
+      confirmLabel: t.remove, tone: "danger",
     });
     if (!ok) return;
     try {
       const done = await api.supplier.archiveProduct(p.id);
       setProducts(ps => ps.filter(x => x.id !== p.id));
       setArchived(a => [done, ...a.filter(x => x.id !== p.id)]);
-      toast("Produit retiré · l'équipe Funti a été prévenue.");
+      toast(t.removed);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
-      toast("Échec du retrait · réessayez.", "error");
+      toast(t.removeFailed, "error");
     }
   };
   const restoreProduct = async (p: ApiProduct) => {
@@ -112,10 +116,10 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
       const done = await api.supplier.restoreProduct(p.id);
       setArchived(a => a.filter(x => x.id !== p.id));
       setProducts(ps => [done, ...ps.filter(x => x.id !== p.id)]);
-      toast("Produit restauré.");
+      toast(t.restored);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
-      toast("Échec de la restauration · réessayez.", "error");
+      toast(t.restoreFailed, "error");
     }
   };
   // Ouvre/ferme la corbeille · charge les produits retirés à la première ouverture.
@@ -159,14 +163,14 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-start justify-between mb-5 gap-4">
           <div>
-            <h1 className="text-xl font-bold text-[#0a0a0f]">Produits & stocks</h1>
+            <h1 className="text-xl font-bold text-[#0a0a0f]">{t.title}</h1>
             <p className="text-sm text-[#64697d] mt-0.5">
-              {loading ? "…" : `${products.length} référence${products.length > 1 ? "s" : ""} active${products.length > 1 ? "s" : ""}`}
-              {staleCount > 0 && <span className="text-[#C4613A]"> · {staleCount} à actualiser</span>}
+              {loading ? "…" : t.activeCount(products.length)}
+              {staleCount > 0 && <span className="text-[#C4613A]"> · {t.toRefresh(staleCount)}</span>}
             </p>
           </div>
           <BtnNavy onClick={() => nav("supplier-propose")}>
-            <Plus className="w-4 h-4" /> Proposer un produit
+            <Plus className="w-4 h-4" /> {t.propose}
           </BtnNavy>
         </div>
 
@@ -176,10 +180,10 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
             <Search className="w-4 h-4 text-[#64697d] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             <input
               value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Rechercher un produit · nom, référence, origine, catégorie…"
+              placeholder={t.searchPlaceholder}
               className="w-full border border-[rgba(13,34,101,0.18)] bg-white pl-9 pr-9 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] transition-colors" />
             {query && (
-              <button onClick={() => setQuery("")} title="Effacer"
+              <button onClick={() => setQuery("")} title={t.clear}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-[#64697d] hover:text-[#0a0a0f] cursor-pointer text-lg leading-none">×</button>
             )}
           </div>
@@ -188,21 +192,21 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
         {/* Filtres */}
         {!loading && products.length > 0 && (
           <div className="flex flex-wrap items-center gap-2 mb-5">
-            <Chip active={filter === "all"} onClick={() => setFilter("all")}>Tous</Chip>
-            <Chip active={filter === "En stock"} onClick={() => setFilter("En stock")}>En stock · {statusCounts["En stock"]}</Chip>
-            <Chip active={filter === "Sur commande"} onClick={() => setFilter("Sur commande")}>Sur commande · {statusCounts["Sur commande"]}</Chip>
-            <Chip active={filter === "Rupture"} onClick={() => setFilter("Rupture")} tone="red">Rupture · {statusCounts["Rupture"]}</Chip>
-            <Chip active={filter === "stale"} onClick={() => setFilter("stale")} tone="orange">À actualiser · {staleCount}</Chip>
+            <Chip active={filter === "all"} onClick={() => setFilter("all")}>{t.all}</Chip>
+            <Chip active={filter === "En stock"} onClick={() => setFilter("En stock")}>{tr("En stock")} · {statusCounts["En stock"]}</Chip>
+            <Chip active={filter === "Sur commande"} onClick={() => setFilter("Sur commande")}>{tr("Sur commande")} · {statusCounts["Sur commande"]}</Chip>
+            <Chip active={filter === "Rupture"} onClick={() => setFilter("Rupture")} tone="red">{tr("Rupture")} · {statusCounts["Rupture"]}</Chip>
+            <Chip active={filter === "stale"} onClick={() => setFilter("stale")} tone="orange">{t.stale} · {staleCount}</Chip>
             {categories.length > 0 && (
               <select value={filter.startsWith("cat:") ? filter.slice(4) : "all"}
                 onChange={e => setFilter(e.target.value === "all" ? "all" : `cat:${e.target.value}`)}
                 className="border border-[rgba(13,34,101,0.18)] bg-white px-3 py-1.5 text-xs text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
-                <option value="all">Toutes catégories</option>
-                {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                <option value="all">{t.allCategories}</option>
+                {categories.map(c => <option key={c} value={c}>{tr(c)}</option>)}
               </select>
             )}
             {anyFilter && (
-              <button onClick={resetFilters} className="text-xs text-[#64697d] hover:text-[#0d2265] underline cursor-pointer ml-1">Réinitialiser</button>
+              <button onClick={resetFilters} className="text-xs text-[#64697d] hover:text-[#0d2265] underline cursor-pointer ml-1">{common.reset}</button>
             )}
           </div>
         )}
@@ -211,28 +215,25 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
         {staleCount > 0 && !anyFilter && (
           <div className="flex items-start gap-2.5 bg-[#fbede3] border border-[#C4613A]/30 px-4 py-3 mb-5 text-sm text-[#A84E2D] leading-relaxed">
             <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-            <span>
-              {staleCount > 1 ? `${staleCount} références ne sont` : "1 référence n'est"} pas actualisée{staleCount > 1 ? "s" : ""} depuis plus de {STALE_DAYS} jours.
-              Confirmez le stock pour rester visible auprès des acheteurs.
-            </span>
+            <span>{t.staleWarning(staleCount, STALE_DAYS)}</span>
           </div>
         )}
 
-        {loading && <p className="text-sm text-[#64697d] py-8 text-center">Chargement de vos produits…</p>}
+        {loading && <p className="text-sm text-[#64697d] py-8 text-center">{t.loading}</p>}
         {!loading && products.length === 0 && (
           <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10 text-center text-sm text-[#64697d]">
-            Aucun produit rattaché à votre compte pour le moment.
+            {t.none}
           </div>
         )}
         {!loading && products.length > 0 && filtered.length === 0 && (
           <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10 text-center text-sm text-[#64697d]">
-            Aucun produit ne correspond {query ? `à « ${query} »` : "à ces filtres"}.{" "}
-            <button onClick={resetFilters} className="text-[#0d2265] underline cursor-pointer">Réinitialiser</button>
+            {t.noMatch(query)}{" "}
+            <button onClick={resetFilters} className="text-[#0d2265] underline cursor-pointer">{common.reset}</button>
           </div>
         )}
 
         {anyFilter && filtered.length > 0 && (
-          <p className="text-xs text-[#64697d] mb-3">{filtered.length} résultat{filtered.length > 1 ? "s" : ""} sur {products.length}</p>
+          <p className="text-xs text-[#64697d] mb-3">{t.results(filtered.length, products.length)}</p>
         )}
 
         <div className="space-y-3">
@@ -241,7 +242,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
             const isOpen = expanded === p.id;
             const isEdit = editing === p.id;
             const hasCommercial = p.price_per_kg || p.bulk_price || p.harvest_period;
-            const avail = availabilityBadge(p.available_until);
+            const avail = availabilityBadge(p.available_until, lang);
             return (
             <div key={p.id} className={`bg-white border ${stale ? "border-[#C4613A]/40" : "border-[rgba(13,34,101,0.1)]"}`}>
               <div className="p-4 flex items-start gap-4">
@@ -257,21 +258,21 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                       <p className="font-semibold text-[#0a0a0f] text-sm">{p.name}{p.origin && !p.name.includes(p.origin) ? ` · ${p.origin}` : ""}</p>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-[#64697d] font-mono">{p.ref}</span>
-                        {p.category && <span className="text-[10px] bg-[#eef1f8] text-[#0d2265] px-1.5 py-0.5 font-medium">{p.category}</span>}
+                        {p.category && <span className="text-[10px] bg-[#eef1f8] text-[#0d2265] px-1.5 py-0.5 font-medium">{tr(p.category)}</span>}
                       </div>
                     </div>
-                    <span className={`shrink-0 text-xs font-medium px-2.5 py-1 ${STATUS_BADGE[p.status]}`}>{p.status}</span>
+                    <span className={`shrink-0 text-xs font-medium px-2.5 py-1 ${STATUS_BADGE[p.status]}`}>{tr(p.status)}</span>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2.5 text-xs text-[#64697d]">
                     <span>
-                      Stock : <strong className="text-[#0a0a0f]">{p.stock_kg.toLocaleString("fr-FR")} {baseUnitOf(p)}</strong>
-                      {stockInPackages(p) && <span className="text-[#64697d]"> · {stockInPackages(p)}</span>}
+                      {t.stock}{lang === "fr" ? " : " : ": "}<strong className="text-[#0a0a0f]">{p.stock_kg.toLocaleString(lang === "en" ? "en-GB" : "fr-FR")} {baseUnitOf(p)}</strong>
+                      {stockInPackages(p, lang) && <span className="text-[#64697d]"> · {stockInPackages(p, lang)}</span>}
                     </span>
-                    <span>Délai : <strong className="text-[#0a0a0f]">{p.delay || "Non précisé"}</strong></span>
-                    <span className={stale ? "text-[#C4613A] font-medium" : ""}>Màj le {fmtDate(p.updated_at)}</span>
+                    <span>{t.delay}{lang === "fr" ? " : " : ": "}<strong className="text-[#0a0a0f]">{p.delay ? tr(p.delay) : common.notSpecified}</strong></span>
+                    <span className={stale ? "text-[#C4613A] font-medium" : ""}>{t.updatedOn(fmtDate(p.updated_at))}</span>
                     {stale && (
                       <span className="inline-flex items-center gap-1 text-[#C4613A] font-semibold">
-                        <AlertTriangle className="w-3 h-3" /> À actualiser
+                        <AlertTriangle className="w-3 h-3" /> {t.stale}
                       </span>
                     )}
                     {avail && (
@@ -285,23 +286,23 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                   {p.status === "Rupture" && (
                     <div className="mt-3 flex items-start gap-2 bg-red-50 border border-red-200 px-3 py-2 text-xs text-red-700 leading-relaxed">
                       <PackageX className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                      <span>En rupture · réapprovisionnez au plus vite. Mettez à jour le stock dès que le produit est de nouveau disponible pour rester visible auprès des acheteurs.</span>
+                      <span>{t.ruptureNotice}</span>
                     </div>
                   )}
                   <div className="flex flex-wrap items-center gap-2 mt-3">
                     <button onClick={() => { setExpanded(isOpen ? null : p.id); setEditing(null); }}
                       className="text-xs text-[#0d2265] hover:text-[#C4613A] font-medium cursor-pointer flex items-center gap-1 transition-colors">
-                      Détails <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
+                      {t.details} <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                     </button>
                     <button onClick={() => setEditInfo(p)} className="border border-[rgba(13,34,101,0.18)] text-[#0d2265] text-xs px-3 py-1.5 hover:bg-[#f4f5f9] cursor-pointer transition-colors flex items-center gap-1.5">
-                      <Pencil className="w-3.5 h-3.5" /> Modifier la fiche
+                      <Pencil className="w-3.5 h-3.5" /> {t.editSheet}
                     </button>
                     <button onClick={() => openEdit(p)} className="border border-[rgba(13,34,101,0.18)] text-[#0d2265] text-xs px-3 py-1.5 hover:bg-[#f4f5f9] cursor-pointer transition-colors flex items-center gap-1.5">
-                      <Edit2 className="w-3.5 h-3.5" /> Mettre à jour le stock
+                      <Edit2 className="w-3.5 h-3.5" /> {t.updateStock}
                     </button>
-                    <button onClick={() => archiveProduct(p)} title="Retirer de la vente (récupérable)"
+                    <button onClick={() => archiveProduct(p)} title={t.removeTitle}
                       className="border border-red-200 text-red-600 text-xs px-3 py-1.5 hover:bg-red-50 cursor-pointer transition-colors flex items-center gap-1.5 ml-auto">
-                      <Trash2 className="w-3.5 h-3.5" /> Retirer
+                      <Trash2 className="w-3.5 h-3.5" /> {t.remove}
                     </button>
                   </div>
                 </div>
@@ -315,36 +316,36 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                       <img src={productImg(p.image)} alt={p.name} className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0 grid grid-cols-2 gap-x-4 gap-y-3">
-                      <Detail label="Conditionnement" value={p.packaging} />
-                      <Detail label="Quantité minimum (MOQ)" value={p.moq} />
-                      <Detail label="Origine" value={p.origin ?? ""} />
-                      <Detail label="Catégorie" value={p.category ?? ""} />
-                      {avail && <Detail label="Disponible jusqu'au" value={`${avail.date}${avail.tone === "expired" ? " (expiré)" : ""}`} />}
+                      <Detail label={f.packaging} value={p.packaging} empty={common.notProvided} />
+                      <Detail label={f.moq} value={p.moq} empty={common.notProvided} />
+                      <Detail label={f.origin} value={p.origin ? tr(p.origin) : ""} empty={common.notProvided} />
+                      <Detail label={f.category} value={p.category ? tr(p.category) : ""} empty={common.notProvided} />
+                      {avail && <Detail label={f.availableUntilShort} value={`${avail.date}${avail.tone === "expired" ? ` ${f.expired}` : ""}`} empty={common.notProvided} />}
                     </div>
                   </div>
 
                   {p.description && (
                     <div>
-                      <p className="text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">Description</p>
+                      <p className="text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-1">{f.description}</p>
                       <p className="text-sm text-[#0a0a0f] leading-relaxed whitespace-pre-line">{p.description}</p>
                     </div>
                   )}
                   {p.benefits && (
                     <div>
-                      <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-1">Bienfaits</p>
+                      <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-1">{f.benefits}</p>
                       <p className="text-sm text-[#0a0a0f] leading-relaxed whitespace-pre-line">{p.benefits}</p>
                     </div>
                   )}
 
                   {hasCommercial && (
                     <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-4">
-                      <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-2">Informations commerciales · internes</p>
+                      <p className="text-[10px] font-bold text-[#C4613A] uppercase tracking-widest mb-2">{f.commercialInternal}</p>
                       <div className="grid grid-cols-3 gap-4">
-                        <Detail label="Prix au kilo" value={p.price_per_kg} />
-                        <Detail label="Prix en vrac" value={p.bulk_price} />
-                        <Detail label="Période de récolte" value={p.harvest_period} />
+                        <Detail label={f.pricePerKg} value={p.price_per_kg} empty={common.notProvided} />
+                        <Detail label={f.bulkPrice} value={p.bulk_price} empty={common.notProvided} />
+                        <Detail label={f.harvest} value={p.harvest_period} empty={common.notProvided} />
                       </div>
-                      <p className="text-[11px] text-[#64697d] mt-3">Visibles uniquement par vous et l'équipe Funti · jamais affichées publiquement.</p>
+                      <p className="text-[11px] text-[#64697d] mt-3">{common.internalOnly}</p>
                     </div>
                   )}
                 </div>
@@ -355,49 +356,47 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                 <div className="border-t border-[rgba(13,34,101,0.08)] bg-[#f4f5f9] p-5">
                   <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <FieldLabel>Disponibilité</FieldLabel>
+                      <FieldLabel>{t.availability}</FieldLabel>
                       <SelectInput value={editData.status} onChange={e => changeStatus(e.target.value as StockStatus)}>
-                        <option>En stock</option><option>Sur commande</option><option>Rupture</option>
+                        {(["En stock", "Sur commande", "Rupture"] as const).map(s => <option key={s} value={s}>{tr(s)}</option>)}
                       </SelectInput>
                     </div>
                     <div>
-                      <FieldLabel>Stock ({baseUnitOf(p)})</FieldLabel>
+                      <FieldLabel>{t.stockUnit(baseUnitOf(p))}</FieldLabel>
                       <TextInput type="number" min="0" value={editData.stock}
                         disabled={editData.status === "Rupture"}
                         className={editData.status === "Rupture" ? "bg-[#eef1f8] text-[#64697d] cursor-not-allowed" : ""}
                         onChange={e => setEditData({ ...editData, stock: e.target.value })} />
-                      {packagesFor(p.packaging, baseUnitOf(p), Number(editData.stock)) && (
-                        <p className="text-[11px] text-[#64697d] mt-1">Soit {packagesFor(p.packaging, baseUnitOf(p), Number(editData.stock))}.</p>
+                      {packagesFor(p.packaging, baseUnitOf(p), Number(editData.stock), lang) && (
+                        <p className="text-[11px] text-[#64697d] mt-1">{t.equivalent(packagesFor(p.packaging, baseUnitOf(p), Number(editData.stock), lang) ?? "")}</p>
                       )}
                     </div>
                     <div>
-                      <FieldLabel>Délai indicatif</FieldLabel>
+                      <FieldLabel>{t.delayIndicative}</FieldLabel>
                       <SelectInput value={delayCustom ? AUTRE_DELAI : editData.delay}
                         onChange={e => {
                           const v = e.target.value;
                           if (v === AUTRE_DELAI) { setDelayCustom(true); setEditData(d => ({ ...d, delay: "" })); }
                           else { setDelayCustom(false); setEditData(d => ({ ...d, delay: v })); }
                         }}>
-                        <option value="">Sélectionner…</option>
-                        {DELAIS_PRODUIT.map(d => <option key={d}>{d}</option>)}
-                        <option>{AUTRE_DELAI}</option>
+                        <option value="">{common.select}</option>
+                        {DELAIS_PRODUIT.map(d => <option key={d} value={d}>{tr(d)}</option>)}
+                        <option value={AUTRE_DELAI}>{t.delayOther}</option>
                       </SelectInput>
                       {delayCustom && (
-                        <TextInput className="mt-2" placeholder="Ex : sous 10 jours, selon récolte…"
+                        <TextInput className="mt-2" placeholder={t.delayOtherPlaceholder}
                           value={editData.delay} onChange={e => setEditData(d => ({ ...d, delay: e.target.value }))} />
                       )}
                     </div>
                   </div>
                   <p className="text-[11px] text-[#64697d] mt-2 leading-relaxed">
-                    {editData.status === "Rupture"
-                      ? "Rupture : le stock est mis à 0. Repassez en « En stock » dès que le produit est de nouveau disponible."
-                      : editData.status === "Sur commande"
-                      ? "Sur commande : produit fabriqué ou livré à la demande · le stock peut rester à 0."
-                      : `En stock : indiquez la quantité réellement disponible (en ${baseUnitOf(p)}), supérieure à 0.`}
+                    {editData.status === "Rupture" ? t.hintRupture
+                      : editData.status === "Sur commande" ? t.hintOnOrder
+                      : t.hintInStock(baseUnitOf(p))}
                   </p>
                   <div className="flex items-center gap-3 mt-4">
-                    <BtnNavy onClick={() => save(p.id)}><Check className="w-4 h-4" /> Enregistrer</BtnNavy>
-                    <button onClick={() => setEditing(null)} className="text-sm text-[#64697d] hover:text-[#0a0a0f] cursor-pointer">Annuler</button>
+                    <BtnNavy onClick={() => save(p.id)}><Check className="w-4 h-4" /> {common.save}</BtnNavy>
+                    <button onClick={() => setEditing(null)} className="text-sm text-[#64697d] hover:text-[#0a0a0f] cursor-pointer">{common.cancel}</button>
                   </div>
                 </div>
               )}
@@ -412,13 +411,13 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
             <button onClick={() => showArchived ? setShowArchived(false) : openArchived()}
               className="text-sm text-[#64697d] hover:text-[#0d2265] font-medium cursor-pointer flex items-center gap-1.5 transition-colors">
               <Trash2 className="w-3.5 h-3.5" />
-              {showArchived ? "Masquer les produits retirés" : "Voir les produits retirés"}
+              {showArchived ? t.hideArchived : t.showArchived}
               {archivedLoaded && ` (${archived.length})`}
             </button>
             {showArchived && (
               <div className="space-y-2 mt-4">
                 {archived.length === 0 && (
-                  <p className="text-sm text-[#64697d] py-6 text-center bg-white border border-[rgba(13,34,101,0.08)]">Aucun produit retiré.</p>
+                  <p className="text-sm text-[#64697d] py-6 text-center bg-white border border-[rgba(13,34,101,0.08)]">{t.noArchived}</p>
                 )}
                 {[...archived].sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" })).map(p => (
                   <div key={p.id} className="bg-white border border-[rgba(13,34,101,0.1)] p-3 flex items-center gap-3">
@@ -431,7 +430,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
                     </div>
                     <button onClick={() => restoreProduct(p)}
                       className="border border-[rgba(13,34,101,0.18)] text-[#0d2265] text-xs px-3 py-1.5 hover:bg-[#f4f5f9] cursor-pointer transition-colors flex items-center gap-1.5 shrink-0">
-                      <RotateCcw className="w-3.5 h-3.5" /> Restaurer
+                      <RotateCcw className="w-3.5 h-3.5" /> {t.restore}
                     </button>
                   </div>
                 ))}
@@ -449,7 +448,7 @@ export function SupplierProducts({ nav }: { nav: Nav }) {
           onSaved={updated => {
             setProducts(ps => ps.map(p => p.id === updated.id ? updated : p));
             setEditInfo(null);
-            toast("Fiche produit mise à jour.");
+            toast(t.sheetUpdated);
           }}
         />
       )}
@@ -473,11 +472,11 @@ function Chip({ active, onClick, tone = "navy", children }: {
   );
 }
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ label, value, empty }: { label: string; value: string; empty: string }) {
   return (
     <div className="min-w-0">
       <p className="text-[10px] font-bold text-[#64697d] uppercase tracking-widest mb-0.5">{label}</p>
-      <p className="text-sm text-[#0a0a0f] break-words">{value || "Non renseigné"}</p>
+      <p className="text-sm text-[#0a0a0f] break-words">{value || empty}</p>
     </div>
   );
 }

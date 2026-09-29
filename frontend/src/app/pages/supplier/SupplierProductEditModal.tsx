@@ -10,6 +10,8 @@ import type { ApiProduct } from "@/lib/api";
 import { CAT_CATEGORIES } from "@/lib/constants";
 import { availableUntilToDateInput, dateToAvailableUntil } from "@/lib/availability";
 import { productImg } from "@/lib/format";
+import { useOptionLabel } from "@/lib/formsText";
+import { useSupplierText } from "@/lib/supplierText";
 import { CountrySelect, FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
 
 export function SupplierProductEditModal({ product, onClose, onSaved, onAuthError }: {
@@ -18,6 +20,8 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
   onSaved: (p: ApiProduct) => void;
   onAuthError: () => void;
 }) {
+  const { edit: t, fields: f, common } = useSupplierText();
+  const tr = useOptionLabel();
   const [form, setForm] = useState({
     name: product.name,
     category: product.category ?? "Épicerie",
@@ -39,25 +43,25 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
   const fileInput = useRef<HTMLInputElement>(null);
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(f => ({ ...f, [k]: e.target.value }));
+    setForm(prev => ({ ...prev, [k]: e.target.value }));
 
   const choisirPhoto = async (file: File | undefined) => {
     if (!file) return;
     setUploading(true); setUploadError(null);
     try {
       const url = await api.supplier.uploadImage(file);
-      setForm(f => ({ ...f, image: url }));
+      setForm(prev => ({ ...prev, image: url }));
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { onAuthError(); return; }
-      setUploadError(err instanceof api.ApiError ? err.message : "Téléversement impossible.");
+      setUploadError(err instanceof api.ApiError ? err.message : common.uploadError);
     } finally {
       setUploading(false);
     }
   };
 
   const save = async () => {
-    if (!form.name.trim()) { setError("Le nom du produit est requis."); return; }
-    if (!form.description.trim()) { setError("Une description est requise."); return; }
+    if (!form.name.trim()) { setError(common.nameRequired); return; }
+    if (!form.description.trim()) { setError(common.descriptionRequired); return; }
     setSaving(true); setError(null);
     try {
       const { available_until, ...rest } = form;
@@ -67,7 +71,7 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
       onSaved(updated);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { onAuthError(); return; }
-      setError("Échec de l'enregistrement. Réessayez.");
+      setError(common.saveError);
     } finally {
       setSaving(false);
     }
@@ -78,7 +82,7 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
       <div className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
         <div className="px-5 py-4 border-b border-[rgba(13,34,101,0.08)] flex items-center justify-between sticky top-0 bg-white z-10">
           <div className="min-w-0">
-            <p className="font-bold text-sm text-[#0a0a0f]">Modifier la fiche produit</p>
+            <p className="font-bold text-sm text-[#0a0a0f]">{t.title}</p>
             <p className="text-[11px] text-[#64697d] font-mono truncate">{product.ref}</p>
           </div>
           <button onClick={onClose} className="text-[#64697d] hover:text-[#0a0a0f] cursor-pointer shrink-0"><X className="w-4 h-4" /></button>
@@ -87,7 +91,7 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
         <div className="px-5 py-5 space-y-5">
           {/* Photo */}
           <div>
-            <FieldLabel>Photo du produit</FieldLabel>
+            <FieldLabel>{f.photo}</FieldLabel>
             <div className="flex gap-4 items-start">
               <div className="w-32 h-24 bg-[#eef1f8] overflow-hidden border border-[rgba(13,34,101,0.1)] shrink-0">
                 <img src={productImg(form.image)} alt="" className="w-full h-full object-cover" />
@@ -98,84 +102,81 @@ export function SupplierProductEditModal({ product, onClose, onSaved, onAuthErro
                 <div className="flex gap-1.5">
                   <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading}
                     className="flex items-center justify-center gap-1.5 border border-[rgba(13,34,101,0.2)] text-[#0d2265] text-xs font-semibold px-3 py-2 cursor-pointer hover:bg-[#f4f5f9] transition-colors disabled:opacity-60">
-                    {uploading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi…</> : <><ImagePlus className="w-3.5 h-3.5" /> Changer la photo</>}
+                    {uploading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {common.uploading}</> : <><ImagePlus className="w-3.5 h-3.5" /> {t.changePhoto}</>}
                   </button>
                   {form.image && (
-                    <button type="button" onClick={() => setForm(f => ({ ...f, image: "" }))} title="Retirer la photo"
+                    <button type="button" onClick={() => setForm(prev => ({ ...prev, image: "" }))} title={common.removePhoto}
                       className="border border-[rgba(13,34,101,0.15)] text-[#64697d] px-2.5 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-[#64697d] mt-1.5">JPG, PNG ou WebP · 5 Mo maximum.</p>
+                <p className="text-[11px] text-[#64697d] mt-1.5">{common.photoFormats}</p>
                 {uploadError && <p className="text-[11px] text-red-600 mt-1">{uploadError}</p>}
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div><FieldLabel required>Nom du produit</FieldLabel><TextInput value={form.name} onChange={set("name")} placeholder="Beurre de karité brut" /></div>
+            <div><FieldLabel required>{f.productName}</FieldLabel><TextInput value={form.name} onChange={set("name")} placeholder={f.productNamePlaceholder} /></div>
             <div>
-              <FieldLabel>Catégorie</FieldLabel>
+              <FieldLabel>{f.category}</FieldLabel>
               <select value={form.category} onChange={set("category")}
                 className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
-                {CAT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {CAT_CATEGORIES.map(c => <option key={c} value={c}>{tr(c)}</option>)}
               </select>
             </div>
           </div>
 
-          <CountrySelect label="Origine" value={form.origin} onChange={v => setForm(f => ({ ...f, origin: v }))} />
+          <CountrySelect label={f.origin} value={form.origin} onChange={v => setForm(prev => ({ ...prev, origin: v }))} />
 
           <PackagingMoqFields
             key={product.ref}
             packaging={form.packaging} moq={form.moq}
-            onPackaging={v => setForm(f => ({ ...f, packaging: v }))}
-            onMoq={v => setForm(f => ({ ...f, moq: v }))}
+            onPackaging={v => setForm(prev => ({ ...prev, packaging: v }))}
+            onMoq={v => setForm(prev => ({ ...prev, moq: v }))}
           />
 
           <div>
-            <FieldLabel>Disponible jusqu'au (facultatif)</FieldLabel>
+            <FieldLabel>{f.availableUntil}</FieldLabel>
             <div className="flex items-center gap-2">
               <input type="date" value={form.available_until} onChange={set("available_until")}
                 min={new Date().toISOString().slice(0, 10)}
                 className="flex-1 border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265]" />
               {form.available_until && (
-                <button type="button" onClick={() => setForm(f => ({ ...f, available_until: "" }))}
-                  className="text-xs text-[#64697d] hover:text-red-600 px-2 py-2 cursor-pointer whitespace-nowrap">Retirer la limite</button>
+                <button type="button" onClick={() => setForm(prev => ({ ...prev, available_until: "" }))}
+                  className="text-xs text-[#64697d] hover:text-red-600 px-2 py-2 cursor-pointer whitespace-nowrap">{f.removeLimit}</button>
               )}
             </div>
-            <p className="text-[11px] text-[#64697d] mt-1.5">
-              À cette date, le produit se retire automatiquement du site. Vous et l'équipe Funti
-              êtes alertés 3 jours avant. Laissez vide s'il est disponible en continu.
-            </p>
+            <p className="text-[11px] text-[#64697d] mt-1.5">{f.availableUntilHint}</p>
           </div>
 
-          <div><FieldLabel required>Description</FieldLabel><TextArea rows={3} value={form.description} onChange={set("description")} placeholder="Caractéristiques, usage, origine exacte…" /></div>
+          <div><FieldLabel required>{f.description}</FieldLabel><TextArea rows={3} value={form.description} onChange={set("description")} placeholder={f.descriptionPlaceholder} /></div>
           <div>
-            <FieldLabel>Bienfaits</FieldLabel>
-            <TextArea rows={3} value={form.benefits} onChange={set("benefits")} placeholder="Apports nutritionnels, atouts pour l'acheteur…"
+            <FieldLabel>{f.benefits}</FieldLabel>
+            <TextArea rows={3} value={form.benefits} onChange={set("benefits")} placeholder={f.benefitsPlaceholder}
               className="border-[rgba(196,97,58,0.3)] bg-[#fffaf7] focus:border-[#C4613A]" />
           </div>
 
           {/* Informations commerciales internes · jamais publiées */}
           <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-4 space-y-3">
-            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">Informations commerciales · internes</p>
+            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">{f.commercialInternal}</p>
             <div className="grid grid-cols-2 gap-4">
-              <div><FieldLabel>Prix au kilo</FieldLabel><TextInput value={form.price_per_kg} onChange={set("price_per_kg")} placeholder="Ex : 1 200 FCFA/kg" /></div>
-              <div><FieldLabel>Prix en vrac</FieldLabel><TextInput value={form.bulk_price} onChange={set("bulk_price")} placeholder="Ex : 950 FCFA/kg dès 1 t" /></div>
+              <div><FieldLabel>{f.pricePerKg}</FieldLabel><TextInput value={form.price_per_kg} onChange={set("price_per_kg")} placeholder={f.pricePerKgPlaceholder} /></div>
+              <div><FieldLabel>{f.bulkPrice}</FieldLabel><TextInput value={form.bulk_price} onChange={set("bulk_price")} placeholder={f.bulkPricePlaceholder} /></div>
             </div>
-            <div><FieldLabel>Période de récolte</FieldLabel><TextInput value={form.harvest_period} onChange={set("harvest_period")} placeholder="Ex : novembre à février" /></div>
-            <p className="text-[11px] text-[#64697d]">Visibles uniquement par vous et l'équipe Funti · jamais affichées publiquement.</p>
+            <div><FieldLabel>{f.harvest}</FieldLabel><TextInput value={form.harvest_period} onChange={set("harvest_period")} placeholder={f.harvestPlaceholder} /></div>
+            <p className="text-[11px] text-[#64697d]">{common.internalOnly}</p>
           </div>
 
           {error && <p className="text-xs text-red-600">{error}</p>}
         </div>
 
         <div className="px-5 py-3.5 border-t border-[rgba(13,34,101,0.08)] flex items-center justify-end gap-2 sticky bottom-0 bg-white">
-          <button onClick={onClose} className="text-sm text-[#64697d] hover:text-[#0a0a0f] px-4 py-2 cursor-pointer">Annuler</button>
+          <button onClick={onClose} className="text-sm text-[#64697d] hover:text-[#0a0a0f] px-4 py-2 cursor-pointer">{common.cancel}</button>
           <button onClick={save} disabled={saving || uploading}
             className="bg-[#0d2265] text-white text-sm font-semibold px-4 py-2 cursor-pointer hover:bg-[#091a52] transition-colors flex items-center gap-2 disabled:opacity-60">
-            <Check className="w-3.5 h-3.5" /> {saving ? "Enregistrement…" : "Enregistrer les modifications"}
+            <Check className="w-3.5 h-3.5" /> {saving ? common.saving : t.submit}
           </button>
         </div>
       </div>

@@ -24,6 +24,8 @@ class Supplier(Base):
     # True après création/réinitialisation par l'admin : le fournisseur est invité à le changer
     must_change_password: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    # Langue de l'espace fournisseur et des e-mails qui lui sont envoyés ("fr" | "en").
+    language: Mapped[str] = mapped_column(String(5), default="fr", server_default="fr")
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(UTC))
 

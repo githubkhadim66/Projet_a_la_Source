@@ -10,9 +10,13 @@ import type { ApiProduct, ApiSupplier } from "@/lib/api";
 import { fmtDate } from "@/lib/format";
 import { daysSince, detentionRate, dossierCompleteness, inStockProducts, ruptureProducts, STALE_DAYS, staleProducts } from "@/lib/supplierMetrics";
 import type { Nav } from "@/lib/routes";
+import { useLang } from "@/lib/i18n";
+import { SUPPLIER_TEXT, useSupplierText } from "@/lib/supplierText";
 import { KpiCard, SupplierShell } from "./SupplierShell";
 
 export function SupplierDashboard({ nav }: { nav: Nav }) {
+  const lang = useLang();
+  const tx = useSupplierText().dashboard;
   const [me, setMe] = useState<ApiSupplier | null>(null);
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +33,7 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
 
   const stale = staleProducts(products);
   const rupture = ruptureProducts(products);
-  const dossier = dossierCompleteness(me, products.length);
+  const dossier = dossierCompleteness(me, products.length, lang);
   const detention = detentionRate(products);
   const inStock = inStockProducts(products).length;
   const firstName = (me?.contact_name || me?.name || "").split(/\s+/)[0] || "";
@@ -37,24 +41,19 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
   // Prochaine action prioritaire : premier motif applicable.
   const nextAction = (() => {
     if (!loading && products.length === 0)
-      return { icon: PlusCircle, tone: "navy" as const, title: "Référencez votre premier produit",
-        body: "Proposez une première fiche · notre équipe la validera avant publication.",
-        cta: "Proposer un produit", go: () => nav("supplier-propose") };
+      return { icon: PlusCircle, tone: "navy" as const, title: tx.firstProductTitle,
+        body: tx.firstProductBody, cta: tx.firstProductCta, go: () => nav("supplier-propose") };
     if (stale.length > 0)
-      return { icon: RefreshCw, tone: "orange" as const, title: `Actualisez ${stale.length} référence${stale.length > 1 ? "s" : ""}`,
-        body: `${stale.length > 1 ? "Elles n'ont" : "Elle n'a"} pas été mise${stale.length > 1 ? "s" : ""} à jour depuis plus de ${STALE_DAYS} jours. Confirmez le stock pour rester visible auprès des acheteurs.`,
-        cta: "Mettre à jour mes stocks", go: () => nav("supplier-products") };
+      return { icon: RefreshCw, tone: "orange" as const, title: tx.staleTitle(stale.length),
+        body: tx.staleBody(stale.length, STALE_DAYS), cta: tx.staleCta, go: () => nav("supplier-products") };
     if (rupture.length > 0)
-      return { icon: PackageX, tone: "red" as const, title: `${rupture.length} référence${rupture.length > 1 ? "s" : ""} en rupture`,
-        body: "Réapprovisionnez au plus vite, puis mettez à jour la disponibilité dès que le produit est de nouveau en stock.",
-        cta: "Voir mes produits", go: () => nav("supplier-products") };
+      return { icon: PackageX, tone: "red" as const, title: tx.ruptureTitle(rupture.length),
+        body: tx.ruptureBody, cta: tx.seeProducts, go: () => nav("supplier-products") };
     if (dossier.pct < 100)
-      return { icon: ClipboardList, tone: "navy" as const, title: `Complétez votre dossier (${dossier.pct} %)`,
-        body: "Un dossier complet inspire confiance et accélère la mise en relation.",
-        cta: "Compléter mon dossier", go: () => nav("supplier-coordonnees") };
-    return { icon: CheckCircle2, tone: "green" as const, title: "Tout est à jour",
-      body: "Vos stocks sont actualisés et votre dossier est complet. Merci !",
-      cta: "Voir mes produits", go: () => nav("supplier-products") };
+      return { icon: ClipboardList, tone: "navy" as const, title: tx.dossierTitle(dossier.pct),
+        body: tx.dossierBody, cta: tx.dossierCta, go: () => nav("supplier-coordonnees") };
+    return { icon: CheckCircle2, tone: "green" as const, title: tx.allGoodTitle,
+      body: tx.allGoodBody, cta: tx.seeProducts, go: () => nav("supplier-products") };
   })();
 
   const TONE: Record<string, { bg: string; bd: string; ic: string; btn: string }> = {
@@ -69,8 +68,8 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
   return (
     <SupplierShell nav={nav} active="dashboard" staleCount={stale.length}>
       <div className="max-w-5xl">
-        <h1 className="text-xl font-bold text-[#0a0a0f]">Bonjour{firstName ? ` ${firstName}` : ""}</h1>
-        <p className="text-sm text-[#64697d] mt-0.5 mb-6">Voici l'état de votre espace fournisseur.</p>
+        <h1 className="text-xl font-bold text-[#0a0a0f]">{tx.hello(firstName)}</h1>
+        <p className="text-sm text-[#64697d] mt-0.5 mb-6">{tx.intro}</p>
 
         {/* Prochaine action */}
         <div className={`border ${t.bd} ${t.bg} p-5 flex items-start gap-4 mb-6`}>
@@ -78,7 +77,7 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
             <NextIcon className="w-5 h-5" style={{ color: t.ic }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64697d] mb-1">Prochaine action</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-[#64697d] mb-1">{tx.nextAction}</p>
             <p className="text-base font-bold text-[#0a0a0f]">{nextAction.title}</p>
             <p className="text-sm text-[#4a4f63] mt-1 leading-relaxed">{nextAction.body}</p>
           </div>
@@ -90,21 +89,21 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
 
         {/* Indicateurs clés */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-          <KpiCard label="Références actives" value={loading ? "…" : products.length} icon={Package}
+          <KpiCard label={tx.kpiActive} value={loading ? "…" : products.length} icon={Package}
             onClick={() => nav("supplier-products")} />
-          <KpiCard label="Taux de détention" value={loading ? "…" : detention === null ? "—" : `${detention} %`}
+          <KpiCard label={tx.kpiDetention} value={loading ? "…" : detention === null ? "—" : `${detention} %`}
             color={detention === null ? "#64697d" : detention >= 70 ? "#2E6B4F" : detention >= 40 ? "#C4613A" : "#dc2626"}
             icon={PackageCheck}
-            sub={loading || detention === null ? undefined : `${inStock}/${products.length} en stock`}
+            sub={loading || detention === null ? undefined : tx.kpiInStock(inStock, products.length)}
             onClick={() => nav("supplier-products")} />
-          <KpiCard label={`À actualiser (+${STALE_DAYS} j)`} value={loading ? "…" : stale.length}
+          <KpiCard label={tx.kpiStale(STALE_DAYS)} value={loading ? "…" : stale.length}
             color={stale.length > 0 ? "#C4613A" : "#2E6B4F"} icon={RefreshCw}
-            sub={stale.length === 0 && !loading ? "Stocks à jour" : undefined}
+            sub={stale.length === 0 && !loading ? tx.kpiStockUpToDate : undefined}
             onClick={() => nav("supplier-products")} />
-          <KpiCard label="En rupture" value={loading ? "…" : rupture.length}
+          <KpiCard label={tx.kpiRupture} value={loading ? "…" : rupture.length}
             color={rupture.length > 0 ? "#dc2626" : "#2E6B4F"} icon={PackageX}
             onClick={() => nav("supplier-products")} />
-          <KpiCard label="Complétude du dossier" value={loading ? "…" : `${dossier.pct} %`}
+          <KpiCard label={tx.kpiDossier} value={loading ? "…" : `${dossier.pct} %`}
             color={dossier.pct === 100 ? "#2E6B4F" : "#0d2265"} icon={ClipboardList}
             onClick={() => nav("supplier-coordonnees")} />
         </div>
@@ -114,14 +113,14 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
           <div className="bg-white border border-[rgba(13,34,101,0.08)]">
             <div className="px-5 py-3.5 border-b border-[rgba(13,34,101,0.07)] flex items-center gap-2">
               <AlertTriangle className={`w-4 h-4 ${stale.length > 0 ? "text-[#C4613A]" : "text-[#64697d]"}`} />
-              <p className="text-sm font-semibold text-[#0a0a0f]">Stocks non actualisés</p>
+              <p className="text-sm font-semibold text-[#0a0a0f]">{tx.staleCard}</p>
               {stale.length > 0 && <span className="ml-auto text-[10px] bg-[#C4613A] text-white font-bold px-1.5 py-0.5">{stale.length}</span>}
             </div>
             <div className="p-2">
-              {loading && <p className="text-sm text-[#64697d] p-4 text-center">Chargement…</p>}
+              {loading && <p className="text-sm text-[#64697d] p-4 text-center">{SUPPLIER_TEXT[lang].common.loading}</p>}
               {!loading && stale.length === 0 && (
                 <p className="text-sm text-[#64697d] px-3 py-6 text-center">
-                  Aucune référence à actualiser · tous vos stocks datent de moins de {STALE_DAYS} jours.
+                  {tx.noStale(STALE_DAYS)}
                 </p>
               )}
               {stale.slice(0, 5).map(p => (
@@ -132,7 +131,7 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-[#0a0a0f] truncate">{p.name}</p>
-                    <p className="text-[11px] text-[#64697d]">Actualisé le {fmtDate(p.updated_at)} · il y a {daysSince(p.updated_at)} j</p>
+                    <p className="text-[11px] text-[#64697d]">{tx.updatedOn(fmtDate(p.updated_at), daysSince(p.updated_at))}</p>
                   </div>
                   <ArrowRight className="w-3.5 h-3.5 text-[#64697d] shrink-0" />
                 </button>
@@ -140,7 +139,7 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
               {stale.length > 5 && (
                 <button onClick={() => nav("supplier-products")}
                   className="w-full text-xs text-[#0d2265] hover:text-[#C4613A] font-semibold px-3 py-2.5 text-left cursor-pointer">
-                  Voir les {stale.length} références →
+                  {tx.seeAllStale(stale.length)}
                 </button>
               )}
             </div>
@@ -150,7 +149,7 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
           <div className="bg-white border border-[rgba(13,34,101,0.08)]">
             <div className="px-5 py-3.5 border-b border-[rgba(13,34,101,0.07)] flex items-center gap-2">
               <ClipboardList className="w-4 h-4 text-[#0d2265]" />
-              <p className="text-sm font-semibold text-[#0a0a0f]">Complétude du dossier</p>
+              <p className="text-sm font-semibold text-[#0a0a0f]">{tx.dossierCard}</p>
               <span className="ml-auto text-sm font-bold text-[#0d2265]">{dossier.pct} %</span>
             </div>
             <div className="p-5">
@@ -170,7 +169,7 @@ export function SupplierDashboard({ nav }: { nav: Nav }) {
               {dossier.pct < 100 && (
                 <button onClick={() => nav("supplier-coordonnees")}
                   className="mt-4 text-xs text-[#0d2265] hover:text-[#C4613A] font-semibold cursor-pointer flex items-center gap-1.5">
-                  Compléter mon dossier <ArrowRight className="w-3.5 h-3.5" />
+                  {tx.dossierCta} <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>

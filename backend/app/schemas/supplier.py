@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -30,6 +31,8 @@ class SupplierSelfUpdate(BaseModel):
     phone: str | None = None
     country: str | None = None
     city: str | None = None
+    # Langue choisie dans son espace : ses e-mails suivent.
+    language: Literal["fr", "en"] | None = None
 
 
 class TokenResponse(BaseModel):
@@ -49,6 +52,7 @@ class SupplierOut(BaseModel):
     city: str | None
     categories: list
     is_active: bool
+    language: str = "fr"
     last_login_at: datetime | None
     created_at: datetime
     products_count: int = 0
@@ -76,6 +80,8 @@ class SupplierCreate(BaseModel):
     country: str | None = None
     city: str | None = None
     categories: list[str] = []
+    # Reprise de la langue de la candidature : e-mail d'accès dans cette langue.
+    language: Literal["fr", "en"] = "fr"
 
 
 class SupplierUpdate(BaseModel):

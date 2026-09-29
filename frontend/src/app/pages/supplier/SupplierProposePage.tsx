@@ -11,6 +11,8 @@ import { suggestProducts } from "@/lib/productSuggest";
 import { dateToAvailableUntil } from "@/lib/availability";
 import { productImg } from "@/lib/format";
 import type { Nav } from "@/lib/routes";
+import { useOptionLabel } from "@/lib/formsText";
+import { useSupplierText } from "@/lib/supplierText";
 import { CountrySelect, FieldLabel, PackagingMoqFields, TextArea, TextInput } from "@/app/components/common/fields";
 import { Confirm, ScreenShell } from "@/app/components/common/layout";
 import { FormWizard } from "@/app/components/common/FormWizard";
@@ -19,6 +21,8 @@ import { SupplierShell } from "./SupplierShell";
 const AUTRE = "Autre (préciser)";
 
 export function SupplierPropose({ nav }: { nav: Nav }) {
+  const { propose: t, fields: fl, common } = useSupplierText();
+  const tr = useOptionLabel();
   const [form, setForm] = useState({
     name: "", origin: "", category: "Épicerie", packaging: "", moq: "", volumes: "",
     price_per_kg: "", bulk_price: "", harvest_period: "", available_until: "",
@@ -71,15 +75,15 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
       setForm(f => ({ ...f, image: url }));
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
-      setUploadError(err instanceof api.ApiError ? err.message : "Téléversement impossible.");
+      setUploadError(err instanceof api.ApiError ? err.message : common.uploadError);
     } finally {
       setUploading(false);
     }
   };
 
   const submit = async () => {
-    if (!form.name.trim()) { setError("Le nom du produit est requis."); return; }
-    if (!form.description.trim()) { setError("Une description est requise."); return; }
+    if (!form.name.trim()) { setError(common.nameRequired); return; }
+    if (!form.description.trim()) { setError(common.descriptionRequired); return; }
     setSending(true); setError(null);
     try {
       const { available_until, ...rest } = form;
@@ -90,7 +94,7 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
       nav("supplier-propose-confirm");
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 401) { logout(); return; }
-      setError("Une erreur est survenue. Réessayez.");
+      setError(common.genericError);
     } finally {
       setSending(false);
     }
@@ -98,13 +102,13 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
 
   const steps = [
     {
-      label: "Le produit",
-      hint: "Identité",
-      validate: () => form.name.trim() ? null : "Sélectionnez ou saisissez le produit.",
+      label: t.stepProduct,
+      hint: t.stepProductHint,
+      validate: () => form.name.trim() ? null : t.pickProduct,
       content: (
         <div className="space-y-5">
           <div>
-            <FieldLabel>Photo du produit</FieldLabel>
+            <FieldLabel>{fl.photo}</FieldLabel>
             <div className="flex gap-4 items-start">
               <div className="w-32 h-24 bg-[#eef1f8] overflow-hidden border border-[rgba(13,34,101,0.1)] shrink-0">
                 <img src={productImg(form.image)} alt="" className="w-full h-full object-cover" />
@@ -115,16 +119,16 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
                 <div className="flex gap-1.5">
                   <button type="button" onClick={() => fileInput.current?.click()} disabled={uploading}
                     className="flex items-center justify-center gap-1.5 border border-[rgba(13,34,101,0.2)] text-[#0d2265] text-xs font-semibold px-3 py-2 cursor-pointer hover:bg-[#f4f5f9] transition-colors disabled:opacity-60">
-                    {uploading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Envoi…</> : <><ImagePlus className="w-3.5 h-3.5" /> Choisir une photo</>}
+                    {uploading ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> {common.uploading}</> : <><ImagePlus className="w-3.5 h-3.5" /> {t.choosePhoto}</>}
                   </button>
                   {form.image && (
-                    <button type="button" onClick={() => setForm(f => ({ ...f, image: "" }))} title="Retirer la photo"
+                    <button type="button" onClick={() => setForm(f => ({ ...f, image: "" }))} title={common.removePhoto}
                       className="border border-[rgba(13,34,101,0.15)] text-[#64697d] px-2.5 cursor-pointer hover:border-red-300 hover:text-red-600 transition-colors">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
-                <p className="text-[11px] text-[#64697d] mt-1.5">JPG, PNG ou WebP · 5 Mo maximum.</p>
+                <p className="text-[11px] text-[#64697d] mt-1.5">{common.photoFormats}</p>
                 {uploadError && <p className="text-[11px] text-red-600 mt-1">{uploadError}</p>}
               </div>
             </div>
@@ -132,26 +136,26 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <FieldLabel>Catégorie</FieldLabel>
+              <FieldLabel>{fl.category}</FieldLabel>
               <select value={form.category} onChange={changeCategory}
                 className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
-                {CAT_CATEGORIES.map(c => <option key={c}>{c}</option>)}
+                {CAT_CATEGORIES.map(c => <option key={c} value={c}>{tr(c)}</option>)}
               </select>
             </div>
-            <CountrySelect label="Origine" value={form.origin} onChange={v => setForm(f => ({ ...f, origin: v }))} />
+            <CountrySelect label={fl.origin} value={form.origin} onChange={v => setForm(f => ({ ...f, origin: v }))} />
           </div>
 
           <div>
-            <FieldLabel required>Produit</FieldLabel>
+            <FieldLabel required>{t.product}</FieldLabel>
             <select value={productChoice} onChange={changeProduct}
               className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265] appearance-none cursor-pointer">
-              <option value="">Sélectionner un produit…</option>
-              {produitsCategorie.map(p => <option key={p}>{p}</option>)}
-              <option>{AUTRE}</option>
+              <option value="">{t.selectProduct}</option>
+              {produitsCategorie.map(p => <option key={p} value={p}>{p}</option>)}
+              <option value={AUTRE}>{t.other}</option>
             </select>
             {customProduct && (
               <>
-                <TextInput required className="mt-2" placeholder="Nom du produit" value={form.name} onChange={set("name")} />
+                <TextInput required className="mt-2" placeholder={fl.productName} value={form.name} onChange={set("name")} />
                 {nameSuggestions.length > 0 && (
                   <div className="border border-[rgba(13,34,101,0.15)] border-t-0 bg-white divide-y divide-[rgba(13,34,101,0.06)]">
                     {nameSuggestions.map(s => (
@@ -169,8 +173,8 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
       ),
     },
     {
-      label: "Conditionnement & quantités",
-      hint: "Format, MOQ, volume",
+      label: t.stepPackaging,
+      hint: t.stepPackagingHint,
       content: (
         <div className="space-y-5">
           <PackagingMoqFields
@@ -179,57 +183,53 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
             onMoq={v => setForm(f => ({ ...f, moq: v }))}
           />
           <div>
-            <FieldLabel>Volume disponible (capacité de production)</FieldLabel>
-            <TextInput placeholder="Ex : 2 000 kg / mois" value={form.volumes} onChange={set("volumes")} />
+            <FieldLabel>{t.volume}</FieldLabel>
+            <TextInput placeholder={t.volumePlaceholder} value={form.volumes} onChange={set("volumes")} />
           </div>
           <div>
-            <FieldLabel>Disponible jusqu'au (facultatif)</FieldLabel>
+            <FieldLabel>{fl.availableUntil}</FieldLabel>
             <input type="date" value={form.available_until} onChange={set("available_until")}
               min={new Date().toISOString().slice(0, 10)}
               className="w-full border border-[rgba(13,34,101,0.18)] bg-white px-3.5 py-2.5 text-sm text-[#0a0a0f] focus:outline-none focus:border-[#0d2265]" />
-            <p className="text-[11px] text-[#64697d] mt-1.5">
-              Si votre produit n'est disponible qu'un temps limité, indiquez la date de fin.
-              Il se retirera automatiquement du site à cette date. Vous et l'équipe Funti
-              serez alertés 3 jours avant. Laissez vide s'il est disponible en continu.
-            </p>
+            <p className="text-[11px] text-[#64697d] mt-1.5">{t.availableUntilHint}</p>
           </div>
         </div>
       ),
     },
     {
-      label: "Prix & récolte",
-      hint: "Confidentiel",
+      label: t.stepPrice,
+      hint: t.stepPriceHint,
       content: (
         <div className="space-y-4">
           <div className="border border-[rgba(196,97,58,0.25)] bg-[#fffaf7] p-4 space-y-4">
-            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">Informations commerciales · confidentielles</p>
+            <p className="text-[11px] font-semibold text-[#C4613A] uppercase tracking-wide">{t.commercialConfidential}</p>
             <div className="grid grid-cols-2 gap-4">
-              <div><FieldLabel>Prix au kilo</FieldLabel><TextInput placeholder="Ex : 1 200 FCFA/kg" value={form.price_per_kg} onChange={set("price_per_kg")} /></div>
-              <div><FieldLabel>Prix en vrac</FieldLabel><TextInput placeholder="Ex : 950 FCFA/kg dès 1 t" value={form.bulk_price} onChange={set("bulk_price")} /></div>
+              <div><FieldLabel>{fl.pricePerKg}</FieldLabel><TextInput placeholder={fl.pricePerKgPlaceholder} value={form.price_per_kg} onChange={set("price_per_kg")} /></div>
+              <div><FieldLabel>{fl.bulkPrice}</FieldLabel><TextInput placeholder={fl.bulkPricePlaceholder} value={form.bulk_price} onChange={set("bulk_price")} /></div>
             </div>
-            <div><FieldLabel>Période de récolte</FieldLabel><TextInput placeholder="Ex : novembre à février" value={form.harvest_period} onChange={set("harvest_period")} /></div>
-            <p className="text-[11px] text-[#64697d]">Ces informations restent internes à Funti et ne sont jamais affichées publiquement.</p>
+            <div><FieldLabel>{fl.harvest}</FieldLabel><TextInput placeholder={fl.harvestPlaceholder} value={form.harvest_period} onChange={set("harvest_period")} /></div>
+            <p className="text-[11px] text-[#64697d]">{t.confidentialNote}</p>
           </div>
         </div>
       ),
     },
     {
-      label: "Présentation",
-      hint: "Description & certifications",
-      validate: () => form.description.trim() ? null : "Une description est requise.",
+      label: t.stepPresentation,
+      hint: t.stepPresentationHint,
+      validate: () => form.description.trim() ? null : common.descriptionRequired,
       content: (
         <div className="space-y-5">
-          <div><FieldLabel required>Description</FieldLabel><TextArea rows={3} placeholder="Caractéristiques, usage, origine exacte…" value={form.description} onChange={set("description")} /></div>
+          <div><FieldLabel required>{fl.description}</FieldLabel><TextArea rows={3} placeholder={fl.descriptionPlaceholder} value={form.description} onChange={set("description")} /></div>
           <div>
-            <FieldLabel>Bienfaits</FieldLabel>
-            <TextArea rows={3} placeholder="Apports nutritionnels, atouts pour l'acheteur…" value={form.benefits} onChange={set("benefits")}
+            <FieldLabel>{fl.benefits}</FieldLabel>
+            <TextArea rows={3} placeholder={fl.benefitsPlaceholder} value={form.benefits} onChange={set("benefits")}
               className="border-[rgba(196,97,58,0.3)] bg-[#fffaf7] focus:border-[#C4613A]" />
           </div>
           <div>
-            <FieldLabel>Certifications détenues pour ce produit</FieldLabel>
+            <FieldLabel>{t.certs}</FieldLabel>
             <div className="grid grid-cols-3 gap-2 mt-1">
               {CERTS_FOURNISSEUR.map(c => (
-                <label key={c} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="accent-[#0d2265]" checked={certs.includes(c)} onChange={() => toggleCert(c)} />{c}</label>
+                <label key={c} className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" className="accent-[#0d2265]" checked={certs.includes(c)} onChange={() => toggleCert(c)} />{tr(c)}</label>
               ))}
             </div>
           </div>
@@ -243,30 +243,31 @@ export function SupplierPropose({ nav }: { nav: Nav }) {
       <FormWizard
         nav={nav}
         embedded
-        title="Proposer un produit"
-        intro="Soumettez une fiche complète. Aucun produit n'est publié automatiquement : l'équipe Funti examine chaque proposition."
+        title={t.title}
+        intro={t.intro}
         steps={steps}
         onSubmit={submit}
         submitting={sending}
-        submitLabel="Soumettre à validation"
+        submitLabel={t.submit}
         error={error}
-        footNote="Aucune publication automatique · validation par l'équipe Funti."
+        footNote={t.footNote}
       />
     </SupplierShell>
   );
 }
 
 export function SupplierProposeConfirm({ nav }: { nav: Nav }) {
+  const t = useSupplierText().propose;
   return (
-    <ScreenShell nav={nav} title="Proposition envoyée" back="supplier-products">
+    <ScreenShell nav={nav} title={t.sentScreen} back="supplier-products">
       <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10">
         <Confirm
           icon={<CheckCircle className="w-8 h-8 text-[#0d2265]" />}
-          title="Proposition transmise"
-          subtitle="Votre proposition a été transmise à l'équipe Funti pour validation. Vous serez informé par e-mail de la décision. Aucune publication automatique."
+          title={t.sentTitle}
+          subtitle={t.sentText}
           nav={nav}
           back="supplier-products"
-          backLabel="Retour à mes produits"
+          backLabel={t.backToProducts}
         />
       </div>
     </ScreenShell>

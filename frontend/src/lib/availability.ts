@@ -1,3 +1,6 @@
+import type { Lang } from "@/lib/i18n";
+import { SUPPLIER_TEXT } from "@/lib/supplierText";
+
 /** Fenêtre de disponibilité produit : conversions date ↔ datetime et libellé du badge.
  *  À l'échéance, le produit se retire du site (retrait automatique côté serveur).
  *  Distinct du rappel d'actualisation 14 j (FRS-05).
@@ -38,12 +41,13 @@ export interface AvailabilityBadge {
 }
 
 /** Badge « se retire dans X j » / « expiré » à afficher sur la fiche produit. */
-export function availabilityBadge(iso: string | null): AvailabilityBadge | null {
+export function availabilityBadge(iso: string | null, lang: Lang = "fr"): AvailabilityBadge | null {
   const days = daysUntil(iso);
   if (days === null) return null;
-  const date = new Date(iso as string).toLocaleDateString("fr-FR");
-  if (days < 0) return { label: "Disponibilité expirée", tone: "expired", date };
-  if (days === 0) return { label: "Se retire aujourd'hui", tone: "warn", date };
-  if (days <= 3) return { label: `Se retire dans ${days} j`, tone: "warn", date };
-  return { label: `Dispo jusqu'au ${date}`, tone: "ok", date };
+  const t = SUPPLIER_TEXT[lang].availability;
+  const date = new Date(iso as string).toLocaleDateString(lang === "en" ? "en-GB" : "fr-FR");
+  if (days < 0) return { label: t.expired, tone: "expired", date };
+  if (days === 0) return { label: t.today, tone: "warn", date };
+  if (days <= 3) return { label: t.inDays(days), tone: "warn", date };
+  return { label: t.until(date), tone: "ok", date };
 }

@@ -78,9 +78,9 @@ export default function App() {
   }
   })();
 
-  // Parcours client : langue choisie par le visiteur. Connexion, espaces fournisseur
-  // et admin : toujours en français.
-  const backOffice = screen === "login" || screen.startsWith("supplier-") || screen.startsWith("admin-");
+  // Site public, connexion et espace fournisseur : langue choisie par le visiteur.
+  // Back-office admin (équipe Funti) : toujours en français.
+  const backOffice = screen.startsWith("admin-");
   return (
     <LangProvider>
       <FeedbackProvider>{backOffice ? <FixedLang lang="fr">{view}</FixedLang> : view}</FeedbackProvider>

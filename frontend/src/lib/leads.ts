@@ -11,6 +11,7 @@ export interface Lead {
   id: number; date: string; company: string; contact: string; country: string;
   status: LeadStatus; product?: string; email: string; phone?: string | null;
   payload?: Record<string, unknown>;
+  language: "fr" | "en";
   createdAt: string; updatedAt: string;
 }
 
@@ -85,6 +86,7 @@ export function toUiLead(l: ApiLead): Lead {
     email: l.email,
     phone: l.phone,
     payload: l.payload,
+    language: l.language === "en" ? "en" : "fr",
     createdAt: l.created_at,
     updatedAt: l.updated_at,
   };

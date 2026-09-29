@@ -10,6 +10,7 @@ import {
 import { suggestProducts } from "@/lib/productSuggest";
 import { useLang } from "@/lib/i18n";
 import { INCOTERM_INFO_EN, INCOTERM_STRATEGIES_EN, useFormsText, useOptionLabel } from "@/lib/formsText";
+import { SUPPLIER_TEXT } from "@/lib/supplierText";
 
 /** Recherche insensible aux accents et à la casse. */
 const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -219,6 +220,8 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
   packaging: string; moq: string;
   onPackaging: (v: string) => void; onMoq: (v: string) => void;
 }) {
+  const t = SUPPLIER_TEXT[useLang()].packaging;
+  const tr = useOptionLabel();
   const p0 = parsePackaging(packaging);
   const m0 = parseMoq(moq);
   const [packType, setPackType] = useState(p0.type);
@@ -275,10 +278,10 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm text-[#0a0a0f] mb-1.5">Conditionnement (format de vente)</label>
+        <label className="block text-sm text-[#0a0a0f] mb-1.5">{t.label}</label>
         <div className="grid grid-cols-3 gap-2">
           <select value={packType} onChange={e => changePackType(e.target.value)} className={selCls}>
-            {EMBALLAGES.map(t => <option key={t}>{t}</option>)}
+            {EMBALLAGES.map(e => <option key={e} value={e}>{tr(e)}</option>)}
           </select>
           {hasSize && <>
             <input type="text" inputMode="decimal" placeholder="25" value={packSize} onChange={e => setPackSize(e.target.value)} className={inCls} />
@@ -290,17 +293,17 @@ export function PackagingMoqFields({ packaging, moq, onPackaging, onMoq }: {
         {packagingText && <p className="text-xs text-[#2E6B4F] mt-1.5">→ {packagingText}</p>}
       </div>
       <div>
-        <label className="block text-sm text-[#0a0a0f] mb-1.5">MOQ · quantité minimum de commande</label>
+        <label className="block text-sm text-[#0a0a0f] mb-1.5">{t.moq}</label>
         <div className="grid grid-cols-2 gap-2">
           <input type="text" inputMode="decimal" placeholder="500" value={moqValue} onChange={e => setMoqValue(e.target.value)} className={inCls} />
           <select value={moqUnit} onChange={e => setMoqUnit(e.target.value)} className={selCls}>
-            {moqUnits.map(u => <option key={u}>{u}</option>)}
+            {moqUnits.map(u => <option key={u} value={u}>{tr(u)}</option>)}
           </select>
         </div>
         {moqText
-          ? <p className="text-xs text-[#2E6B4F] mt-1.5">→ MOQ : {moqText}</p>
+          ? <p className="text-xs text-[#2E6B4F] mt-1.5">{t.moqPreview(moqText)}</p>
           : hasSize
-            ? <p className="text-[11px] text-[#64697d] mt-1.5">Choisissez « {packPlural} » pour saisir la MOQ en nombre de colis · l'équivalent en {packUnit} est calculé.</p>
+            ? <p className="text-[11px] text-[#64697d] mt-1.5">{t.moqHint(tr(packPlural), packUnit)}</p>
             : null}
       </div>
     </div>

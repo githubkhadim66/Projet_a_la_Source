@@ -119,6 +119,8 @@ export function AdminLeads({ nav }: { nav: Nav }) {
         country: lead.country,
         city: typeof lead.payload?.city === "string" ? lead.payload.city : undefined,
         categories: Array.isArray(lead.payload?.product_types) ? lead.payload.product_types as string[] : [],
+        // Candidature en anglais → espace et e-mail d'accès en anglais.
+        language: lead.language,
       });
       setAccountPwd(created.temp_password);
       setAccountMsg(`Compte créé · identifiant : ${created.email}`);

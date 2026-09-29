@@ -4,11 +4,13 @@ import { useEffect, useState } from "react";
 import { Key } from "lucide-react";
 import * as api from "@/lib/api";
 import type { Nav } from "@/lib/routes";
+import { useSupplierText } from "@/lib/supplierText";
 import { BtnNavy } from "@/app/components/common/buttons";
 import { FieldLabel, FormError, TextInput } from "@/app/components/common/fields";
 import { SupplierShell } from "./SupplierShell";
 
 export function SupplierChangePassword({ nav }: { nav: Nav }) {
+  const { password: t, common } = useSupplierText();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -24,8 +26,8 @@ export function SupplierChangePassword({ nav }: { nav: Nav }) {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (next.length < 8) { setError("Le nouveau mot de passe doit contenir au moins 8 caractères."); return; }
-    if (next !== confirm) { setError("La confirmation ne correspond pas au nouveau mot de passe."); return; }
+    if (next.length < 8) { setError(t.tooShort); return; }
+    if (next !== confirm) { setError(t.mismatch); return; }
     setSending(true);
     setError(null);
     try {
@@ -34,9 +36,7 @@ export function SupplierChangePassword({ nav }: { nav: Nav }) {
       setCurrent(""); setNext(""); setConfirm("");
       setTimeout(() => setSaved(false), 4000);
     } catch (err) {
-      setError(err instanceof api.ApiError && err.status === 401
-        ? "Mot de passe actuel incorrect."
-        : "Une erreur est survenue. Réessayez.");
+      setError(err instanceof api.ApiError && err.status === 401 ? t.wrongCurrent : common.genericError);
     } finally {
       setSending(false);
     }
@@ -45,45 +45,43 @@ export function SupplierChangePassword({ nav }: { nav: Nav }) {
   return (
     <SupplierShell nav={nav} active="settings">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-xl font-bold text-[#0a0a0f]">Paramètres</h1>
-        <p className="text-sm text-[#64697d] mt-0.5 mb-6">
-          Gérez la sécurité de votre compte. Si vous vous êtes connecté avec un mot de passe temporaire, remplacez-le par un mot de passe personnel (8 caractères minimum).
-        </p>
+        <h1 className="text-xl font-bold text-[#0a0a0f]">{t.title}</h1>
+        <p className="text-sm text-[#64697d] mt-0.5 mb-6">{t.intro}</p>
 
         <div className="bg-white border border-[rgba(13,34,101,0.1)] p-6">
-          <p className="text-sm font-semibold text-[#0a0a0f] mb-4">Mot de passe</p>
+          <p className="text-sm font-semibold text-[#0a0a0f] mb-4">{t.card}</p>
           <form onSubmit={submit} className="space-y-4">
             <div>
-              <FieldLabel required>Mot de passe actuel</FieldLabel>
-              <TextInput type={show ? "text" : "password"} required value={current} onChange={e => setCurrent(e.target.value)} placeholder="Mot de passe actuel" />
+              <FieldLabel required>{t.current}</FieldLabel>
+              <TextInput type={show ? "text" : "password"} required value={current} onChange={e => setCurrent(e.target.value)} placeholder={t.current} />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <FieldLabel required>Nouveau mot de passe</FieldLabel>
-                <TextInput type={show ? "text" : "password"} required value={next} onChange={e => setNext(e.target.value)} placeholder="8 caractères min." />
+                <FieldLabel required>{t.next}</FieldLabel>
+                <TextInput type={show ? "text" : "password"} required value={next} onChange={e => setNext(e.target.value)} placeholder={t.nextPlaceholder} />
               </div>
               <div>
-                <FieldLabel required>Confirmation</FieldLabel>
-                <TextInput type={show ? "text" : "password"} required value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Répétez-le" />
+                <FieldLabel required>{t.confirm}</FieldLabel>
+                <TextInput type={show ? "text" : "password"} required value={confirm} onChange={e => setConfirm(e.target.value)} placeholder={t.confirmPlaceholder} />
               </div>
             </div>
             <label className="flex items-center gap-2 text-xs text-[#64697d] cursor-pointer">
               <input type="checkbox" className="accent-[#0d2265]" checked={show} onChange={() => setShow(s => !s)} />
-              Afficher les mots de passe
+              {t.show}
             </label>
             <FormError error={error} />
             {saved && (
               <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-800">
-                <Key className="w-4 h-4 shrink-0" /> Mot de passe mis à jour.
+                <Key className="w-4 h-4 shrink-0" /> {t.saved}
               </div>
             )}
             <div className="flex items-center gap-3 pt-1">
               <BtnNavy type="submit" className="flex-1 justify-center">
-                <Key className="w-4 h-4" /> {sending ? "Enregistrement…" : "Changer mon mot de passe"}
+                <Key className="w-4 h-4" /> {sending ? common.saving : t.submit}
               </BtnNavy>
               <button type="button" onClick={() => nav("supplier-dashboard")}
                 className="text-sm text-[#64697d] hover:text-[#0a0a0f] cursor-pointer px-4 py-3">
-                Retour
+                {common.back}
               </button>
             </div>
           </form>

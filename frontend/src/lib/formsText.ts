@@ -473,6 +473,32 @@ const OPTION_EN: Record<string, string> = {
   "Aucune": "None",
   // Incoterm « à conseiller »
   "À conseiller": "Advise me",
+  // Espace fournisseur : statuts de stock, délais produit, emballages
+  "En stock": "In stock",
+  "Sur commande": "Made to order",
+  "Rupture": "Out of stock",
+  "Sous 1 semaine": "Within 1 week",
+  "1 à 2 semaines": "1 to 2 weeks",
+  "2 à 3 semaines": "2 to 3 weeks",
+  "3 à 4 semaines": "3 to 4 weeks",
+  "1 à 2 mois": "1 to 2 months",
+  "Selon la récolte": "Depending on harvest",
+  "À confirmer": "To be confirmed",
+  "Autre (préciser)": "Other (specify)",
+  "Sac": "Bag",
+  "Carton": "Carton",
+  "Bidon": "Jerrycan",
+  "Seau": "Bucket",
+  "Palette": "Pallet",
+  "Conteneur 20'": "20' container",
+  "Conteneur 40'": "40' container",
+  "sacs": "bags",
+  "cartons": "cartons",
+  "bidons": "jerrycans",
+  "seaux": "buckets",
+  "palettes": "pallets",
+  "conteneurs 20'": "20' containers",
+  "conteneurs 40'": "40' containers",
 };
 
 // Pays absents (ou libellés autrement) dans Intl.DisplayNames.

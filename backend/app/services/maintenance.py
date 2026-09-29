@@ -59,7 +59,7 @@ def _send_expiry_alerts(db: Session, now: datetime) -> int:
         supplier = p.supplier
         if supplier and supplier.email:
             emails.send_template(
-                "product_expiring", supplier.email, "fr",
+                "product_expiring", supplier.email, supplier.language,
                 name=supplier.contact_name or supplier.name,
                 product=p.name, ref=p.ref, date=date_str, days=days,
             )
@@ -97,7 +97,7 @@ def _withdraw_expired(db: Session, now: datetime) -> int:
         supplier = p.supplier
         if supplier and supplier.email:
             emails.send_template(
-                "product_withdrawn", supplier.email, "fr",
+                "product_withdrawn", supplier.email, supplier.language,
                 name=supplier.contact_name or supplier.name,
                 product=p.name, ref=p.ref, date=date_str,
             )

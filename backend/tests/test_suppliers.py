@@ -152,3 +152,44 @@ def test_accepted_proposal_notifies_supplier(seeded, monkeypatch):
     # Une seconde décision ne renvoie pas l'e-mail (la proposition n'est plus en attente).
     client.patch(f"/api/v1/admin/proposals/{proposal_id}", json={"status": "Approuvé"}, headers=headers)
     assert len([s for s in sent if s[0] == "a@test.sn"]) == 1
+
+
+def test_supplier_language_drives_his_emails(seeded, monkeypatch):
+    """Le fournisseur passe son espace en anglais → ses e-mails suivent (ici : produit accepté)."""
+    from app.services import emails
+
+    sent = []
+    monkeypatch.setattr(emails, "_send", lambda to, subject, body, attachments=None: sent.append((to, subject)))
+    client = seeded["client"]
+    token = supplier_token(client, "a@test.sn", "mdp-coop-a")
+    res = client.patch("/api/v1/suppliers/me", json={"language": "en"}, headers={"Authorization": f"Bearer {token}"})
+    assert res.json()["language"] == "en"
+
+    proposal_id = _propose(client, token, "Hibiscus")
+    headers = {"Authorization": f"Bearer {admin_token(client)}"}
+    client.patch(f"/api/v1/admin/proposals/{proposal_id}", json={"status": "Approuvé"}, headers=headers)
+    assert ("a@test.sn", "Your product has been accepted · Funti") in sent
+
+
+def test_account_created_in_english_gets_english_credentials(seeded, monkeypatch):
+    from app.services import emails
+
+    sent = []
+    monkeypatch.setattr(emails, "_send", lambda to, subject, body, attachments=None: sent.append((to, subject)))
+    client = seeded["client"]
+    headers = {"Authorization": f"Bearer {admin_token(client)}"}
+    res = client.post(
+        "/api/v1/admin/suppliers",
+        json={"name": "Accra Farms", "email": "hello@accra-farms.com", "language": "en"},
+        headers=headers,
+    )
+    assert res.status_code == 201, res.text
+    assert res.json()["language"] == "en"
+    assert sent and sent[0][0] == "hello@accra-farms.com" and sent[0][1].startswith("Your access")
+
+
+def test_supplier_language_rejects_unknown_value(seeded):
+    client = seeded["client"]
+    token = supplier_token(client, "a@test.sn", "mdp-coop-a")
+    res = client.patch("/api/v1/suppliers/me", json={"language": "de"}, headers={"Authorization": f"Bearer {token}"})
+    assert res.status_code == 422

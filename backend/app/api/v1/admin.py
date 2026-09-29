@@ -224,7 +224,7 @@ def create_supplier(
     db.commit()
     db.refresh(supplier)
     emails.send_template(
-        "supplier_credentials", supplier.email, "fr",
+        "supplier_credentials", supplier.email, supplier.language,
         name=supplier.contact_name or supplier.name, email=supplier.email, password=temp_password,
     )
     out = SupplierWithTempPassword.model_validate(supplier)
@@ -245,7 +245,7 @@ def reset_supplier_password(
     db.commit()
     db.refresh(supplier)
     emails.send_template(
-        "supplier_credentials", supplier.email, "fr",
+        "supplier_credentials", supplier.email, supplier.language,
         name=supplier.contact_name or supplier.name, email=supplier.email, password=temp_password,
     )
     out = SupplierWithTempPassword.model_validate(supplier)
@@ -459,7 +459,7 @@ def decide_proposal(
     # Refus → on informe le fournisseur par e-mail, avec le motif renseigné par l'admin.
     if was_pending and data.status == ProposalStatus.REFUSE and proposal.supplier:
         emails.send_template(
-            "proposal_rejected", proposal.supplier.email, "fr",
+            "proposal_rejected", proposal.supplier.email, proposal.supplier.language,
             name=proposal.supplier.contact_name or proposal.supplier.name,
             product=proposal.name,
             reason=(data.reason or "").strip() or "non précisé",
@@ -469,7 +469,7 @@ def decide_proposal(
     # Acceptation → on prévient le fournisseur une fois le produit bien enregistré.
     if was_pending and data.status == ProposalStatus.APPROUVE and proposal.supplier:
         emails.send_template(
-            "proposal_accepted", proposal.supplier.email, "fr",
+            "proposal_accepted", proposal.supplier.email, proposal.supplier.language,
             name=proposal.supplier.contact_name or proposal.supplier.name,
             product=proposal.name,
             ref=f"ALS-PR-{proposal.id:03d}",
@@ -527,7 +527,7 @@ def remind_supplier_stock(
         return {"message": "Aucune référence à relancer pour ce fournisseur.", "count": 0}
     listing = "\n".join(f"- {p.name} ({p.ref}) · dernière màj {p.updated_at:%d/%m/%Y}" for p in stale)
     emails.send_template(
-        "stock_reminder", supplier.email, "fr",
+        "stock_reminder", supplier.email, supplier.language,
         name=supplier.contact_name or supplier.name, days=STALE_DAYS, products=listing,
     )
     return {"message": f"Relance envoyée à {supplier.email} ({len(stale)} référence(s)).", "count": len(stale)}
