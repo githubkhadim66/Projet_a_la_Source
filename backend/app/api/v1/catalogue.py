@@ -10,7 +10,7 @@ from app.core.security import decode_token
 from app.db.session import get_db
 from app.models import Lead, LeadQueue, LeadStatus, Product
 from app.schemas.supplier import PublicProductOut
-from app.services.catalogue_pdf import build_catalogue_pdf
+from app.services.catalogue_pdf import LANGS, build_catalogue_pdf, localize_products
 from app.services.translate import translate_batch
 
 router = APIRouter()
@@ -51,11 +51,12 @@ def public_products(featured: bool | None = None, lang: str | None = None, db: S
 
 
 @router.get("/download")
-def download_catalogue(token: str, db: Session = Depends(get_db)):
+def download_catalogue(token: str, lang: str | None = None, db: Session = Depends(get_db)):
     """Sert le catalogue uniquement via lien signé expirant — pas d'URL publique devinable (CATA-01).
 
     Le PDF est généré à la demande depuis le référentiel : un lien déjà envoyé
     sert donc toujours la dernière édition composée par l'administrateur (CATA-04).
+    Langue : `lang` (« fr » / « en ») si précisée, sinon celle du demandeur.
     """
     try:
         payload = decode_token(token, purpose="catalogue-download")
@@ -73,11 +74,15 @@ def download_catalogue(token: str, db: Session = Depends(get_db)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Catalogue momentanément indisponible",
         )
-    pdf = build_catalogue_pdf(products)
+
+    # Le lien contient l'id du lead : il fixe la langue par défaut et sert au suivi de conversion.
+    lead = db.get(Lead, int(payload["sub"])) if str(payload.get("sub", "")).isdigit() else None
+    if lang not in LANGS:
+        lang = lead.language if lead is not None and lead.language in LANGS else "fr"
+    pdf = build_catalogue_pdf(localize_products(db, products, lang), lang=lang)
 
     # Le téléchargement réussit : on marque le lead comme « Téléchargé » (CATA : suivi de conversion).
-    # Le lien contient l'id du lead ; on n'écrase jamais une progression manuelle de l'admin.
-    lead = db.get(Lead, int(payload["sub"])) if str(payload.get("sub", "")).isdigit() else None
+    # On n'écrase jamais une progression manuelle de l'admin.
     if lead is not None and lead.queue == LeadQueue.CATALOGUE:
         lead.catalogue_downloaded_at = datetime.now(UTC)
         lead.catalogue_download_count += 1
@@ -88,7 +93,7 @@ def download_catalogue(token: str, db: Session = Depends(get_db)):
         iter([pdf]),
         media_type="application/pdf",
         headers={
-            "Content-Disposition": 'attachment; filename="catalogue-funti.pdf"',
+            "Content-Disposition": f'attachment; filename="catalogue-funti-{lang}.pdf"',
             # Un lien déjà envoyé doit toujours servir la dernière édition (CATA-04)
             "Cache-Control": "no-store, no-cache, must-revalidate",
         },

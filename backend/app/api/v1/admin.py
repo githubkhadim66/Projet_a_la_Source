@@ -41,7 +41,7 @@ from app.schemas.supplier import (
     SupplierWithTempPassword,
 )
 from app.services import emails
-from app.services.catalogue_pdf import build_catalogue_pdf
+from app.services.catalogue_pdf import LANGS, build_catalogue_pdf, localize_products
 from app.services.storage import StorageError, upload_product_image
 
 router = APIRouter()
@@ -591,16 +591,18 @@ def catalogue_reorder(
 
 
 @router.get("/catalogue/preview")
-def catalogue_preview(_: AdminUser = Depends(get_current_admin), db: Session = Depends(get_db)):
-    """Génère et renvoie le catalogue PDF tel que le recevront les prospects."""
+def catalogue_preview(lang: str = "fr", _: AdminUser = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Génère et renvoie le catalogue PDF tel que le recevront les prospects (« fr » ou « en »)."""
     products = _catalogue_products(db)
     if not products:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Aucun produit dans le catalogue · ajoutez-en au moins un.",
         )
-    pdf = build_catalogue_pdf(products)
-    filename = f"catalogue-funti-{date.today():%Y-%m}.pdf"
+    if lang not in LANGS:
+        lang = "fr"
+    pdf = build_catalogue_pdf(localize_products(db, products, lang), lang=lang)
+    filename = f"catalogue-funti-{lang}-{date.today():%Y-%m}.pdf"
     return StreamingResponse(
         iter([pdf]),
         media_type="application/pdf",

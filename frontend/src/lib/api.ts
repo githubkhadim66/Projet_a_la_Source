@@ -457,8 +457,8 @@ export const admin = {
       method: "POST", headers: adminHeaders(),
     }),
   /** Télécharge le PDF généré tel que le reçoivent les prospects (jamais depuis le cache). */
-  downloadCataloguePreview: async () => {
-    const res = await fetch(`${BASE_URL}/admin/catalogue/preview`, {
+  downloadCataloguePreview: async (lang: "fr" | "en" = "fr") => {
+    const res = await fetch(`${BASE_URL}/admin/catalogue/preview?lang=${lang}`, {
       headers: adminHeaders(), cache: "no-store",
     });
     if (!res.ok) {
@@ -470,7 +470,7 @@ export const admin = {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "catalogue-funti.pdf";
+    a.download = `catalogue-funti-${lang}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   },

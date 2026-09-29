@@ -68,3 +68,62 @@ def test_glossary_wins_over_deepl_for_categories(seeded, fake_deepl):
         db.close()
     assert out == {"Épicerie": "Grocery", "Karité": "Shea"}
     assert fake_deepl == [["Karité"]]  # la catégorie n'est jamais envoyée à DeepL
+
+
+# ─── Catalogue PDF bilingue ──────────────────────────────────────────────────
+
+def _pdf_text(pdf: bytes) -> str:
+    """Texte des flux du PDF (ReportLab : ASCII85 + Flate)."""
+    import base64
+    import re
+    import zlib
+
+    out = []
+    for m in re.finditer(rb"stream\r?\n(.*?)endstream", pdf, re.S):
+        raw = m.group(1).strip()
+        if raw.endswith(b"~>"):
+            raw = raw[:-2]
+        try:
+            out.append(zlib.decompress(base64.a85decode(raw)).decode("latin-1"))
+        except (ValueError, zlib.error):
+            continue
+    return "\n".join(out)
+
+
+def _catalogue_token(client, language: str) -> str:
+    payload = {
+        "first_name": "Mary", "last_name": "Smith", "company": "Market Foods Ltd",
+        "email": "mary@marketfoods.com", "country": "Royaume-Uni", "rgpd_consent": True, "language": language,
+    }
+    return client.post("/api/v1/leads/catalogue", json=payload).json()["download_url"].split("token=")[1]
+
+
+def test_english_client_gets_english_catalogue(seeded, fake_deepl):
+    client = seeded["client"]
+    res = client.get("/api/v1/catalogue/download", params={"token": _catalogue_token(client, "en")})
+    assert res.status_code == 200
+    assert "catalogue-funti-en.pdf" in res.headers["content-disposition"]
+    text = _pdf_text(res.content)
+    assert "Our products" in text and "PRICE ON QUOTATION" in text
+    assert "Shea" in text  # contenu produit traduit (DeepL simulé)
+    assert "Nos références" not in text
+
+
+def test_catalogue_language_can_be_chosen_explicitly(seeded, fake_deepl):
+    client = seeded["client"]
+    token = _catalogue_token(client, "en")
+    res = client.get("/api/v1/catalogue/download", params={"token": token, "lang": "fr"})
+    text = _pdf_text(res.content)
+    assert "catalogue-funti-fr.pdf" in res.headers["content-disposition"]
+    # Accents encodés dans le flux PDF : on vérifie sur la partie ASCII des mots.
+    assert "Nos r" in text and "PRIX SUR DEVIS" in text and "Karit" in text
+
+
+def test_admin_preview_in_english(seeded, fake_deepl):
+    from tests.conftest import admin_token
+
+    client = seeded["client"]
+    headers = {"Authorization": f"Bearer {admin_token(client)}"}
+    res = client.get("/api/v1/admin/catalogue/preview", params={"lang": "en"}, headers=headers)
+    assert res.status_code == 200
+    assert "Our products" in _pdf_text(res.content)

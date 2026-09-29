@@ -57,10 +57,10 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
     } catch (err) { onApiError(err); }
   };
 
-  const telecharger = async () => {
+  const telecharger = async (lang: "fr" | "en") => {
     try {
-      await api.admin.downloadCataloguePreview();
-      flash("Catalogue PDF généré · le téléchargement a démarré.");
+      await api.admin.downloadCataloguePreview(lang);
+      flash(`Catalogue PDF (${lang === "fr" ? "français" : "anglais"}) généré · le téléchargement a démarré.`);
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 409) flash(err.message);
       else onApiError(err);
@@ -91,10 +91,16 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
             Environ {Math.ceil(dedans.length / 4) + 3} pages · couverture, présentation et contacts inclus
           </p>
         </div>
-        <button onClick={telecharger}
-          className="flex items-center gap-2 bg-[#C4613A] text-white text-sm font-semibold px-5 py-3 cursor-pointer hover:bg-[#A84E2D] transition-colors shrink-0">
-          <Download className="w-4 h-4" /> Télécharger le catalogue PDF
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button onClick={() => telecharger("fr")}
+            className="flex items-center gap-2 bg-[#C4613A] text-white text-sm font-semibold px-5 py-3 cursor-pointer hover:bg-[#A84E2D] transition-colors">
+            <Download className="w-4 h-4" /> Catalogue PDF · FR
+          </button>
+          <button onClick={() => telecharger("en")}
+            className="flex items-center gap-2 border border-[#C4613A] text-[#C4613A] text-sm font-semibold px-4 py-3 cursor-pointer hover:bg-[#C4613A] hover:text-white transition-colors">
+            <Download className="w-4 h-4" /> EN
+          </button>
+        </div>
       </div>
 
       {/* Liste ordonnable */}

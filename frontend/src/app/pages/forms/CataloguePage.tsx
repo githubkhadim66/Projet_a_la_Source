@@ -64,8 +64,12 @@ export function CatalogueForm({ nav, onSuccess }: { nav: Nav; onSuccess: (url: s
 }
 
 export function CatalogueConfirm({ nav, downloadUrl }: { nav: Nav; downloadUrl: string | null }) {
+  const lang = useLang();
   const tx = useFormsText();
   const t = tx.catalogue;
+  // Le catalogue existe en français et en anglais : la langue du visiteur est proposée d'abord.
+  const other = lang === "fr" ? "en" : "fr";
+  const open = (l: "fr" | "en") => downloadUrl && window.open(`${downloadUrl}&lang=${l}`, "_blank");
   return (
     <ScreenShell nav={nav} title={tx.common.confirmation}>
       <div className="bg-white border border-[rgba(13,34,101,0.1)] p-10">
@@ -76,9 +80,13 @@ export function CatalogueConfirm({ nav, downloadUrl }: { nav: Nav; downloadUrl: 
           nav={nav}
         >
           <div className="space-y-4">
-            <BtnNavy className="mx-auto" onClick={() => downloadUrl && window.open(downloadUrl, "_blank")}>
-              <Download className="w-4 h-4" /> {t.download}
+            <BtnNavy className="mx-auto" onClick={() => open(lang)}>
+              <Download className="w-4 h-4" /> {t.downloadIn[lang]}
             </BtnNavy>
+            <button type="button" onClick={() => open(other)}
+              className="mx-auto flex items-center gap-1.5 text-sm text-[#0d2265] hover:text-[#C4613A] underline cursor-pointer">
+              <Download className="w-3.5 h-3.5" /> {t.downloadIn[other]}
+            </button>
             <div className="pt-4 border-t border-[rgba(13,34,101,0.08)]">
               <p className="text-sm text-[#64697d] mb-3">{t.immediate}</p>
               <BtnOutlineNavy onClick={() => window.open(CALENDLY_URL, '_blank')} className="mx-auto">
