@@ -104,3 +104,53 @@ def translate_batch(db: Session, texts: list[str], target_lang: str) -> dict[str
             logger.warning("Traduction déjà mise en cache par une requête concurrente")
             db.rollback()
     return result
+
+
+# ─── Relecture et correction par l'admin ─────────────────────────────────────
+
+def translation_details(db: Session, texts: list[str], target_lang: str) -> dict[str, tuple[str, str]]:
+    """Comme `translate_batch`, mais précise l'origine de chaque traduction :
+    {texte_source: (traduction, statut)} avec statut « manual » (corrigée par l'admin),
+    « glossary » (libellé validé), « auto » (DeepL) ou « missing » (pas encore traduite,
+    p. ex. sans clé DeepL)."""
+    target = target_lang.upper()
+    translated = translate_batch(db, texts, target_lang)
+    glossary = GLOSSARY.get(target, {})
+    uniq = {t for t in texts if t and t.strip()}
+    rows = db.scalars(
+        select(Translation).where(
+            Translation.target_lang == target,
+            Translation.source_hash.in_([_hash(t, target) for t in uniq]),
+        )
+    ).all()
+    manual = {r.source_hash for r in rows if r.is_manual}
+    cached = {r.source_hash for r in rows}
+    details: dict[str, tuple[str, str]] = {}
+    for t in uniq:
+        h = _hash(t, target)
+        status = ("glossary" if t in glossary else "manual" if h in manual
+                  else "auto" if h in cached else "missing")
+        details[t] = (translated.get(t, t), status)
+    return details
+
+
+def set_manual_translation(db: Session, source: str, target_lang: str, text: str) -> None:
+    """Enregistre la traduction corrigée par l'admin (elle remplace celle de DeepL)."""
+    target = target_lang.upper()
+    h = _hash(source, target)
+    row = db.scalar(select(Translation).where(Translation.source_hash == h, Translation.target_lang == target))
+    if row is None:
+        db.add(Translation(source_hash=h, target_lang=target, source_text=source,
+                           translated_text=text, is_manual=True))
+    else:
+        row.translated_text = text
+        row.is_manual = True
+
+
+def reset_translation(db: Session, source: str, target_lang: str) -> None:
+    """Oublie la traduction (corrigée ou non) : DeepL la recalculera au prochain affichage."""
+    target = target_lang.upper()
+    row = db.scalar(select(Translation).where(
+        Translation.source_hash == _hash(source, target), Translation.target_lang == target))
+    if row is not None:
+        db.delete(row)

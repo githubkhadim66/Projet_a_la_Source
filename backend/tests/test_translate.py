@@ -127,3 +127,72 @@ def test_admin_preview_in_english(seeded, fake_deepl):
     res = client.get("/api/v1/admin/catalogue/preview", params={"lang": "en"}, headers=headers)
     assert res.status_code == 200
     assert "Our products" in _pdf_text(res.content)
+
+
+# ─── Corrections de la version anglaise par l'admin ──────────────────────────
+
+def _admin_headers(client) -> dict:
+    from tests.conftest import admin_token
+
+    return {"Authorization": f"Bearer {admin_token(client)}"}
+
+
+def test_admin_reviews_and_corrects_english_version(seeded, fake_deepl):
+    client = seeded["client"]
+    headers = _admin_headers(client)
+    url = f"/api/v1/admin/products/{seeded['p1']}/translation"
+
+    fields = {f["field"]: f for f in client.get(url, headers=headers).json()["fields"]}
+    assert fields["name"] == {"field": "name", "source": "Karité", "translated": "Shea",
+                              "status": "auto", "editable": True}
+
+    # Correction : servie partout (site public), marquée « manual ».
+    res = client.put(url, json={"fields": {"name": "Shea butter"}}, headers=headers)
+    assert {f["field"]: f["status"] for f in res.json()["fields"]}["name"] == "manual"
+    assert _names(client, "en")["Karité"] == "Shea butter"
+
+    # Jamais écrasée par DeepL, même en redemandant la traduction.
+    assert _names(client, "en")["Karité"] == "Shea butter"
+
+    # null = retour à la traduction automatique.
+    res = client.put(url, json={"fields": {"name": None}}, headers=headers)
+    name = next(f for f in res.json()["fields"] if f["field"] == "name")
+    assert (name["translated"], name["status"]) == ("Shea", "auto")
+
+
+def test_category_follows_glossary_and_is_not_editable(seeded, fake_deepl):
+    from app.db.session import SessionLocal
+    from app.models import Product
+
+    db = SessionLocal()
+    try:
+        db.get(Product, seeded["p1"]).category = "Épicerie"
+        db.commit()
+    finally:
+        db.close()
+    client = seeded["client"]
+    headers = _admin_headers(client)
+    url = f"/api/v1/admin/products/{seeded['p1']}/translation"
+    category = next(f for f in client.get(url, headers=headers).json()["fields"] if f["field"] == "category")
+    assert (category["translated"], category["status"], category["editable"]) == ("Grocery", "glossary", False)
+    # Une tentative de modification est ignorée.
+    client.put(url, json={"fields": {"category": "Shop"}}, headers=headers)
+    category = next(f for f in client.get(url, headers=headers).json()["fields"] if f["field"] == "category")
+    assert category["translated"] == "Grocery"
+
+
+def test_catalogue_translation_summary(seeded, fake_deepl):
+    client = seeded["client"]
+    headers = _admin_headers(client)
+    client.put(f"/api/v1/admin/products/{seeded['p1']}/translation",
+               json={"fields": {"name": "Shea butter"}}, headers=headers)
+    rows = {r["ref"]: r for r in client.get("/api/v1/admin/catalogue/translation", headers=headers).json()}
+    assert rows["A-001"]["name_translated"] == "Shea butter" and rows["A-001"]["manual_count"] == 1
+    assert rows["B-001"]["name_translated"] == "Cashew" and rows["B-001"]["manual_count"] == 0
+
+
+def test_translation_endpoints_reject_french_and_require_admin(seeded):
+    client = seeded["client"]
+    url = f"/api/v1/admin/products/{seeded['p1']}/translation"
+    assert client.get(url).status_code == 401
+    assert client.get(url, params={"lang": "fr"}, headers=_admin_headers(client)).status_code == 422

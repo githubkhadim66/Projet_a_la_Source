@@ -1,16 +1,26 @@
 /** Composition du catalogue PDF : deux listes claires (dedans / dehors) et ordre par glisser-déposer. */
 
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Check, Download, GripVertical, Plus, X } from "lucide-react";
+import { BookOpen, Check, Download, GripVertical, Languages, Plus, X } from "lucide-react";
 import * as api from "@/lib/api";
-import type { ApiAdminProduct } from "@/lib/api";
+import type { ApiAdminProduct, ApiCatalogueTranslationRow } from "@/lib/api";
+import { ProductTranslationPanel } from "./ProductTranslation";
 import { productImg } from "@/lib/format";
 import { useAdminText } from "@/lib/adminText";
 import { useOptionLabel } from "@/lib/formsText";
 
 export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown) => void }) {
-  const { composition: t, common } = useAdminText();
+  const { composition: t, translation: tt, common } = useAdminText();
   const tr = useOptionLabel();
+  // Relecture de la version anglaise du catalogue (chargée à la demande).
+  const [review, setReview] = useState<ApiCatalogueTranslationRow[] | null>(null);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewing, setReviewing] = useState<number | null>(null);
+  const loadReview = () => api.admin.catalogueTranslation().then(setReview).catch(onApiError);
+  const toggleReview = () => {
+    if (!reviewOpen && review === null) loadReview();
+    setReviewOpen(o => !o);
+  };
   const [products, setProducts] = useState<ApiAdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [banner, setBanner] = useState<string | null>(null);
@@ -102,8 +112,52 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
             className="flex items-center gap-2 border border-[#C4613A] text-[#C4613A] text-sm font-semibold px-4 py-3 cursor-pointer hover:bg-[#C4613A] hover:text-white transition-colors">
             <Download className="w-4 h-4" /> EN
           </button>
+          <button onClick={toggleReview}
+            className="flex items-center gap-2 border border-white/30 text-white text-sm font-semibold px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
+            <Languages className="w-4 h-4" /> {reviewOpen ? tt.hideReview : tt.review}
+          </button>
         </div>
       </div>
+
+      {/* Relecture de la version anglaise : un produit par ligne, correction sur place */}
+      {reviewOpen && (
+        <div className="bg-white border border-[rgba(13,34,101,0.12)] p-5 mb-8">
+          <h2 className="font-bold text-[#0a0a0f] flex items-center gap-2"><Languages className="w-4 h-4 text-[#0d2265]" /> {tt.reviewTitle}</h2>
+          <p className="text-xs text-[#64697d] mt-1 mb-4">{tt.reviewIntro}</p>
+          {review === null && <p className="text-sm text-[#64697d] py-4">{tt.loading}</p>}
+          {review !== null && review.length === 0 && <p className="text-sm text-[#64697d] py-4">{tt.empty}</p>}
+          <div className="space-y-1.5">
+            {review?.map((r, i) => (
+              <div key={r.product_id} className="border border-[rgba(13,34,101,0.08)]">
+                <div className="flex items-center gap-3 px-3 py-2.5">
+                  <span className="w-7 text-center text-sm font-bold text-[#0d2265] tabular-nums shrink-0">{i + 1}</span>
+                  <div className="w-10 h-10 bg-[#eef1f8] overflow-hidden shrink-0">
+                    <img src={productImg(r.image, "w=80&h=80")} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-[#0a0a0f] truncate">{r.name_translated}</p>
+                    <p className="text-[11px] text-[#64697d] truncate">{r.name} · <span className="font-mono">{r.ref}</span></p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {r.manual_count > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200">{tt.corrected(r.manual_count)}</span>}
+                    {r.missing_count > 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-amber-50 text-amber-700 border border-amber-200">{tt.untranslated(r.missing_count)}</span>}
+                    {r.manual_count === 0 && r.missing_count === 0 && <span className="text-[10px] font-semibold px-1.5 py-0.5 bg-[#eef1f8] text-[#0d2265]">{tt.allAuto}</span>}
+                  </div>
+                  <button onClick={() => setReviewing(reviewing === r.product_id ? null : r.product_id)}
+                    className="shrink-0 border border-[rgba(13,34,101,0.2)] text-[#0d2265] text-xs font-semibold px-3 py-1.5 cursor-pointer hover:bg-[#f4f5f9] transition-colors">
+                    {reviewing === r.product_id ? tt.close : tt.edit}
+                  </button>
+                </div>
+                {reviewing === r.product_id && (
+                  <div className="border-t border-[rgba(13,34,101,0.08)] bg-[#f4f5f9] p-3">
+                    <ProductTranslationPanel productId={r.product_id} onApiError={onApiError} onSaved={loadReview} />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Liste ordonnable */}
       <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">

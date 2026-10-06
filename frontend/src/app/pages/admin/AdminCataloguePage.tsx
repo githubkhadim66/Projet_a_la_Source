@@ -14,6 +14,7 @@ import { useAdminGuard } from "./adminSession";
 import { CatalogueComposition } from "./catalogue/CatalogueComposition";
 import { CatalogueRequests } from "./catalogue/CatalogueRequests";
 import { ProductForm, emptyProduct, productToForm } from "./catalogue/ProductForm";
+import { ProductTranslationPanel } from "./catalogue/ProductTranslation";
 import type { ProductFormValues } from "./catalogue/ProductForm";
 import { useLang } from "@/lib/i18n";
 import { useAdminText } from "@/lib/adminText";
@@ -329,6 +330,10 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
                   <div className="border-t border-[rgba(13,34,101,0.08)] bg-[#f4f5f9] p-4">
                     <ProductForm values={form} setValues={setForm} suppliers={suppliers} isEdit
                       error={formError} onSubmit={submitForm} onCancel={closeForm} />
+                    {/* Version anglaise (site + catalogue PDF) : relecture / correction */}
+                    <div className="mt-4">
+                      <ProductTranslationPanel productId={p.id} onApiError={onApiError} />
+                    </div>
                   </div>
                 )}
               </div>

@@ -40,9 +40,16 @@ from app.schemas.supplier import (
     SupplierUpdate,
     SupplierWithTempPassword,
 )
+from app.schemas.translation import (
+    CatalogueTranslationRow,
+    FieldTranslation,
+    ProductTranslationOut,
+    ProductTranslationUpdate,
+)
 from app.services import emails
 from app.services.catalogue_pdf import LANGS, build_catalogue_pdf, localize_products
 from app.services.storage import StorageError, upload_product_image
+from app.services.translate import reset_translation, set_manual_translation, translation_details
 
 router = APIRouter()
 
@@ -697,3 +704,86 @@ def export_suppliers(_: AdminUser = Depends(get_current_admin), db: Session = De
          "statut", "produits", "derniere_connexion", "cree_le"],
         rows,
     )
+
+
+# ─── Version anglaise du catalogue : relecture et corrections ────────────────
+
+# Champs traduits d'un produit (site + PDF). La catégorie suit le glossaire validé.
+_TRANSLATED_FIELDS = ("name", "category", "origin", "packaging", "moq", "description", "benefits")
+_EDITABLE_FIELDS = {"name", "origin", "packaging", "moq", "description", "benefits"}
+
+
+def _check_lang(lang: str) -> str:
+    if lang not in LANGS or lang == "fr":
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Langue non prise en charge")
+    return lang
+
+
+def _product_translation(db: Session, product: Product, lang: str) -> ProductTranslationOut:
+    sources = {f: (getattr(product, f) or "") for f in _TRANSLATED_FIELDS}
+    details = translation_details(db, [s for s in sources.values() if s], lang)
+    fields = []
+    for f, src in sources.items():
+        if not src.strip():
+            continue
+        translated, state = details[src]
+        fields.append(FieldTranslation(
+            field=f, source=src, translated=translated, status=state,
+            editable=f in _EDITABLE_FIELDS and state != "glossary",
+        ))
+    return ProductTranslationOut(product_id=product.id, ref=product.ref, lang=lang, fields=fields)
+
+
+@router.get("/products/{product_id}/translation", response_model=ProductTranslationOut)
+def get_product_translation(
+    product_id: int, lang: str = "en", _: AdminUser = Depends(get_current_admin), db: Session = Depends(get_db)
+):
+    """Version anglaise d'un produit, champ par champ, avec l'origine de chaque traduction."""
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit introuvable")
+    return _product_translation(db, product, _check_lang(lang))
+
+
+@router.put("/products/{product_id}/translation", response_model=ProductTranslationOut)
+def update_product_translation(
+    product_id: int,
+    data: ProductTranslationUpdate,
+    lang: str = "en",
+    _: AdminUser = Depends(get_current_admin),
+    db: Session = Depends(get_db),
+):
+    """Corrige la traduction d'un ou plusieurs champs (null = retour à la traduction automatique).
+    La correction vaut partout où ce texte apparaît : site, catalogue PDF, suggestions."""
+    lang = _check_lang(lang)
+    product = db.get(Product, product_id)
+    if product is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Produit introuvable")
+    for field, value in data.fields.items():
+        source = (getattr(product, field, "") or "") if field in _EDITABLE_FIELDS else ""
+        if not source.strip():
+            continue  # champ inconnu, non modifiable ou vide : ignoré
+        if value is None or not value.strip():
+            reset_translation(db, source, lang)
+        else:
+            set_manual_translation(db, source, lang, value.strip())
+    db.commit()
+    return _product_translation(db, product, lang)
+
+
+@router.get("/catalogue/translation", response_model=list[CatalogueTranslationRow])
+def catalogue_translation(lang: str = "en", _: AdminUser = Depends(get_current_admin), db: Session = Depends(get_db)):
+    """Relecture de la version anglaise du catalogue PDF : un résumé par produit."""
+    lang = _check_lang(lang)
+    products = _catalogue_products(db)
+    texts = [getattr(p, f) or "" for p in products for f in _TRANSLATED_FIELDS]
+    details = translation_details(db, [t for t in texts if t.strip()], lang)
+    rows = []
+    for p in products:
+        states = [details[v][1] for f in _TRANSLATED_FIELDS if (v := getattr(p, f) or "").strip()]
+        rows.append(CatalogueTranslationRow(
+            product_id=p.id, ref=p.ref, image=p.image, name=p.name,
+            name_translated=details[p.name][0] if p.name.strip() else p.name,
+            manual_count=states.count("manual"), missing_count=states.count("missing"),
+        ))
+    return rows

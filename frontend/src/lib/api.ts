@@ -6,6 +6,8 @@
  * En production, nginx proxifie `/api` vers le service backend.
  */
 
+import { getStoredLang } from "@/lib/i18n";
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? "/api/v1";
 
 // ─── Jetons (localStorage) ───────────────────────────────────────────────────
@@ -30,7 +32,15 @@ export class ApiError extends Error {
 }
 
 // Libellés lisibles des champs, pour transformer les erreurs de validation FastAPI
-// (renvoyées en tableau technique) en un message clair pour l'utilisateur.
+// (renvoyées en tableau technique) en un message clair, dans la langue du visiteur.
+const FIELD_LABELS_EN: Record<string, string> = {
+  company: "Company", contact_name: "Contact name", contact: "Contact", name: "Name",
+  email: "Email", phone: "Phone", country: "Country", city: "City",
+  products: "Products", product_types: "Categories", sector: "Business sector",
+  volume: "Volume", incoterm: "Incoterm", subject: "Subject", message: "Message",
+  price_per_kg: "Price per kg", moq: "Minimum order quantity (MOQ)", packaging: "Packaging",
+  description: "Description", origin: "Origin", category: "Category",
+};
 const FIELD_LABELS: Record<string, string> = {
   company: "Société", contact_name: "Nom du contact", contact: "Contact", name: "Nom",
   email: "E-mail", phone: "Téléphone", country: "Pays", city: "Ville",
@@ -42,13 +52,19 @@ const FIELD_LABELS: Record<string, string> = {
 
 /** Convertit un tableau d'erreurs de validation FastAPI en phrase lisible. */
 function humanizeValidation(errors: Array<{ loc?: unknown[]; msg?: string }>): string {
+  const en = getStoredLang() === "en";
+  const labels = en ? FIELD_LABELS_EN : FIELD_LABELS;
   const fields = errors.map(e => {
     const key = Array.isArray(e.loc) && e.loc.length ? String(e.loc[e.loc.length - 1]) : "";
-    return FIELD_LABELS[key] ?? key;
+    return labels[key] ?? key;
   }).filter(Boolean);
   const uniq = [...new Set(fields)];
-  if (uniq.length) return `Merci de vérifier ${uniq.length > 1 ? "ces champs" : "ce champ"} : ${uniq.join(", ")}.`;
-  return "Certaines informations sont invalides ou manquantes.";
+  if (uniq.length) {
+    return en
+      ? `Please check ${uniq.length > 1 ? "these fields" : "this field"}: ${uniq.join(", ")}.`
+      : `Merci de vérifier ${uniq.length > 1 ? "ces champs" : "ce champ"} : ${uniq.join(", ")}.`;
+  }
+  return en ? "Some information is invalid or missing." : "Certaines informations sont invalides ou manquantes.";
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -135,6 +151,33 @@ export interface ApiProduct {
   harvest_period: string;
   available_until: string | null;
   updated_at: string;
+}
+
+/** Traduction d'un champ produit : origine « manual » (corrigée par l'admin), « glossary »
+ *  (libellé validé, non modifiable), « auto » (DeepL) ou « missing » (pas encore traduite). */
+export interface ApiFieldTranslation {
+  field: string;
+  source: string;
+  translated: string;
+  status: "manual" | "glossary" | "auto" | "missing";
+  editable: boolean;
+}
+
+export interface ApiProductTranslation {
+  product_id: number;
+  ref: string;
+  lang: string;
+  fields: ApiFieldTranslation[];
+}
+
+export interface ApiCatalogueTranslationRow {
+  product_id: number;
+  ref: string;
+  image: string;
+  name: string;
+  name_translated: string;
+  manual_count: number;
+  missing_count: number;
 }
 
 export interface ApiAdminProduct extends ApiProduct {
@@ -457,6 +500,16 @@ export const admin = {
       method: "POST", headers: adminHeaders(),
     }),
   /** Télécharge le PDF généré tel que le reçoivent les prospects (jamais depuis le cache). */
+  /** Version anglaise d'un produit (relecture / correction des traductions). */
+  productTranslation: (id: number, lang: "en" = "en") =>
+    request<ApiProductTranslation>(`/admin/products/${id}/translation?lang=${lang}`, { headers: adminHeaders() }),
+  /** Corrections : texte = traduction imposée ; null = retour à la traduction automatique. */
+  updateProductTranslation: (id: number, fields: Record<string, string | null>, lang: "en" = "en") =>
+    request<ApiProductTranslation>(`/admin/products/${id}/translation?lang=${lang}`, {
+      method: "PUT", body: JSON.stringify({ fields }), headers: adminHeaders(),
+    }),
+  catalogueTranslation: (lang: "en" = "en") =>
+    request<ApiCatalogueTranslationRow[]>(`/admin/catalogue/translation?lang=${lang}`, { headers: adminHeaders() }),
   downloadCataloguePreview: async (lang: "fr" | "en" = "fr") => {
     const res = await fetch(`${BASE_URL}/admin/catalogue/preview?lang=${lang}`, {
       headers: adminHeaders(), cache: "no-store",
