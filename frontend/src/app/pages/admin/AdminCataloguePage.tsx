@@ -15,8 +15,14 @@ import { CatalogueComposition } from "./catalogue/CatalogueComposition";
 import { CatalogueRequests } from "./catalogue/CatalogueRequests";
 import { ProductForm, emptyProduct, productToForm } from "./catalogue/ProductForm";
 import type { ProductFormValues } from "./catalogue/ProductForm";
+import { useLang } from "@/lib/i18n";
+import { useAdminText } from "@/lib/adminText";
+import { useOptionLabel } from "@/lib/formsText";
 
 export function AdminCatalogue({ nav }: { nav: Nav }) {
+  const lang = useLang();
+  const { catalogue: t, common } = useAdminText();
+  const tr = useOptionLabel();
   const onApiError = useAdminGuard(nav);
   const toast = useToast();
   const confirm = useConfirm();
@@ -53,16 +59,16 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   // Corbeille réversible : archiver retire du site/catalogue sans perdre le produit
   const archiveProduct = async (p: ApiAdminProduct) => {
     const ok = await confirm({
-      title: `Mettre « ${p.name} » à la corbeille ?`,
-      message: "Il quitte le site et le catalogue, mais reste restaurable depuis l'onglet « Corbeille ».",
-      confirmLabel: "Mettre à la corbeille", tone: "danger",
+      title: t.confirmTrashTitle(p.name),
+      message: t.confirmTrashMessage,
+      confirmLabel: t.confirmTrashLabel, tone: "danger",
     });
     if (!ok) return;
     try {
       const updated = await api.admin.archiveProduct(p.id);
       setProducts(prev => prev.filter(x => x.id !== p.id));
       setArchived(prev => [...prev, updated]);
-      toast("Produit mis à la corbeille.");
+      toast(t.trashed);
     } catch (err) { onApiError(err); }
   };
 
@@ -76,15 +82,15 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
 
   const purgeProduct = async (p: ApiAdminProduct) => {
     const ok = await confirm({
-      title: `Supprimer définitivement « ${p.name} » ?`,
-      message: "Cette action est irréversible.",
-      confirmLabel: "Supprimer définitivement", tone: "danger",
+      title: t.confirmPurgeTitle(p.name),
+      message: t.confirmPurgeMessage,
+      confirmLabel: t.confirmPurgeLabel, tone: "danger",
     });
     if (!ok) return;
     try {
       await api.admin.deleteProduct(p.id);
       setArchived(prev => prev.filter(x => x.id !== p.id));
-      toast("Produit supprimé définitivement.");
+      toast(t.purged);
     } catch (err) { onApiError(err); }
   };
 
@@ -113,8 +119,8 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   });
 
   const submitForm = async () => {
-    if (!form.name.trim()) { setFormError("Le nom du produit est requis."); return; }
-    if (editingId === null && !form.supplier_id) { setFormError("Sélectionnez un fournisseur."); return; }
+    if (!form.name.trim()) { setFormError(t.nameRequired); return; }
+    if (editingId === null && !form.supplier_id) { setFormError(t.supplierRequired); return; }
     setFormError(null);
     try {
       if (editingId !== null) {
@@ -130,7 +136,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
       }
       closeForm();
     } catch (err) {
-      if (err instanceof api.ApiError && err.status === 409) setFormError("Cette référence est déjà utilisée.");
+      if (err instanceof api.ApiError && err.status === 409) setFormError(t.refTaken);
       else onApiError(err);
     }
   };
@@ -159,10 +165,10 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
 
   // Relance d'actualisation des stocks (FRS-05) · une relance par fournisseur
   const [remindMsg, setRemindMsg] = useState<string | null>(null);
-  const remindSupplier = async (supplierId: number) => {
+  const remindSupplier = async (supplierId: number, supplierName: string) => {
     try {
       const res = await api.admin.remindSupplierStock(supplierId);
-      setRemindMsg(res.message);
+      setRemindMsg(res.count ? t.reminded(supplierName, res.count) : t.nothingToRemind);
       setTimeout(() => setRemindMsg(null), 5000);
     } catch (err) {
       onApiError(err);
@@ -172,18 +178,18 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
   return (
     <AdminShell nav={nav} active="catalogue">
       <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
-        <h1 className="text-xl font-bold text-[#0a0a0f]">Catalogue</h1>
+        <h1 className="text-xl font-bold text-[#0a0a0f]">{t.title}</h1>
         <div className="flex items-center gap-2">
           {(catTab === "produits" || catTab === "stocks") && (
             <button onClick={() => api.admin.downloadExport("products").catch(onApiError)}
               className="flex items-center gap-2 border border-[rgba(13,34,101,0.2)] text-[#0d2265] text-sm font-semibold px-4 py-2.5 cursor-pointer hover:bg-white transition-colors">
-              <Download className="w-4 h-4" /> Exporter CSV
+              <Download className="w-4 h-4" /> {common.exportCsv}
             </button>
           )}
           {catTab === "produits" && (
             <button onClick={showForm ? closeForm : openCreate}
               className="flex items-center gap-2 bg-[#0d2265] text-white text-sm font-semibold px-4 py-2.5 cursor-pointer hover:bg-[#091a52] transition-colors">
-              <Plus className="w-4 h-4" /> Ajouter un produit
+              <Plus className="w-4 h-4" /> {t.addProduct}
             </button>
           )}
         </div>
@@ -191,21 +197,15 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <KpiCard label="Produits" value={products.length} sub={`${featuredCount} en vedette`} icon={Package} color="#0d2265" />
-        <KpiCard label="En vedette" value={`${featuredCount}/6`} sub="slots page d'accueil" icon={Star} color="#C4613A" />
-        <KpiCard label="Stocks suivis" value={products.length} sub={`${ruptures > 0 ? ruptures+" rupture(s)" : "aucune rupture"}`} icon={Archive} color={ruptures > 0 ? "#ef4444" : "#059669"} />
-        <KpiCard label="Alertes" value={staleCount} sub="données non actualisées" icon={AlertCircle} color={staleCount > 0 ? "#d97706" : "#059669"} />
+        <KpiCard label={t.kpiProducts} value={products.length} sub={t.kpiProductsSub(featuredCount)} icon={Package} color="#0d2265" />
+        <KpiCard label={t.kpiFeatured} value={`${featuredCount}/6`} sub={t.kpiFeaturedSub} icon={Star} color="#C4613A" />
+        <KpiCard label={t.kpiStocks} value={products.length} sub={t.kpiStocksSub(ruptures)} icon={Archive} color={ruptures > 0 ? "#ef4444" : "#059669"} />
+        <KpiCard label={t.kpiAlerts} value={staleCount} sub={t.kpiAlertsSub} icon={AlertCircle} color={staleCount > 0 ? "#d97706" : "#059669"} />
       </div>
 
       {/* Section tabs */}
       <div className="flex gap-0 border-b border-[rgba(13,34,101,0.1)] mb-5 overflow-x-auto">
-        {([
-          ["produits", "Produits & vitrine"],
-          ["stocks", "Stocks & alertes"],
-          ["pdf", "Catalogue PDF"],
-          ["demandes", "Demandes de catalogue"],
-          ["archives", "Corbeille"],
-        ] as const).map(([id, label]) => (
+        {(["produits", "stocks", "pdf", "demandes", "archives"] as const).map(id => [id, t.tabs[id]] as const).map(([id, label]) => (
           <button key={id} onClick={() => { setCatTab(id); setSearch(""); }}
             className={`px-5 py-2.5 text-sm font-medium border-b-2 -mb-px cursor-pointer transition-colors flex items-center gap-2 whitespace-nowrap ${catTab === id ? "border-[#0d2265] text-[#0d2265]" : "border-transparent text-[#64697d] hover:text-[#0d2265]"}`}>
             {label}
@@ -223,11 +223,11 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
       {catTab === "archives" && (
         <div>
           <p className="text-sm text-[#64697d] mb-4">
-            Les produits archivés ne sont plus sur le site ni dans le catalogue, mais restent conservés.
-            <strong className="text-[#0a0a0f]"> Restaurez-les</strong> à tout moment, ou supprimez-les définitivement.
+            {t.trashIntro}
+            <strong className="text-[#0a0a0f]">{t.trashRestore}</strong>{t.trashIntroEnd}
           </p>
           {archived.length === 0 && (
-            <div className="bg-white border border-[rgba(13,34,101,0.08)] p-10 text-center text-sm text-[#64697d]">La corbeille est vide.</div>
+            <div className="bg-white border border-[rgba(13,34,101,0.08)] p-10 text-center text-sm text-[#64697d]">{t.trashEmpty}</div>
           )}
           <div className="space-y-1.5">
             {archived.map(p => (
@@ -241,11 +241,11 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
                 </div>
                 <button onClick={() => restoreProduct(p)}
                   className="shrink-0 flex items-center gap-1.5 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1.5 cursor-pointer hover:bg-emerald-50 transition-colors">
-                  <RotateCcw className="w-3.5 h-3.5" /> Restaurer
+                  <RotateCcw className="w-3.5 h-3.5" /> {common.restore}
                 </button>
                 <button onClick={() => purgeProduct(p)}
                   className="shrink-0 flex items-center gap-1.5 border border-red-200 text-red-600 text-xs font-semibold px-3 py-1.5 cursor-pointer hover:bg-red-50 transition-colors">
-                  <Trash2 className="w-3.5 h-3.5" /> Supprimer
+                  <Trash2 className="w-3.5 h-3.5" /> {common.delete}
                 </button>
               </div>
             ))}
@@ -258,7 +258,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
       <div className="flex flex-wrap gap-2 mb-4">
         <div className="relative flex-1 min-w-48">
           <Search className="w-3.5 h-3.5 text-[#64697d] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={catTab === "produits" ? "Nom, réf, fournisseur…" : "Produit, référence…"}
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={catTab === "produits" ? t.searchProducts : t.searchStocks}
             className="w-full pl-8 pr-3 py-2 text-sm border border-[rgba(13,34,101,0.15)] bg-white focus:outline-none focus:border-[#0d2265]" />
         </div>
         {catTab === "produits" && (
@@ -266,17 +266,17 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
             {["Toutes", ...CAT_CATEGORIES].map(c => (
               <button key={c} onClick={() => setFilterCat(c)}
                 className={`px-2.5 py-2 text-xs font-medium cursor-pointer border transition-colors ${filterCat === c ? "bg-[#0d2265] text-white border-[#0d2265]" : "bg-white text-[#64697d] border-[rgba(13,34,101,0.15)] hover:border-[#0d2265]"}`}>
-                {c}
+                {c === "Toutes" ? t.allCategories : tr(c)}
               </button>
             ))}
           </div>
         )}
         {catTab === "produits" && origins.length > 0 && (
           <select value={filterOrigin} onChange={e => setFilterOrigin(e.target.value)}
-            title="Filtrer par pays d'origine"
+            title={t.filterOrigin}
             className="px-2.5 py-2 text-xs font-medium border bg-white text-[#0d2265] border-[rgba(13,34,101,0.15)] focus:outline-none focus:border-[#0d2265] cursor-pointer appearance-none">
-            <option value="Tous">Tous les pays</option>
-            {origins.map(o => <option key={o} value={o}>{o}</option>)}
+            <option value="Tous">{t.allCountries}</option>
+            {origins.map(o => <option key={o} value={o}>{tr(o)}</option>)}
           </select>
         )}
       </div>
@@ -301,23 +301,23 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-semibold text-sm text-[#0a0a0f]">{p.name}</span>
-                      {p.category && <span className="text-[10px] text-[#64697d] bg-[#f0f2f7] px-1.5 py-0.5">{p.category}</span>}
-                      {p.featured && <span className="text-[10px] text-[#C4613A] font-semibold">★ Vedette</span>}
+                      {p.category && <span className="text-[10px] text-[#64697d] bg-[#f0f2f7] px-1.5 py-0.5">{tr(p.category)}</span>}
+                      {p.featured && <span className="text-[10px] text-[#C4613A] font-semibold">{t.featuredBadge}</span>}
                     </div>
                     <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.packaging ? ` · ${p.packaging}` : ""}{p.moq ? ` · MOQ ${p.moq}` : ""} · {p.supplier_name} · <span className="font-mono">{p.ref}</span></p>
                   </div>
                   {/* Actions */}
                   <div className="flex items-center gap-1 shrink-0">
-                    <button onClick={() => editingId === p.id ? setEditingId(null) : openEdit(p)} title="Modifier la fiche"
+                    <button onClick={() => editingId === p.id ? setEditingId(null) : openEdit(p)} title={t.editSheet}
                       className={`w-8 h-8 flex items-center justify-center cursor-pointer transition-colors rounded hover:bg-[#f0f2f7] ${editingId === p.id ? "text-[#C4613A]" : "text-[#64697d]/40 hover:text-[#0d2265]"}`}>
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button onClick={() => toggle(p.id, "featured")}
-                      title={p.featured ? "Retirer de la vedette (accueil)" : featuredCount >= 6 ? "Maximum 6 en vedette" : "Mettre en vedette sur l'accueil"}
+                      title={p.featured ? t.unfeature : featuredCount >= 6 ? t.maxFeatured : t.feature}
                       className={`w-8 h-8 flex items-center justify-center cursor-pointer transition-colors rounded hover:bg-[#f0f2f7] ${p.featured ? "text-[#C4613A]" : featuredCount >= 6 && !p.featured ? "text-[#64697d]/15 cursor-not-allowed" : "text-[#64697d]/30 hover:text-[#C4613A]"}`}>
                       <Star className="w-4 h-4" fill={p.featured ? "#C4613A" : "none"} />
                     </button>
-                    <button onClick={() => archiveProduct(p)} title="Mettre à la corbeille (réversible)"
+                    <button onClick={() => archiveProduct(p)} title={t.trash}
                       className="w-8 h-8 flex items-center justify-center text-[#64697d]/20 hover:text-red-500 cursor-pointer transition-colors rounded hover:bg-red-50">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -348,7 +348,7 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
           {staleCount > 0 && (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 px-4 py-2.5 mb-4 text-sm text-amber-800">
               <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>{staleCount} référence{staleCount > 1 ? "s" : ""} sans mise à jour depuis plus de 14 jours</span>
+              <span>{t.staleWarning(staleCount)}</span>
             </div>
           )}
           {filteredStocks.map(s => (
@@ -357,20 +357,20 @@ export function AdminCatalogue({ nav }: { nav: Nav }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-sm text-[#0a0a0f]">{s.name}</span>
-                  {s.stale && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5">Non actualisé</span>}
-                  {s.status === "Rupture" && <span className="text-[10px] font-semibold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5">Rupture</span>}
+                  {s.stale && <span className="text-[10px] font-semibold text-amber-700 bg-amber-100 border border-amber-200 px-1.5 py-0.5">{t.notUpdated}</span>}
+                  {s.status === "Rupture" && <span className="text-[10px] font-semibold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5">{tr("Rupture")}</span>}
                 </div>
-                <p className="text-xs text-[#64697d] mt-0.5"><span className="font-mono">{s.ref}</span> · {s.category} · {s.supplier_name}</p>
+                <p className="text-xs text-[#64697d] mt-0.5"><span className="font-mono">{s.ref}</span> · {s.category ? tr(s.category) : ""} · {s.supplier_name}</p>
               </div>
               {s.stale && (
-                <button onClick={() => remindSupplier(s.supplier_id)} title={`Relancer ${s.supplier_name} par e-mail`}
+                <button onClick={() => remindSupplier(s.supplier_id, s.supplier_name)} title={t.remindTitle(s.supplier_name)}
                   className="shrink-0 flex items-center gap-1.5 border border-amber-300 text-amber-700 text-xs font-semibold px-2.5 py-1.5 cursor-pointer hover:bg-amber-100 transition-colors">
-                  <Bell className="w-3.5 h-3.5" /> Relancer
+                  <Bell className="w-3.5 h-3.5" /> {t.remind}
                 </button>
               )}
               <div className="text-right shrink-0">
-                <p className="text-sm font-bold text-[#0a0a0f]">{s.stock_kg.toLocaleString("fr-FR")} kg</p>
-                <p className="text-[10px] text-[#64697d]">Màj {fmtDate(s.updated_at)}</p>
+                <p className="text-sm font-bold text-[#0a0a0f]">{s.stock_kg.toLocaleString(lang === "en" ? "en-GB" : "fr-FR")} kg</p>
+                <p className="text-[10px] text-[#64697d]">{t.updated(fmtDate(s.updated_at))}</p>
               </div>
             </div>
           ))}

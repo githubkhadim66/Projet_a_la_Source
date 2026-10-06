@@ -23,14 +23,15 @@ export const FOLLOWUP_DAYS = 5;
 
 const hoursSince = (iso: string) => (Date.now() - new Date(iso).getTime()) / 3_600_000;
 
-export type LeadAlert = { kind: "overdue" | "followup"; label: string };
+// Libellé affiché : dictionnaire admin (useAdminText().alerts[kind]).
+export type LeadAlert = { kind: "overdue" | "followup" };
 
 /** Alerte temporelle d'un lead : « En retard » (nouveau non traité) ou « À relancer » (devis sans réponse). */
 export function leadAlert(l: Lead): LeadAlert | null {
   if (l.status === "Nouveau" && hoursSince(l.createdAt) >= NEW_SLA_HOURS)
-    return { kind: "overdue", label: "En retard" };
+    return { kind: "overdue" };
   if (l.status === "Devis envoyé" && hoursSince(l.updatedAt) >= FOLLOWUP_DAYS * 24)
-    return { kind: "followup", label: "À relancer" };
+    return { kind: "followup" };
   return null;
 }
 
@@ -56,10 +57,6 @@ export const STATUSES_FOR: Record<LeadTab, LeadStatus[]> = {
   devis: ["Nouveau","En cours","Devis envoyé","Gagné","Perdu","Clos"],
   sourcing: ["Nouveau","En cours","Traité","Clos"],
   candidatures: ["Nouveau","En cours","Référencé","Traité","Clos"],
-};
-
-export const TAB_LABELS: Record<LeadTab, string> = {
-  catalogue: "Catalogue", devis: "Devis", sourcing: "Sourcing", candidatures: "Candidatures fournisseurs",
 };
 
 export const TAB_FOR_QUEUE: Record<string, LeadTab> = {

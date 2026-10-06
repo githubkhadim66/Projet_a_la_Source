@@ -7,7 +7,7 @@ import { ArrowRight, Home, LogOut, Menu, Package, PlusCircle, Settings, UserRoun
 import * as api from "@/lib/api";
 import type { ApiSupplier } from "@/lib/api";
 import type { Nav, Screen } from "@/lib/routes";
-import { type Lang, useLang, useSetLang } from "@/lib/i18n";
+import { type Lang, LangSwitch, useLang, useSetLang } from "@/lib/i18n";
 import { useSupplierText } from "@/lib/supplierText";
 
 export type SupplierSection = "dashboard" | "products" | "propose" | "dossier" | "settings";
@@ -73,9 +73,8 @@ export function SupplierShell({ nav, active, staleCount = 0, children }: {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nav]);
 
-  // Changement de langue dans l'espace : appliqué tout de suite et enregistré sur le compte.
-  const switchLang = (l: Lang) => {
-    setLang(l);
+  // Changement de langue dans l'espace : enregistré sur le compte (ses e-mails suivent).
+  const saveLang = (l: Lang) => {
     api.supplier.updateProfile({ language: l }).then(setMe).catch(() => {});
   };
 
@@ -146,17 +145,7 @@ export function SupplierShell({ nav, active, staleCount = 0, children }: {
           </button>
           <p className="text-sm font-semibold text-[#0a0a0f] truncate">{t.nav[active]}</p>
           <div className="ml-auto flex items-center gap-3">
-            <div className="flex items-center gap-0.5 text-xs" aria-label="Langue / Language">
-              {(["fr", "en"] as const).map((l, i) => (
-                <span key={l} className="flex items-center gap-0.5">
-                  {i > 0 && <span className="text-[#c3c9dd]">│</span>}
-                  <button type="button" onClick={() => switchLang(l)}
-                    className={`cursor-pointer px-1 transition-colors ${lang === l ? "text-[#0d2265] font-bold" : "text-[#64697d] hover:text-[#0d2265]"}`}>
-                    {l.toUpperCase()}
-                  </button>
-                </span>
-              ))}
-            </div>
+            <LangSwitch tone="light" onChange={saveLang} />
             <button onClick={() => nav("landing")}
               className="text-xs text-[#64697d] hover:text-[#0d2265] cursor-pointer transition-colors flex items-center gap-1.5 border border-[rgba(13,34,101,0.15)] px-3 py-1.5 hover:border-[#0d2265]">
               <ArrowRight className="w-3 h-3 rotate-180" /> <span className="hidden sm:inline">{t.backToSite}</span><span className="sm:hidden">{t.site}</span>

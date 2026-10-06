@@ -1,10 +1,10 @@
-/** Langue du parcours client (FR/EN), partagée par tout le site public.
+/** Langue du site (FR/EN), partagée par tous les écrans.
  *
  *  - Choisie sur l'accueil, elle suit le visiteur sur le catalogue, la fiche produit et
  *    chaque formulaire jusqu'à l'envoi (la demande part avec `language` → e-mails dans
  *    la même langue).
  *  - Retenue d'une visite à l'autre (stockage indisponible → français).
- *  - Les espaces fournisseur et admin restent en français : App leur impose "fr".
+ *  - Valable aussi pour l'espace fournisseur (choix enregistré sur son compte) et l'admin.
  */
 
 import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
@@ -38,26 +38,19 @@ export function LangProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Force une langue pour une partie de l'arbre (espaces fournisseur/admin : français). */
-export function FixedLang({ lang, children }: { lang: Lang; children: ReactNode }) {
-  return (
-    <SetLangContext.Provider value={null}>
-      <LangContext.Provider value={lang}>{children}</LangContext.Provider>
-    </SetLangContext.Provider>
-  );
-}
-
-/** Sélecteur FR │ EN pour les barres marine des écrans publics (masqué en back-office). */
-export function LangSwitch() {
+/** Sélecteur FR │ EN : `dark` pour les barres marine, `light` pour les barres blanches. */
+export function LangSwitch({ tone = "dark", onChange }: { tone?: "dark" | "light"; onChange?: (l: Lang) => void }) {
   const lang = useLang();
   const setLang = useContext(SetLangContext);
   if (!setLang) return null;
-  const cls = (l: Lang) => `cursor-pointer px-1 transition-colors ${lang === l ? "text-white font-bold" : "text-white/50 hover:text-white"}`;
+  const active = tone === "dark" ? "text-white font-bold" : "text-[#0d2265] font-bold";
+  const idle = tone === "dark" ? "text-white/50 hover:text-white" : "text-[#64697d] hover:text-[#0d2265]";
+  const pick = (l: Lang) => { setLang(l); onChange?.(l); };
   return (
     <div className="flex items-center gap-0.5 text-xs" aria-label="Langue / Language">
-      <button type="button" onClick={() => setLang("fr")} className={cls("fr")}>FR</button>
-      <span className="text-white/30">│</span>
-      <button type="button" onClick={() => setLang("en")} className={cls("en")}>EN</button>
+      <button type="button" onClick={() => pick("fr")} className={`cursor-pointer px-1 transition-colors ${lang === "fr" ? active : idle}`}>FR</button>
+      <span className={tone === "dark" ? "text-white/30" : "text-[#c3c9dd]"}>│</span>
+      <button type="button" onClick={() => pick("en")} className={`cursor-pointer px-1 transition-colors ${lang === "en" ? active : idle}`}>EN</button>
     </div>
   );
 }

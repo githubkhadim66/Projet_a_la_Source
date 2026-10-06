@@ -7,6 +7,7 @@
 import { createContext, useCallback, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { AlertTriangle, CheckCircle2, Info, X } from "lucide-react";
+import { useLang } from "@/lib/i18n";
 
 export interface ConfirmOptions {
   title: string;
@@ -59,6 +60,7 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const danger = dialog?.tone === "danger";
+  const en = useLang() === "en";
 
   return (
     <FeedbackCtx.Provider value={{ confirm, toast }}>
@@ -80,11 +82,11 @@ export function FeedbackProvider({ children }: { children: ReactNode }) {
             </div>
             <div className="px-5 py-3.5 bg-[#faf9f6] border-t border-[rgba(13,34,101,0.08)] flex items-center justify-end gap-2">
               <button onClick={() => settle(false)} className="text-sm text-[#64697d] hover:text-[#0a0a0f] px-4 py-2 cursor-pointer">
-                {dialog.cancelLabel ?? "Annuler"}
+                {dialog.cancelLabel ?? (en ? "Cancel" : "Annuler")}
               </button>
               <button onClick={() => settle(true)}
                 className={`text-sm font-semibold text-white px-4 py-2 cursor-pointer transition-colors ${danger ? "bg-red-600 hover:bg-red-700" : "bg-[#0d2265] hover:bg-[#091a52]"}`}>
-                {dialog.confirmLabel ?? "Confirmer"}
+                {dialog.confirmLabel ?? (en ? "Confirm" : "Confirmer")}
               </button>
             </div>
           </div>

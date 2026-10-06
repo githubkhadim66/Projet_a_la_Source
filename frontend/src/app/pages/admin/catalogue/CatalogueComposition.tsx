@@ -5,8 +5,12 @@ import { BookOpen, Check, Download, GripVertical, Plus, X } from "lucide-react";
 import * as api from "@/lib/api";
 import type { ApiAdminProduct } from "@/lib/api";
 import { productImg } from "@/lib/format";
+import { useAdminText } from "@/lib/adminText";
+import { useOptionLabel } from "@/lib/formsText";
 
 export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown) => void }) {
+  const { composition: t, common } = useAdminText();
+  const tr = useOptionLabel();
   const [products, setProducts] = useState<ApiAdminProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [banner, setBanner] = useState<string | null>(null);
@@ -29,7 +33,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
     try {
       const updated = await api.admin.updateProduct(p.id, { in_catalogue: inCatalogue });
       setProducts(prev => prev.map(x => x.id === p.id ? updated : x));
-      flash(inCatalogue ? `« ${p.name} » ajouté au catalogue.` : `« ${p.name} » retiré du catalogue.`);
+      flash(inCatalogue ? t.added(p.name) : t.removed(p.name));
     } catch (err) { onApiError(err); }
   };
 
@@ -60,7 +64,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
   const telecharger = async (lang: "fr" | "en") => {
     try {
       await api.admin.downloadCataloguePreview(lang);
-      flash(`Catalogue PDF (${lang === "fr" ? "français" : "anglais"}) généré · le téléchargement a démarré.`);
+      flash(t.generated(lang));
     } catch (err) {
       if (err instanceof api.ApiError && err.status === 409) flash(err.message);
       else onApiError(err);
@@ -68,7 +72,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
   };
 
   if (loading) {
-    return <div className="bg-white border border-[rgba(13,34,101,0.08)] p-10 text-center text-sm text-[#64697d]">Chargement du catalogue…</div>;
+    return <div className="bg-white border border-[rgba(13,34,101,0.08)] p-10 text-center text-sm text-[#64697d]">{t.loading}</div>;
   }
 
   return (
@@ -86,10 +90,8 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
           <BookOpen className="w-6 h-6" />
         </div>
         <div className="flex-1 min-w-[200px]">
-          <p className="font-bold text-lg">Votre catalogue contient {dedans.length} produit{dedans.length > 1 ? "s" : ""}</p>
-          <p className="text-white/60 text-sm mt-0.5">
-            Environ {Math.ceil(dedans.length / 4) + 3} pages · couverture, présentation et contacts inclus
-          </p>
+          <p className="font-bold text-lg">{t.contains(dedans.length)}</p>
+          <p className="text-white/60 text-sm mt-0.5">{t.pages(Math.ceil(dedans.length / 4) + 3)}</p>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={() => telecharger("fr")}
@@ -105,16 +107,16 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
 
       {/* Liste ordonnable */}
       <div className="flex items-baseline justify-between mb-2 flex-wrap gap-2">
-        <h2 className="font-bold text-[#0a0a0f]">Dans le catalogue</h2>
+        <h2 className="font-bold text-[#0a0a0f]">{t.inCatalogue}</h2>
         <p className="text-xs text-[#64697d] flex items-center gap-1.5">
-          <GripVertical className="w-3.5 h-3.5" /> Attrapez une ligne et faites-la glisser pour changer l'ordre des pages
+          <GripVertical className="w-3.5 h-3.5" /> {t.dragHint}
         </p>
       </div>
 
       <div className="space-y-1.5 mb-10">
         {dedans.length === 0 && (
           <div className="bg-white border border-dashed border-[rgba(13,34,101,0.2)] p-10 text-center text-sm text-[#64697d]">
-            Aucun produit dans le catalogue. Ajoutez-en depuis la liste ci-dessous.
+            {t.emptyIn}
           </div>
         )}
         {dedans.map((p, i) => (
@@ -138,27 +140,25 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="font-semibold text-sm text-[#0a0a0f]">{p.name}</span>
-                {p.category && <span className="text-[10px] text-[#64697d] bg-[#f0f2f7] px-1.5 py-0.5">{p.category}</span>}
+                {p.category && <span className="text-[10px] text-[#64697d] bg-[#f0f2f7] px-1.5 py-0.5">{tr(p.category)}</span>}
               </div>
               <p className="text-xs text-[#64697d] mt-0.5">{p.origin}{p.packaging ? ` · ${p.packaging}` : ""}{p.moq ? ` · MOQ ${p.moq}` : ""}</p>
             </div>
             <button onClick={() => setMembership(p, false)}
               className="shrink-0 border border-[rgba(13,34,101,0.15)] text-[#64697d] text-xs px-3 py-1.5 cursor-pointer hover:border-red-300 hover:text-red-600 hover:bg-red-50 transition-colors">
-              Retirer
+              {common.remove}
             </button>
           </div>
         ))}
       </div>
 
       {/* Produits disponibles à ajouter */}
-      <h2 className="font-bold text-[#0a0a0f] mb-1">Pas dans le catalogue</h2>
-      <p className="text-xs text-[#64697d] mb-3">
-        Ces produits existent au référentiel mais n'apparaissent pas dans le PDF. Cliquez sur « Ajouter » pour les y faire entrer.
-      </p>
+      <h2 className="font-bold text-[#0a0a0f] mb-1">{t.outTitle}</h2>
+      <p className="text-xs text-[#64697d] mb-3">{t.outIntro}</p>
       <div className="space-y-1.5">
         {dehors.length === 0 && (
           <div className="bg-white border border-[rgba(13,34,101,0.08)] p-8 text-center text-sm text-[#64697d]">
-            Tous vos produits figurent dans le catalogue.
+            {t.allIn}
           </div>
         )}
         {dehors.map(p => (
@@ -172,7 +172,7 @@ export function CatalogueComposition({ onApiError }: { onApiError: (err: unknown
             </div>
             <button onClick={() => setMembership(p, true)}
               className="shrink-0 flex items-center gap-1.5 bg-[#0d2265] text-white text-xs font-semibold px-3 py-1.5 cursor-pointer hover:bg-[#091a52] transition-colors">
-              <Plus className="w-3.5 h-3.5" /> Ajouter
+              <Plus className="w-3.5 h-3.5" /> {common.add}
             </button>
           </div>
         ))}

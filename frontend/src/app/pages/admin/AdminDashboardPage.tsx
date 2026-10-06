@@ -8,8 +8,12 @@ import type { Lead } from "@/lib/leads";
 import type { Nav, Screen } from "@/lib/routes";
 import { ADMIN_NAV, AdminShell, KpiCard } from "./AdminShell";
 import { useAdminGuard } from "./adminSession";
+import { useAdminText } from "@/lib/adminText";
+import { useOptionLabel } from "@/lib/formsText";
 
 export function AdminDashboard({ nav }: { nav: Nav }) {
+  const { dashboard: t, shell } = useAdminText();
+  const tr = useOptionLabel();
   const onApiError = useAdminGuard(nav);
   const [stats, setStats] = useState<api.ApiDashboard | null>(null);
   const [recentLeads, setRecentLeads] = useState<Lead[]>([]);
@@ -34,24 +38,24 @@ export function AdminDashboard({ nav }: { nav: Nav }) {
   return (
     <AdminShell nav={nav} active="dashboard">
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#0a0a0f]">Bonjour 👋</h1>
-        <p className="text-sm text-[#64697d] mt-0.5">Voici un résumé de l'activité de votre plateforme.</p>
+        <h1 className="text-xl font-bold text-[#0a0a0f]">{t.hello}</h1>
+        <p className="text-sm text-[#64697d] mt-0.5">{t.intro}</p>
       </div>
 
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <KpiCard label="Leads totaux" value={totalLeads} sub={`${newLeads} nouveaux · ${inProgressLeads} en cours`} icon={Inbox} color="#0d2265" onClick={() => nav("admin-leads")} />
-        <KpiCard label="Nouveaux leads" value={newLeads} sub="en attente de traitement" icon={TrendingUp} color="#C4613A" onClick={() => nav("admin-leads")} />
-        <KpiCard label="Produits visibles" value={prodVisible} sub={`${prodFeatured} en vedette sur l'accueil`} icon={Package} color="#059669" onClick={() => nav("admin-catalogue")} />
-        <KpiCard label="Fournisseurs actifs" value={suppActifs} sub={suppEnAttente > 0 ? `${suppEnAttente} désactivé${suppEnAttente > 1 ? "s" : ""}` : "tous actifs"} icon={Users} color="#7c3aed" onClick={() => nav("admin-fournisseurs")} />
+        <KpiCard label={t.totalLeads} value={totalLeads} sub={t.totalLeadsSub(newLeads, inProgressLeads)} icon={Inbox} color="#0d2265" onClick={() => nav("admin-leads")} />
+        <KpiCard label={t.newLeads} value={newLeads} sub={t.awaiting} icon={TrendingUp} color="#C4613A" onClick={() => nav("admin-leads")} />
+        <KpiCard label={t.visibleProducts} value={prodVisible} sub={t.featuredSub(prodFeatured)} icon={Package} color="#059669" onClick={() => nav("admin-catalogue")} />
+        <KpiCard label={t.activeSuppliers} value={suppActifs} sub={suppEnAttente > 0 ? t.disabledSub(suppEnAttente) : t.allActive} icon={Users} color="#7c3aed" onClick={() => nav("admin-fournisseurs")} />
       </div>
 
       {/* Secondary KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-        <KpiCard label="Alertes stocks" value={stockAlerte} sub="données non actualisées" icon={AlertCircle} color="#d97706" onClick={() => nav("admin-catalogue")} />
-        <KpiCard label="Ruptures" value={stockRupture} sub="produits à zéro" icon={Archive} color="#ef4444" onClick={() => nav("admin-catalogue")} />
-        <KpiCard label="En vedette" value={`${prodFeatured}/6`} sub="slots d'accueil utilisés" icon={Star} color="#C4613A" onClick={() => nav("admin-catalogue")} />
-        <KpiCard label="Propositions fournisseurs" value={proposalsPending} sub="en attente de validation" icon={Activity} color="#0d2265" onClick={() => nav("admin-fournisseurs")} />
+        <KpiCard label={t.stockAlerts} value={stockAlerte} sub={t.staleSub} icon={AlertCircle} color="#d97706" onClick={() => nav("admin-catalogue")} />
+        <KpiCard label={t.ruptures} value={stockRupture} sub={t.rupturesSub} icon={Archive} color="#ef4444" onClick={() => nav("admin-catalogue")} />
+        <KpiCard label={t.featured} value={`${prodFeatured}/6`} sub={t.featuredSlots} icon={Star} color="#C4613A" onClick={() => nav("admin-catalogue")} />
+        <KpiCard label={t.proposals} value={proposalsPending} sub={t.proposalsSub} icon={Activity} color="#0d2265" onClick={() => nav("admin-fournisseurs")} />
       </div>
 
       {/* Two-column layout: recent leads + quick nav */}
@@ -59,8 +63,8 @@ export function AdminDashboard({ nav }: { nav: Nav }) {
         {/* Recent leads */}
         <div className="lg:col-span-2 bg-white border border-[rgba(13,34,101,0.08)]">
           <div className="px-5 py-4 border-b border-[rgba(13,34,101,0.06)] flex items-center justify-between">
-            <p className="font-semibold text-sm text-[#0a0a0f]">Derniers leads reçus</p>
-            <button onClick={() => nav("admin-leads")} className="text-xs text-[#0d2265] font-medium hover:underline cursor-pointer">Voir tout →</button>
+            <p className="font-semibold text-sm text-[#0a0a0f]">{t.recentLeads}</p>
+            <button onClick={() => nav("admin-leads")} className="text-xs text-[#0d2265] font-medium hover:underline cursor-pointer">{t.seeAll}</button>
           </div>
           <div>
             {recentLeads.map((lead, i) => (
@@ -78,7 +82,7 @@ export function AdminDashboard({ nav }: { nav: Nav }) {
                     lead.status === "Nouveau" ? "bg-[#0d2265] text-white" :
                     lead.status === "En cours" ? "bg-amber-100 text-amber-700" :
                     "bg-gray-100 text-gray-500"
-                  }`}>{lead.status}</span>
+                  }`}>{tr(lead.status)}</span>
                 </div>
               </div>
             ))}
@@ -87,7 +91,7 @@ export function AdminDashboard({ nav }: { nav: Nav }) {
 
         {/* Quick nav shortcuts */}
         <div className="space-y-3">
-          <p className="text-xs font-semibold text-[#64697d] uppercase tracking-widest mb-3">Accès rapide</p>
+          <p className="text-xs font-semibold text-[#64697d] uppercase tracking-widest mb-3">{t.quickAccess}</p>
           {ADMIN_NAV.filter(n => n.id !== "dashboard").map(item => {
             const Icon = item.icon;
             return (
@@ -97,8 +101,8 @@ export function AdminDashboard({ nav }: { nav: Nav }) {
                   <Icon className="w-4 h-4 text-[#0d2265]" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-[#0a0a0f]">{item.label}</p>
-                  <p className="text-[11px] text-[#64697d]">{item.desc}</p>
+                  <p className="text-sm font-semibold text-[#0a0a0f]">{shell.nav[item.id][0]}</p>
+                  <p className="text-[11px] text-[#64697d]">{shell.nav[item.id][1]}</p>
                 </div>
                 <ArrowRight className="w-4 h-4 text-[#64697d] ml-auto" />
               </button>

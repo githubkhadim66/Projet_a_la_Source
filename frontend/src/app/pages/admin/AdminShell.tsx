@@ -3,16 +3,20 @@
 import { useState } from "react";
 import { AlertCircle, ArrowRight, Calendar, Home, Inbox, LogOut, Package, Users } from "lucide-react";
 import type { Nav, Screen } from "@/lib/routes";
+import { LangSwitch } from "@/lib/i18n";
+import { useAdminText } from "@/lib/adminText";
+import { useOptionLabel } from "@/lib/formsText";
 import { adminLogout, useAdminNotifications } from "./adminSession";
 
 export type AdminSection = "dashboard" | "leads" | "catalogue" | "fournisseurs" | "rdv";
 
-export const ADMIN_NAV: { id: AdminSection; label: string; screen: Screen; icon: React.ElementType; desc: string }[] = [
-  { id: "dashboard",    label: "Tableau de bord",  screen: "admin-dashboard",    icon: Home,     desc: "Vue globale" },
-  { id: "leads",        label: "Leads & demandes", screen: "admin-leads",        icon: Inbox,    desc: "Demandes clients" },
-  { id: "catalogue",    label: "Catalogue",        screen: "admin-catalogue",    icon: Package,  desc: "Produits, stocks & PDF" },
-  { id: "fournisseurs", label: "Fournisseurs",     screen: "admin-fournisseurs", icon: Users,    desc: "Comptes & propositions" },
-  { id: "rdv",          label: "Rendez-vous",      screen: "admin-rdv",          icon: Calendar, desc: "Échanges avec l'experte" },
+// Libellé et description de chaque entrée : dictionnaire (useAdminText().shell.nav[id]).
+export const ADMIN_NAV: { id: AdminSection; screen: Screen; icon: React.ElementType }[] = [
+  { id: "dashboard",    screen: "admin-dashboard",    icon: Home },
+  { id: "leads",        screen: "admin-leads",        icon: Inbox },
+  { id: "catalogue",    screen: "admin-catalogue",    icon: Package },
+  { id: "fournisseurs", screen: "admin-fournisseurs", icon: Users },
+  { id: "rdv",          screen: "admin-rdv",          icon: Calendar },
 ];
 
 export function KpiCard({ label, value, sub, icon: Icon, color = "#0d2265", onClick }: {
@@ -34,6 +38,8 @@ export function KpiCard({ label, value, sub, icon: Icon, color = "#0d2265", onCl
 }
 
 export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminSection; children: React.ReactNode }) {
+  const t = useAdminText().shell;
+  const tr = useOptionLabel();
   const [notifOpen, setNotifOpen] = useState(false);
   const { newLeads, proposals, stockAlerts, allRead, markAllRead } = useAdminNotifications();
   const adminEmail = localStorage.getItem("als-admin-email") ?? "admin";
@@ -66,7 +72,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
                   isActive ? "bg-white/[0.12] text-white" : "text-white/45 hover:text-white/80 hover:bg-white/[0.05]"
                 }`}>
                 <Icon className="w-4 h-4 shrink-0" />
-                <span className="flex-1 text-[13px] font-medium leading-none">{item.label}</span>
+                <span className="flex-1 text-[13px] font-medium leading-none">{t.nav[item.id][0]}</span>
                 {badge > 0 && !isActive && (
                   <span className="bg-[#C4613A] text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none shrink-0">{badge}</span>
                 )}
@@ -81,10 +87,10 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
               <span className="text-white text-[10px] font-bold">OB</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white/70 text-xs font-medium truncate">Administrateur</p>
+              <p className="text-white/70 text-xs font-medium truncate">{t.administrator}</p>
               <p className="text-white/25 text-[10px] truncate">{adminEmail}</p>
             </div>
-            <button onClick={() => adminLogout(nav)} title="Se déconnecter" className="text-white/25 hover:text-white cursor-pointer transition-colors shrink-0">
+            <button onClick={() => adminLogout(nav)} title={t.logout} className="text-white/25 hover:text-white cursor-pointer transition-colors shrink-0">
               <LogOut className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -95,8 +101,9 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar */}
         <div className="h-14 bg-white border-b border-[rgba(13,34,101,0.07)] flex items-center px-8 sticky top-0 z-30 gap-4">
-          <p className="text-sm font-semibold text-[#0a0a0f]">{ADMIN_NAV.find(n => n.id === active)?.label}</p>
+          <p className="text-sm font-semibold text-[#0a0a0f]">{t.nav[active][0]}</p>
           <div className="ml-auto flex items-center gap-3">
+            <LangSwitch tone="light" />
             {/* Notification bell */}
             <div className="relative">
               <button onClick={() => setNotifOpen(o => !o)}
@@ -110,18 +117,18 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
               {notifOpen && (
                 <div className="absolute right-0 top-11 w-80 bg-white border border-[rgba(13,34,101,0.12)] shadow-xl z-50">
                   <div className="px-4 py-3 border-b border-[rgba(13,34,101,0.07)] flex items-center justify-between">
-                    <p className="text-sm font-semibold text-[#0a0a0f]">Notifications</p>
+                    <p className="text-sm font-semibold text-[#0a0a0f]">{t.notifications}</p>
                     <span className="text-[10px] bg-[#C4613A] text-white font-bold px-1.5 py-0.5">{totalNotifs}</span>
                   </div>
                   <div className="max-h-80 overflow-y-auto">
                     {totalNotifs === 0 && (
                       <p className="px-4 py-6 text-xs text-[#64697d] text-center">
-                        {allRead && rawTotal > 0 ? "Toutes les notifications sont lues." : "Aucune notification."}
+                        {allRead && rawTotal > 0 ? t.allRead : t.none}
                       </p>
                     )}
                     {!allRead && newLeads.length > 0 && (
                       <div>
-                        <p className="px-4 pt-3 pb-1 text-[9px] font-bold text-[#64697d] uppercase tracking-widest">Nouveaux leads</p>
+                        <p className="px-4 pt-3 pb-1 text-[9px] font-bold text-[#64697d] uppercase tracking-widest">{t.newLeads}</p>
                         {newLeads.slice(0,3).map((l, i) => (
                           <button key={i} onClick={() => { setNotifOpen(false); nav("admin-leads"); }}
                             className="w-full px-4 py-2.5 flex items-start gap-3 hover:bg-[#f4f5f9] cursor-pointer text-left transition-colors">
@@ -132,14 +139,14 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
                               <p className="text-xs font-semibold text-[#0a0a0f] truncate">{l.company}</p>
                               <p className="text-[10px] text-[#64697d]">{l.country} · {l.date}</p>
                             </div>
-                            <span className="shrink-0 text-[9px] bg-[#0d2265] text-white px-1.5 py-0.5 font-bold mt-0.5">Nouveau</span>
+                            <span className="shrink-0 text-[9px] bg-[#0d2265] text-white px-1.5 py-0.5 font-bold mt-0.5">{tr("Nouveau")}</span>
                           </button>
                         ))}
                       </div>
                     )}
                     {!allRead && proposals.length > 0 && (
                       <div>
-                        <p className="px-4 pt-3 pb-1 text-[9px] font-bold text-[#64697d] uppercase tracking-widest">Propositions fournisseurs</p>
+                        <p className="px-4 pt-3 pb-1 text-[9px] font-bold text-[#64697d] uppercase tracking-widest">{t.proposals}</p>
                         {proposals.map((p, i) => (
                           <button key={i} onClick={() => { setNotifOpen(false); nav("admin-fournisseurs"); }}
                             className="w-full px-4 py-2.5 flex items-start gap-3 hover:bg-[#f4f5f9] cursor-pointer text-left transition-colors">
@@ -148,7 +155,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-semibold text-[#0a0a0f] truncate">{p.name}</p>
-                              <p className="text-[10px] text-[#64697d]">par {p.supplier_name}</p>
+                              <p className="text-[10px] text-[#64697d]">{t.by(p.supplier_name)}</p>
                             </div>
                           </button>
                         ))}
@@ -156,7 +163,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
                     )}
                     {!allRead && stockAlerts.length > 0 && (
                       <div>
-                        <p className="px-4 pt-3 pb-1 text-[9px] font-bold text-[#64697d] uppercase tracking-widest">Alertes stock</p>
+                        <p className="px-4 pt-3 pb-1 text-[9px] font-bold text-[#64697d] uppercase tracking-widest">{t.stockAlerts}</p>
                         {stockAlerts.slice(0,3).map((s, i) => (
                           <button key={i} onClick={() => { setNotifOpen(false); nav("admin-catalogue"); }}
                             className="w-full px-4 py-2.5 flex items-start gap-3 hover:bg-[#f4f5f9] cursor-pointer text-left transition-colors">
@@ -165,7 +172,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
                             </div>
                             <div className="min-w-0">
                               <p className="text-xs font-semibold text-[#0a0a0f] truncate">{s.name}</p>
-                              <p className="text-[10px] text-[#64697d]">{s.status === "Rupture" ? "Rupture de stock" : "Données non actualisées"}</p>
+                              <p className="text-[10px] text-[#64697d]">{s.status === "Rupture" ? t.outOfStock : t.staleData}</p>
                             </div>
                           </button>
                         ))}
@@ -174,7 +181,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
                   </div>
                   {rawTotal > 0 && !allRead && (
                     <div className="px-4 py-2.5 border-t border-[rgba(13,34,101,0.07)]">
-                      <button onClick={markAllRead} className="text-[10px] text-[#64697d] hover:text-[#0d2265] cursor-pointer transition-colors">Marquer tout comme lu</button>
+                      <button onClick={markAllRead} className="text-[10px] text-[#64697d] hover:text-[#0d2265] cursor-pointer transition-colors">{t.markAllRead}</button>
                     </div>
                   )}
                 </div>
@@ -182,7 +189,7 @@ export function AdminShell({ nav, active, children }: { nav: Nav; active: AdminS
             </div>
             <button onClick={() => nav("landing")}
               className="text-xs text-[#64697d] hover:text-[#0d2265] cursor-pointer transition-colors flex items-center gap-1.5 border border-[rgba(13,34,101,0.15)] px-3 py-1.5 hover:border-[#0d2265]">
-              <ArrowRight className="w-3 h-3 rotate-180" /> Retour au site
+              <ArrowRight className="w-3 h-3 rotate-180" /> {t.backToSite}
             </button>
           </div>
         </div>

@@ -5,6 +5,8 @@
 import { useRef, useState } from "react";
 import { alertPill, leadAlert, statusBadge } from "@/lib/leads";
 import type { Lead, LeadStatus } from "@/lib/leads";
+import { useAdminText } from "@/lib/adminText";
+import { useOptionLabel } from "@/lib/formsText";
 
 export function LeadKanban({ leads, statuses, selectedId, onSelect, onMove }: {
   leads: Lead[];
@@ -13,6 +15,8 @@ export function LeadKanban({ leads, statuses, selectedId, onSelect, onMove }: {
   onSelect: (l: Lead) => void;
   onMove: (id: number, status: LeadStatus) => void;
 }) {
+  const { leads: t, alerts } = useAdminText();
+  const tr = useOptionLabel();
   // Ref (et non state) pour l'id glissé : le handler onDrop lit toujours la valeur à jour.
   const dragId = useRef<number | null>(null);
   const [draggingId, setDraggingId] = useState<number | null>(null);
@@ -31,7 +35,7 @@ export function LeadKanban({ leads, statuses, selectedId, onSelect, onMove }: {
             onDrop={e => { e.preventDefault(); if (dragId.current != null) onMove(dragId.current, col); endDrag(); }}
             className={`bg-[#f4f5f9] rounded-lg flex flex-col min-h-[220px] border transition-all ${isOver ? "border-[#0d2265]/40 ring-2 ring-[#0d2265]/15 bg-[#eef1f8]" : "border-[rgba(13,34,101,0.06)]"}`}>
             <div className="px-4 py-3 flex items-center justify-between border-b border-[rgba(13,34,101,0.06)]">
-              <span className={`text-xs font-semibold px-2.5 py-1 ${statusBadge[col]}`}>{col}</span>
+              <span className={`text-xs font-semibold px-2.5 py-1 ${statusBadge[col]}`}>{tr(col)}</span>
               <span className="min-w-[24px] h-6 px-1.5 rounded-full bg-white border border-[rgba(13,34,101,0.1)] text-xs font-bold text-[#64697d] flex items-center justify-center">{items.length}</span>
             </div>
             <div className="p-3 space-y-2.5 flex-1">
@@ -50,16 +54,16 @@ export function LeadKanban({ leads, statuses, selectedId, onSelect, onMove }: {
                         <span className="text-[#0d2265] font-bold text-[10px]">{l.company.slice(0, 2).toUpperCase()}</span>
                       </div>
                       <p className="font-semibold text-[#0a0a0f] text-sm leading-tight flex-1 min-w-0 break-words">{l.company}</p>
-                      {a && <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 leading-none ${alertPill(a.kind)}`}>{a.label}</span>}
+                      {a && <span className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 leading-none ${alertPill(a.kind)}`}>{alerts[a.kind]}</span>}
                     </div>
                     {l.product && <p className="text-xs text-[#4a4f63] leading-snug break-words">{l.product}</p>}
-                    <p className="text-[11px] text-[#9ca3af] mt-1.5">{l.country} · {l.date}</p>
+                    <p className="text-[11px] text-[#9ca3af] mt-1.5">{tr(l.country)} · {l.date}</p>
                   </div>
                 );
               })}
               {items.length === 0 && (
                 <div className="h-full min-h-[100px] flex items-center justify-center border border-dashed border-[rgba(13,34,101,0.15)] rounded text-xs text-[#9ca3af] select-none">
-                  Déposer ici
+                  {t.dropHere}
                 </div>
               )}
             </div>
